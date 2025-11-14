@@ -5,9 +5,10 @@ import supabase from "@/utils/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Check, X, MessageSquare } from "lucide-react";
+import { Check, X, MessageSquare, Search, UserPlus } from "lucide-react";
 
 interface ProfileMini {
   id: string;
@@ -27,8 +28,8 @@ interface FriendshipRow {
 }
 
 interface FriendsSystemProps {
-  userId: string; // profile being viewed
-  currentUserId: string | null; // logged in user (nullable)
+  userId: string;
+  currentUserId: string | null;
   onMessage?: (friendId: string) => void;
 }
 
@@ -36,57 +37,87 @@ const FriendsSystem = ({ userId, currentUserId, onMessage }: FriendsSystemProps)
   const [friends, setFriends] = useState<ProfileMini[]>([]);
   const [incoming, setIncoming] = useState<FriendshipRow[]>([]);
   const [outgoing, setOutgoing] = useState<FriendshipRow[]>([]);
+  const [searchResults, setSearchResults] = useState<ProfileMini[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
 
   const fetchFriends = useCallback(async () => {
     setLoading(true);
     try {
-      // accepted friendships (either side)
       const { data: acceptedData, error: acceptedErr } = await supabase
         .from("friendships")
-        .select(
-          `id,user_id,friend_id,status,created_at,user:profiles(id,username,display_name,avatar_url),friend:profiles(id,username,display_name,avatar_url)`
-        )
+        .select("id,user_id,friend_id,status,created_at")
         .eq("status", "accepted")
         .or(`user_id.eq.${userId},friend_id.eq.${userId}`);
 
       if (acceptedErr) throw acceptedErr;
 
-      const mappedFriends: ProfileMini[] = (acceptedData || []).map((row: any) => {
-        const other = row.user_id === userId ? row.user : row.friend;
-        return {
-          id: other?.id,
-          username: other?.username ?? "unknown",
-          display_name: other?.display_name ?? null,
-          avatar_url: other?.avatar_url ?? null,
-        };
+      // Get friend IDs
+      const friendIds = (acceptedData || []).map((row: any) => {
+        return row.user_id === userId ? row.friend_id : row.user_id;
       });
 
-      // incoming pending (others -> viewing user)
+      if (friendIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id,username,display_name,avatar_url")
+          .in("id", friendIds);
+
+        setFriends(profilesData || []);
+      } else {
+        setFriends([]);
+      }
+
+      // incoming
       const { data: incomingData, error: incomingErr } = await supabase
         .from("friendships")
-        .select(
-          `id,user_id,friend_id,status,created_at,user:profiles(id,username,display_name,avatar_url),friend:profiles(id,username,display_name,avatar_url)`
-        )
+        .select("id,user_id,friend_id,status,created_at")
         .eq("status", "pending")
         .eq("friend_id", userId);
 
       if (incomingErr) throw incomingErr;
 
-      // outgoing pending (viewing user -> others)
+      const incomingIds = (incomingData || []).map((r: any) => r.user_id);
+      if (incomingIds.length > 0) {
+        const { data: incomingProfiles } = await supabase
+          .from("profiles")
+          .select("id,username,display_name,avatar_url")
+          .in("id", incomingIds);
+
+        const mappedIncoming = (incomingData || []).map((row: any) => ({
+          ...row,
+          user: (incomingProfiles || []).find((p: any) => p.id === row.user_id),
+        }));
+        setIncoming(mappedIncoming);
+      } else {
+        setIncoming([]);
+      }
+
+      // outgoing
       const { data: outgoingData, error: outgoingErr } = await supabase
         .from("friendships")
-        .select(
-          `id,user_id,friend_id,status,created_at,user:profiles(id,username,display_name,avatar_url),friend:profiles(id,username,display_name,avatar_url)`
-        )
+        .select("id,user_id,friend_id,status,created_at")
         .eq("status", "pending")
         .eq("user_id", userId);
 
       if (outgoingErr) throw outgoingErr;
 
-      setFriends(mappedFriends || []);
-      setIncoming(incomingData || []);
-      setOutgoing(outgoingData || []);
+      const outgoingIds = (outgoingData || []).map((r: any) => r.friend_id);
+      if (outgoingIds.length > 0) {
+        const { data: outgoingProfiles } = await supabase
+          .from("profiles")
+          .select("id,username,display_name,avatar_url")
+          .in("id", outgoingIds);
+
+        const mappedOutgoing = (outgoingData || []).map((row: any) => ({
+          ...row,
+          friend: (outgoingProfiles || []).find((p: any) => p.id === row.friend_id),
+        }));
+        setOutgoing(mappedOutgoing);
+      } else {
+        setOutgoing([]);
+      }
     } catch (err) {
       console.error("FriendsSystem fetch error:", err);
       toast.error("Ошибка загрузки друзей");
@@ -98,7 +129,6 @@ const FriendsSystem = ({ userId, currentUserId, onMessage }: FriendsSystemProps)
   useEffect(() => {
     fetchFriends();
 
-    // subscribe to changes for realtime updates
     if (!userId) return;
     const channel = supabase
       .channel(`friends_system_profile_${userId}`)
@@ -109,7 +139,6 @@ const FriendsSystem = ({ userId, currentUserId, onMessage }: FriendsSystemProps)
           const row: any = (payload as any).new || (payload as any).old;
           if (!row) return;
           if (row.user_id === userId || row.friend_id === userId) {
-            // refetch when any related change occurs
             fetchFriends();
           }
         }
@@ -120,6 +149,59 @@ const FriendsSystem = ({ userId, currentUserId, onMessage }: FriendsSystemProps)
       supabase.removeChannel(channel);
     };
   }, [userId, fetchFriends]);
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim() || !currentUserId) return;
+    setSearching(true);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id,username,display_name,avatar_url")
+        .or(`username.ilike.%${searchQuery}%,id.eq.${searchQuery}`)
+        .neq("id", currentUserId)
+        .limit(10);
+
+      if (error) throw error;
+      setSearchResults(data || []);
+      if ((data || []).length === 0) {
+        toast("Пользователи не найдены");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Ошибка поиска");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleAddFriend = async (friendId: string) => {
+    if (!currentUserId) return toast.error("Нужно войти в аккаунт");
+    try {
+      const { data: existing } = await supabase
+        .from("friendships")
+        .select("id,status")
+        .or(`and(user_id.eq.${currentUserId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${currentUserId})`)
+        .maybeSingle();
+
+      if (existing) {
+        toast("Запрос уже отправлен или вы уже друзья");
+        return;
+      }
+
+      const { error } = await supabase.from("friendships").insert({
+        user_id: currentUserId,
+        friend_id: friendId,
+        status: "pending",
+      });
+
+      if (error) throw error;
+      toast.success("Запрос отправлен");
+      fetchFriends();
+    } catch (err) {
+      console.error(err);
+      toast.error("Ошибка отправки запроса");
+    }
+  };
 
   const handleAccept = async (id: string) => {
     if (!currentUserId) return toast.error("Нужно войти в аккаунт");
@@ -187,7 +269,7 @@ const FriendsSystem = ({ userId, currentUserId, onMessage }: FriendsSystemProps)
   );
 
   const renderIncomingRow = (row: FriendshipRow) => {
-    const other = row.user ?? null; // incoming: user -> profile
+    const other = row.user ?? null;
     if (!other) return null;
     return (
       <div
@@ -206,7 +288,6 @@ const FriendsSystem = ({ userId, currentUserId, onMessage }: FriendsSystemProps)
         </Link>
 
         <div className="flex gap-2">
-          {/* only profile owner can accept/reject */}
           {currentUserId === userId && (
             <>
               <Button size="sm" onClick={() => handleAccept(row.id)}>
@@ -223,7 +304,7 @@ const FriendsSystem = ({ userId, currentUserId, onMessage }: FriendsSystemProps)
   };
 
   const renderOutgoingRow = (row: FriendshipRow) => {
-    const other = row.friend ?? null; // outgoing: profile -> friend
+    const other = row.friend ?? null;
     if (!other) return null;
     return (
       <div
@@ -267,6 +348,50 @@ const FriendsSystem = ({ userId, currentUserId, onMessage }: FriendsSystemProps)
 
   return (
     <div className="space-y-6">
+      {currentUserId === userId && (
+        <Card className="card-glow">
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold mb-4">🔍 Поиск друзей</h3>
+            <div className="flex gap-2 mb-4">
+              <Input
+                placeholder="Введите username или ID"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
+              <Button onClick={handleSearch} disabled={searching}>
+                <Search className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {searchResults.length > 0 && (
+              <div className="space-y-2">
+                {searchResults.map((user) => (
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/20"
+                  >
+                    <Link to={`/profile/${user.id}`} className="flex items-center gap-3 flex-1">
+                      <Avatar className="w-10 h-10">
+                        <AvatarImage src={user.avatar_url || undefined} />
+                        <AvatarFallback>{(user.username?.[0] ?? "U").toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{user.display_name || user.username}</p>
+                        <p className="text-xs text-muted-foreground">@{user.username}</p>
+                      </div>
+                    </Link>
+                    <Button size="sm" onClick={() => handleAddFriend(user.id)}>
+                      <UserPlus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs defaultValue="friends" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="friends">Друзья ({friends.length})</TabsTrigger>
@@ -323,4 +448,4 @@ const FriendsSystem = ({ userId, currentUserId, onMessage }: FriendsSystemProps)
 };
 
 export { FriendsSystem };
-export { FriendsSystem as default };
+export default FriendsSystem;
