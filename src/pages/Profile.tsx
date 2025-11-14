@@ -31,9 +31,8 @@ import TopListsManager from "@/components/TopListsManager";
 import ProfileCustomizations from "@/components/ProfileCustomizations";
 import ProfileStats from "@/components/ProfileStats";
 import FriendsList from "@/components/FriendsList";
-import FriendsSystem from "@/components/FriendsSystem";
+import { FriendsSystem } from "@/components/FriendsSystem";
 import WatchedInteractive from "@/components/WatchedInteractive";
-import useOnlineStatus from "@/hooks/useOnlineStatus";
 
 interface Profile {
   id: string;
