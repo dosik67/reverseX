@@ -17,6 +17,9 @@ import TopListsManager from "@/components/TopListsManager";
 import ProfileCustomizations from "@/components/ProfileCustomizations";
 import ProfileStats from "@/components/ProfileStats";
 import FriendsList from "@/components/FriendsList";
+import FriendsSystem from "@/components/FriendsSystem";
+import WatchedInteractive from "@/components/WatchedInteractive";
+import useOnlineStatus from "@/hooks/useOnlineStatus";
 
 interface Profile {
   id: string;
@@ -483,12 +486,16 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="friends" className="mt-6 animate-fade-in">
-            <FriendsList userId={userId!} />
-          </TabsContent>
+  <FriendsSystem 
+    userId={userId!} 
+    currentUserId={currentUserId} 
+    onMessage={() => setShowChat(true)}
+  />
+</TabsContent>
 
-          <TabsContent value="watched" className="mt-6 animate-fade-in">
-            <UserActivity userId={userId!} showOnlyWatched={true} />
-          </TabsContent>
+         <TabsContent value="watched" className="mt-6 animate-fade-in">
+  <WatchedInteractive userId={userId!} />
+</TabsContent>
 
           <TabsContent value="activity" className="mt-6 animate-fade-in">
             <UserActivity userId={userId!} showOnlyWatched={false} />
