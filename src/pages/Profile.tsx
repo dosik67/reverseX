@@ -1,13 +1,27 @@
-import { useState, useEffect } from "react";
+// src/pages/Profile.tsx (или src/components/Profile.tsx) — полный файл
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import supabase from "@/utils/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { UserPlus, UserCheck, Users, Star, Film, MessageSquare, List, MapPin, Sparkles, BarChart3, Trash2, Send } from "lucide-react";
+import {
+  UserPlus,
+  UserCheck,
+  Users,
+  Star,
+  Film,
+  MessageSquare,
+  List,
+  MapPin,
+  Sparkles,
+  BarChart3,
+  Trash2,
+  Send,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import ProfileEditor from "@/components/ProfileEditor";
 import FavoriteMovies from "@/components/FavoriteMovies";
@@ -82,10 +96,10 @@ const Profile = () => {
   useEffect(() => {
     if (!currentUserId || !userId) return;
     const channel = supabase
-      .channel('friendship_status')
+      .channel("friendship_status")
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'friendships' },
+        "postgres_changes",
+        { event: "*", schema: "public", table: "friendships" },
         (payload) => {
           const row: any = (payload as any).new || (payload as any).old;
           if (!row) return;
@@ -105,41 +119,46 @@ const Profile = () => {
   }, [currentUserId, userId]);
 
   const getCurrentUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setCurrentUserId(user?.id || null);
+    try {
+      const { data } = await supabase.auth.getUser();
+      const user = (data as any)?.user;
+      setCurrentUserId(user?.id || null);
+    } catch (e) {
+      setCurrentUserId(null);
+    }
   };
 
   const fetchProfile = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
+      const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
       if (error) throw error;
       setProfile(data);
-    } catch (error) {
-      toast.error('Ошибка загрузки профиля');
+    } catch (err) {
+      console.error(err);
+      toast.error("Ошибка загрузки профиля");
     } finally {
       setLoading(false);
     }
   };
 
   const fetchStats = async () => {
-    const [moviesData, followersData, followingData, commentsData] = await Promise.all([
-      supabase.from('user_movies').select('id', { count: 'exact' }).eq('user_id', userId),
-      supabase.from('follows').select('id', { count: 'exact' }).eq('following_id', userId),
-      supabase.from('follows').select('id', { count: 'exact' }).eq('follower_id', userId),
-      supabase.from('profile_comments').select('id', { count: 'exact' }).eq('profile_id', userId),
-    ]);
+    try {
+      const [moviesData, followersData, followingData, commentsData] = await Promise.all([
+        supabase.from("user_movies").select("id", { count: "exact" }).eq("user_id", userId),
+        supabase.from("follows").select("id", { count: "exact" }).eq("following_id", userId),
+        supabase.from("follows").select("id", { count: "exact" }).eq("follower_id", userId),
+        supabase.from("profile_comments").select("id", { count: "exact" }).eq("profile_id", userId),
+      ]);
 
-    setStats({
-      movies: moviesData.count || 0,
-      followers: followersData.count || 0,
-      following: followingData.count || 0,
-      comments: commentsData.count || 0,
-    });
+      setStats({
+        movies: (moviesData as any).count || 0,
+        followers: (followersData as any).count || 0,
+        following: (followingData as any).count || 0,
+        comments: (commentsData as any).count || 0,
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchComments = async () => {
@@ -159,8 +178,8 @@ const Profile = () => {
 
       if (error) throw error;
       setComments(data || []);
-    } catch (error) {
-      console.error("Error:", error);
+    } catch (err) {
+      console.error(err);
     } finally {
       setCommentsLoading(false);
     }
@@ -177,13 +196,12 @@ const Profile = () => {
         author_id: currentUserId,
         content: newComment.trim(),
       });
-
       if (error) throw error;
       setNewComment("");
       toast.success("Комментарий добавлен");
       fetchComments();
-    } catch (error) {
-      console.error("Error:", error);
+    } catch (err) {
+      console.error(err);
       toast.error("Ошибка добавления комментария");
     } finally {
       setSubmittingComment(false);
@@ -192,89 +210,106 @@ const Profile = () => {
 
   const handleDeleteComment = async (commentId: string) => {
     try {
-      const { error } = await supabase
-        .from("profile_comments")
-        .delete()
-        .eq("id", commentId);
-
+      const { error } = await supabase.from("profile_comments").delete().eq("id", commentId);
       if (error) throw error;
       toast.success("Комментарий удален");
       fetchComments();
-    } catch (error) {
-      console.error("Error:", error);
+    } catch (err) {
+      console.error(err);
       toast.error("Ошибка удаления комментария");
     }
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("ru-RU", {
-      day: "numeric",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
   const checkFollowStatus = async () => {
-    const { data } = await supabase
-      .from('follows')
-      .select('id')
-      .eq('follower_id', currentUserId)
-      .eq('following_id', userId)
-      .maybeSingle();
-
-    setIsFollowing(!!data);
+    if (!currentUserId) return setIsFollowing(false);
+    try {
+      const { data } = await supabase
+        .from("follows")
+        .select("id")
+        .eq("follower_id", currentUserId)
+        .eq("following_id", userId)
+        .maybeSingle();
+      setIsFollowing(!!data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const checkFriendshipStatus = async () => {
-    if (!currentUserId || !userId) return;
-    const { data } = await supabase
-      .from('friendships')
-      .select('status')
-      .or(`and(user_id.eq.${currentUserId},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${currentUserId})`)
-      .maybeSingle();
+    if (!currentUserId || !userId) return setFriendshipStatus(null);
+    try {
+      const { data } = await supabase
+        .from("friendships")
+        .select("status")
+        .or(`and(user_id.eq.${currentUserId},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${currentUserId})`)
+        .maybeSingle();
 
-    setFriendshipStatus(data?.status || null);
+      setFriendshipStatus((data as any)?.status || null);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleFollow = async () => {
     if (!currentUserId) return;
-
     try {
       if (isFollowing) {
-        await supabase
-          .from('follows')
-          .delete()
-          .eq('follower_id', currentUserId)
-          .eq('following_id', userId);
-        toast.success('Отписано');
+        await supabase.from("follows").delete().eq("follower_id", currentUserId).eq("following_id", userId);
+        toast.success("Отписано");
       } else {
-        await supabase.from('follows').insert({
-          follower_id: currentUserId,
-          following_id: userId,
-        });
-        toast.success('Подписано');
+        await supabase.from("follows").insert({ follower_id: currentUserId, following_id: userId });
+        toast.success("Подписано");
       }
       setIsFollowing(!isFollowing);
       fetchStats();
-    } catch (error) {
-      toast.error('Ошибка обновления подписки');
+    } catch (err) {
+      console.error(err);
+      toast.error("Ошибка обновления подписки");
     }
   };
 
   const handleFriendRequest = async () => {
-    if (!currentUserId) return;
+    if (!currentUserId || !userId) return toast.error("Нужно войти в аккаунт");
 
     try {
-      await supabase.from('friendships').insert({
+      const { data: existing, error: existingErr } = await supabase
+        .from("friendships")
+        .select("id,status,user_id,friend_id")
+        .or(
+          `and(user_id.eq.${currentUserId},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${currentUserId})`
+        )
+        .maybeSingle();
+
+      if (existingErr) throw existingErr;
+
+      if (existing) {
+        if ((existing as any).status === "pending") {
+          toast("Запрос уже отправлен или ожидает подтверждения");
+          setFriendshipStatus("pending");
+          return;
+        }
+        if ((existing as any).status === "accepted") {
+          toast("Вы уже в друзьях");
+          setFriendshipStatus("accepted");
+          return;
+        }
+      }
+
+      const { error } = await supabase.from("friendships").insert({
         user_id: currentUserId,
         friend_id: userId,
-        status: 'pending',
+        status: "pending",
       });
-      toast.success('Запрос на дружбу отправлен');
-      setFriendshipStatus('pending');
-    } catch (error) {
-      toast.error('Ошибка отправки запроса');
+
+      if (error) throw error;
+      toast.success("Запрос на дружбу отправлен");
+      setFriendshipStatus("pending");
+    } catch (err) {
+      console.error("Error sending friend request:", err);
+      toast.error("Ошибка отправки запроса");
     }
   };
 
@@ -298,35 +333,35 @@ const Profile = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'online':
-        return 'bg-green-500';
-      case 'idle':
-        return 'bg-yellow-500';
-      case 'dnd':
-        return 'bg-red-500';
+      case "online":
+        return "bg-green-500";
+      case "idle":
+        return "bg-yellow-500";
+      case "dnd":
+        return "bg-red-500";
       default:
-        return 'bg-gray-500';
+        return "bg-gray-500";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'online':
-        return '🟢 Онлайн';
-      case 'idle':
-        return '🟡 Неактивен';
-      case 'dnd':
-        return '🔴 Не беспокоить';
+      case "online":
+        return "🟢 Онлайн";
+      case "idle":
+        return "🟡 Неактивен";
+      case "dnd":
+        return "🔴 Не беспокоить";
       default:
-        return '⚪ Оффлайн';
+        return "⚪ Оффлайн";
     }
   };
 
   const backgroundStyle = profile.background_gif_url
-    ? { backgroundImage: `url(${profile.background_gif_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    ? { backgroundImage: `url(${profile.background_gif_url})`, backgroundSize: "cover", backgroundPosition: "center" }
     : {
-      background: `linear-gradient(135deg, ${profile.profile_color}20, ${profile.profile_accent}20)`
-    };
+        background: `linear-gradient(135deg, ${profile.profile_color}20, ${profile.profile_accent}20)`,
+      };
 
   return (
     <div className="min-h-screen">
@@ -335,34 +370,25 @@ const Profile = () => {
       </div>
 
       <div className="container mx-auto px-4 -mt-32 relative z-10">
-        <Card className="card-glow border-2" style={{ borderColor: profile.profile_color + '40' }}>
+        <Card className="card-glow border-2" style={{ borderColor: profile.profile_color + "40" }}>
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row gap-6 items-start">
               <div className="relative">
                 <Avatar className="w-32 h-32 border-4" style={{ borderColor: profile.profile_color }}>
                   <AvatarImage src={profile.avatar_url || undefined} />
-                  <AvatarFallback className="text-3xl">
-                    {profile.username?.[0]?.toUpperCase()}
-                  </AvatarFallback>
+                  <AvatarFallback className="text-3xl">{profile.username?.[0]?.toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <div
-                  className={`absolute bottom-2 right-2 w-5 h-5 rounded-full border-2 border-background ${getStatusColor(profile.status)}`}
-                />
+                <div className={`absolute bottom-2 right-2 w-5 h-5 rounded-full border-2 border-background ${getStatusColor(profile.status)}`} />
               </div>
 
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h1 className="text-3xl font-bold mb-1">
-                      {profile.display_name || profile.username}
-                    </h1>
+                    <h1 className="text-3xl font-bold mb-1">{profile.display_name || profile.username}</h1>
                     <p className="text-muted-foreground">@{profile.username}</p>
 
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
-                      <span
-                        className="px-3 py-1 rounded-full text-sm font-medium text-white"
-                        style={{ backgroundColor: profile.profile_color }}
-                      >
+                      <span className="px-3 py-1 rounded-full text-sm font-medium text-white" style={{ backgroundColor: profile.profile_color }}>
                         <Sparkles className="w-3 h-3 inline mr-1" />
                         Уровень {profile.level}
                       </span>
@@ -386,20 +412,23 @@ const Profile = () => {
                       <>
                         <Button onClick={handleFollow} variant={isFollowing ? "outline" : "default"}>
                           {isFollowing ? <UserCheck className="w-4 h-4 mr-2" /> : <UserPlus className="w-4 h-4 mr-2" />}
-                          {isFollowing ? 'Подписано' : 'Подписаться'}
+                          {isFollowing ? "Подписано" : "Подписаться"}
                         </Button>
+
                         {!friendshipStatus && (
                           <Button onClick={handleFriendRequest} variant="outline">
                             <Users className="w-4 h-4 mr-2" />
                             Добавить в друзья
                           </Button>
                         )}
-                        {friendshipStatus === 'pending' && (
+
+                        {friendshipStatus === "pending" && (
                           <Button variant="outline" disabled>
                             Запрос отправлен
                           </Button>
                         )}
-                        {friendshipStatus === 'accepted' && (
+
+                        {friendshipStatus === "accepted" && (
                           <>
                             <Button variant="outline" disabled>
                               <Users className="w-4 h-4 mr-2" />
@@ -416,9 +445,7 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {profile.bio && (
-                  <p className="text-muted-foreground mb-4 whitespace-pre-wrap">{profile.bio}</p>
-                )}
+                {profile.bio && <p className="text-muted-foreground mb-4 whitespace-pre-wrap">{profile.bio}</p>}
 
                 <div className="flex gap-6 flex-wrap">
                   <div className="text-center">
@@ -486,16 +513,12 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="friends" className="mt-6 animate-fade-in">
-  <FriendsSystem 
-    userId={userId!} 
-    currentUserId={currentUserId} 
-    onMessage={() => setShowChat(true)}
-  />
-</TabsContent>
+            <FriendsSystem userId={userId!} currentUserId={currentUserId} onMessage={() => setShowChat(true)} />
+          </TabsContent>
 
-         <TabsContent value="watched" className="mt-6 animate-fade-in">
-  <WatchedInteractive userId={userId!} />
-</TabsContent>
+          <TabsContent value="watched" className="mt-6 animate-fade-in">
+            <WatchedInteractive userId={userId!} />
+          </TabsContent>
 
           <TabsContent value="activity" className="mt-6 animate-fade-in">
             <UserActivity userId={userId!} showOnlyWatched={false} />
@@ -517,22 +540,10 @@ const Profile = () => {
 
               {currentUserId && (
                 <form onSubmit={handleSubmitComment} className="space-y-3 mb-6">
-                  <Textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Напиши комментарий..."
-                    rows={3}
-                    maxLength={500}
-                  />
+                  <Textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Напиши комментарий..." rows={3} maxLength={500} />
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground">
-                      {newComment.length}/500
-                    </span>
-                    <Button
-                      type="submit"
-                      disabled={submittingComment || !newComment.trim()}
-                      size="sm"
-                    >
+                    <span className="text-xs text-muted-foreground">{newComment.length}/500</span>
+                    <Button type="submit" disabled={submittingComment || !newComment.trim()} size="sm">
                       <Send className="w-4 h-4 mr-2" />
                       Отправить
                     </Button>
@@ -544,49 +555,29 @@ const Profile = () => {
                 {commentsLoading ? (
                   <p className="text-muted-foreground">Загрузка комментариев...</p>
                 ) : comments.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    Комментариев еще нет. Будь первым! 👋
-                  </p>
+                  <p className="text-center text-muted-foreground py-8">Комментариев еще нет. Будь первым! 👋</p>
                 ) : (
                   comments.map((comment) => (
-                    <div
-                      key={comment.id}
-                      className="flex gap-3 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                    >
+                    <div key={comment.id} className="flex gap-3 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors">
                       <Link to={`/profile/${comment.author_id}`}>
                         <Avatar className="w-10 h-10 cursor-pointer hover:ring-2 ring-primary">
-                          <AvatarImage
-                            src={comment.author?.avatar_url || undefined}
-                          />
-                          <AvatarFallback>
-                            {comment.author?.username?.[0]?.toUpperCase() || "U"}
-                          </AvatarFallback>
+                          <AvatarImage src={comment.author?.avatar_url || undefined} />
+                          <AvatarFallback>{comment.author?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
                         </Avatar>
                       </Link>
 
                       <div className="flex-1 min-w-0">
                         <Link to={`/profile/${comment.author_id}`}>
                           <p className="font-medium hover:underline cursor-pointer">
-                            {comment.author?.display_name ||
-                              comment.author?.username ||
-                              "Unknown"}
+                            {comment.author?.display_name || comment.author?.username || "Unknown"}
                           </p>
                         </Link>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          {formatDate(comment.created_at)}
-                        </p>
-                        <p className="text-sm break-words whitespace-pre-wrap">
-                          {comment.content}
-                        </p>
+                        <p className="text-xs text-muted-foreground mb-2">{formatDate(comment.created_at)}</p>
+                        <p className="text-sm break-words whitespace-pre-wrap">{comment.content}</p>
                       </div>
 
                       {(isOwnProfile || currentUserId === comment.author_id) && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteComment(comment.id)}
-                          className="text-destructive hover:bg-destructive/20"
-                        >
+                        <Button size="sm" variant="ghost" onClick={() => handleDeleteComment(comment.id)} className="text-destructive hover:bg-destructive/20">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       )}
@@ -600,23 +591,11 @@ const Profile = () => {
       </div>
 
       {showEditor && (
-        <ProfileEditor
-          profile={profile}
-          open={showEditor}
-          onClose={() => setShowEditor(false)}
-          onUpdate={fetchProfile}
-        />
+        <ProfileEditor profile={profile} open={showEditor} onClose={() => setShowEditor(false)} onUpdate={fetchProfile} />
       )}
 
       {showChat && !isOwnProfile && profile && (
-        <ChatWindow
-          open={showChat}
-          onClose={() => setShowChat(false)}
-          friendId={userId!}
-          friendUsername={profile.username}
-          friendAvatar={profile.avatar_url}
-          currentUserId={currentUserId!}
-        />
+        <ChatWindow open={showChat} onClose={() => setShowChat(false)} friendId={userId!} friendUsername={profile.username} friendAvatar={profile.avatar_url} currentUserId={currentUserId!} />
       )}
     </div>
   );
