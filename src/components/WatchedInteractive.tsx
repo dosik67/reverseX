@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import supabase from "@/utils/supabase";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Star, Calendar, Clock, Film, Tv } from "lucide-react";
+import { Star, Calendar, Clock, Film, Tv, Trash2, Edit, X } from "lucide-react";
+import { toast } from "sonner";
 
 interface WatchedItem {
   id: string;
@@ -28,13 +30,31 @@ const WatchedInteractive = ({ userId }: WatchedInteractiveProps) => {
   const [series, setSeries] = useState<WatchedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<WatchedItem | null>(null);
+  const [editingRating, setEditingRating] = useState<number | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchWatched();
+    getCurrentUser();
+  }, []);
+
+  useEffect(() => {
+    if (userId) {
+      fetchWatched();
+    }
   }, [userId]);
+
+  const getCurrentUser = async () => {
+    try {
+      const { data } = await supabase.auth.getUser();
+      setCurrentUserId((data as any)?.user?.id || null);
+    } catch (e) {
+      setCurrentUserId(null);
+    }
+  };
 
   const fetchWatched = async () => {
     try {
+      setLoading(true);
       const [moviesRes, seriesRes] = await Promise.all([
         supabase
           .from("user_movies")
@@ -63,7 +83,7 @@ const WatchedInteractive = ({ userId }: WatchedInteractiveProps) => {
         seriesRes.data?.map((s: any) => ({
           ...s,
           type: "series",
-          title: s.title,
+          title: m.title,
           poster_path: s.poster_path,
           release_date: s.release_date,
         })) || []
@@ -72,6 +92,54 @@ const WatchedInteractive = ({ userId }: WatchedInteractiveProps) => {
       console.error("Error:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (item: WatchedItem) => {
+    if (currentUserId !== userId) {
+      toast.error("Вы не можете удалять чужие записи");
+      return;
+    }
+
+    try {
+      const table = item.type === "movie" ? "user_movies" : "user_series";
+      const { error } = await supabase.from(table).delete().eq("id", item.id);
+
+      if (error) throw error;
+
+      toast.success("Удалено");
+      fetchWatched();
+      setSelectedItem(null);
+    } catch (error) {
+      console.error(error);
+      toast.error("Ошибка удаления");
+    }
+  };
+
+  const handleUpdateRating = async (item: WatchedItem, newRating: number) => {
+    if (currentUserId !== userId) {
+      toast.error("Вы не можете редактировать чужие записи");
+      return;
+    }
+
+    try {
+      const table = item.type === "movie" ? "user_movies" : "user_series";
+      const { error } = await supabase
+        .from(table)
+        .update({ rating: newRating })
+        .eq("id", item.id);
+
+      if (error) throw error;
+
+      toast.success("Оценка обновлена");
+      fetchWatched();
+      setEditingRating(null);
+      if (selectedItem) {
+        setSelectedItem({ ...selectedItem, rating: newRating });
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Ошибка обновления");
     }
   };
 
@@ -119,6 +187,8 @@ const WatchedInteractive = ({ userId }: WatchedInteractiveProps) => {
     );
   }
 
+  const isOwnProfile = currentUserId === userId;
+
   const renderItems = (items: WatchedItem[]) => (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
       {items.map((item) => (
@@ -130,9 +200,10 @@ const WatchedInteractive = ({ userId }: WatchedInteractiveProps) => {
           <div className="relative mb-3 overflow-hidden rounded-lg bg-secondary/30 aspect-[2/3] group-hover:ring-2 ring-primary transition-all">
             {item.poster_path ? (
               <img
-                src={`https://image.tmdb.org/t/p/w300${item.poster_path}`}
+                src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
                 alt={item.title}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                loading="lazy"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -205,7 +276,10 @@ const WatchedInteractive = ({ userId }: WatchedInteractiveProps) => {
       {selectedItem && (
         <div
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedItem(null)}
+          onClick={() => {
+            setSelectedItem(null);
+            setEditingRating(null);
+          }}
         >
           <Card
             className="card-glow max-w-2xl w-full max-h-[90vh] overflow-y-auto"
@@ -216,7 +290,7 @@ const WatchedInteractive = ({ userId }: WatchedInteractiveProps) => {
                 {selectedItem.poster_path && (
                   <div className="flex-shrink-0 w-40">
                     <img
-                      src={`https://image.tmdb.org/t/p/w300${selectedItem.poster_path}`}
+                      src={`https://image.tmdb.org/t/p/w500${selectedItem.poster_path}`}
                       alt={selectedItem.title}
                       className="w-full rounded-lg"
                     />
@@ -236,9 +310,52 @@ const WatchedInteractive = ({ userId }: WatchedInteractiveProps) => {
                     {selectedItem.rating > 0 && (
                       <div className="flex items-center gap-2">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        <span className="font-medium">
-                          Оценка: {selectedItem.rating}/10
-                        </span>
+                        {editingRating === selectedItem.rating ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              max="10"
+                              step="0.1"
+                              defaultValue={selectedItem.rating}
+                              className="w-20 px-2 py-1 rounded bg-secondary text-foreground"
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                if (val >= 0 && val <= 10) {
+                                  setEditingRating(val);
+                                }
+                              }}
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => editingRating !== null && handleUpdateRating(selectedItem, editingRating)}
+                            >
+                              Сохранить
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingRating(null)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              Оценка: {selectedItem.rating}/10
+                            </span>
+                            {isOwnProfile && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditingRating(selectedItem.rating)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -265,12 +382,26 @@ const WatchedInteractive = ({ userId }: WatchedInteractiveProps) => {
                     )}
                   </div>
 
-                  <button
-                    onClick={() => setSelectedItem(null)}
-                    className="w-full px-4 py-2 bg-primary/20 hover:bg-primary/30 rounded-lg transition-colors"
-                  >
-                    Закрыть
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedItem(null);
+                        setEditingRating(null);
+                      }}
+                      className="flex-1 px-4 py-2 bg-primary/20 hover:bg-primary/30 rounded-lg transition-colors"
+                    >
+                      Закрыть
+                    </button>
+                    {isOwnProfile && (
+                      <button
+                        onClick={() => handleDelete(selectedItem)}
+                        className="px-4 py-2 bg-destructive/20 hover:bg-destructive/30 text-destructive rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Удалить
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -281,6 +412,5 @@ const WatchedInteractive = ({ userId }: WatchedInteractiveProps) => {
   );
 };
 
-// ВАЖНО: Добавляем оба экспорта
 export { WatchedInteractive };
 export default WatchedInteractive;
