@@ -13,7 +13,7 @@ interface Activity {
   rating?: number;
   content?: string;
   title?: string;
-  poster_path?: string;
+  poster?: string;
 }
 
 interface UserActivityProps {
@@ -61,7 +61,7 @@ const UserActivity = ({ userId, showOnlyWatched = false }: UserActivityProps) =>
             created_at: m.updated_at,
             rating: m.rating,
             title: movieData?.title,
-            poster_path: movieData?.poster_path,
+            poster: movieData?.poster,
           };
         });
 
@@ -81,7 +81,7 @@ const UserActivity = ({ userId, showOnlyWatched = false }: UserActivityProps) =>
             created_at: r.created_at, 
             rating: r.rating,
             title: moviesData.find(m => m.id === r.movie_id)?.title,
-            poster_path: moviesData.find(m => m.id === r.movie_id)?.poster_path,
+            poster: moviesData.find(m => m.id === r.movie_id)?.poster,
           })),
           ...(comments.data || []).map(c => ({ 
             id: c.id, 
@@ -90,7 +90,7 @@ const UserActivity = ({ userId, showOnlyWatched = false }: UserActivityProps) =>
             created_at: c.created_at, 
             content: c.content,
             title: moviesData.find(m => m.id === c.movie_id)?.title,
-            poster_path: moviesData.find(m => m.id === c.movie_id)?.poster_path,
+            poster: moviesData.find(m => m.id === c.movie_id)?.poster,
           })),
           ...(favorites.data || []).map(f => ({ 
             id: f.id, 
@@ -98,7 +98,7 @@ const UserActivity = ({ userId, showOnlyWatched = false }: UserActivityProps) =>
             movie_id: f.movie_id, 
             created_at: f.created_at,
             title: moviesData.find(m => m.id === f.movie_id)?.title,
-            poster_path: moviesData.find(m => m.id === f.movie_id)?.poster_path,
+            poster: moviesData.find(m => m.id === f.movie_id)?.poster,
           })),
         ];
 
@@ -139,9 +139,9 @@ const UserActivity = ({ userId, showOnlyWatched = false }: UserActivityProps) =>
           <Link key={activity.id} to={`/movie/${activity.movie_id}`}>
             <Card className="overflow-hidden hover-lift cursor-pointer group animate-scale-in">
               <div className="aspect-[2/3] relative overflow-hidden">
-                {activity.poster_path && (
+                {activity.poster && (
                   <img
-                    src={`https://image.tmdb.org/t/p/w300${activity.poster_path}`}
+                    src={activity.poster}
                     alt={activity.title}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     onError={(e) => {
