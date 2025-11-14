@@ -5,14 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { UserPlus, UserCheck, Users, Star, Film, MessageSquare, List } from "lucide-react";
+import { UserPlus, UserCheck, Users, Star, Film, MessageSquare, List, MapPin, Sparkles, BarChart3, Trash2, Send } from "lucide-react";
+import { Link } from "react-router-dom";
 import ProfileEditor from "@/components/ProfileEditor";
 import FavoriteMovies from "@/components/FavoriteMovies";
 import UserActivity from "@/components/UserActivity";
 import ChatWindow from "@/components/ChatWindow";
 import TopListsManager from "@/components/TopListsManager";
 import ProfileCustomizations from "@/components/ProfileCustomizations";
+import ProfileStats from "@/components/ProfileStats";
 import FriendsList from "@/components/FriendsList";
 
 interface Profile {
@@ -22,8 +25,24 @@ interface Profile {
   bio: string | null;
   avatar_url: string | null;
   background_gif_url: string | null;
+  profile_color: string;
+  profile_accent: string;
+  status: string;
   level: number;
   xp: number;
+  location: string | null;
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  created_at: string;
+  author_id: string;
+  author: {
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+  };
 }
 
 const Profile = () => {
@@ -32,10 +51,14 @@ const Profile = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [friendshipStatus, setFriendshipStatus] = useState<string | null>(null);
-  const [stats, setStats] = useState({ movies: 0, followers: 0, following: 0 });
+  const [stats, setStats] = useState({ movies: 0, followers: 0, following: 0, comments: 0 });
   const [loading, setLoading] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [submittingComment, setSubmittingComment] = useState(false);
 
   useEffect(() => {
     getCurrentUser();
@@ -45,6 +68,7 @@ const Profile = () => {
     if (userId) {
       fetchProfile();
       fetchStats();
+      fetchComments();
       if (currentUserId && currentUserId !== userId) {
         checkFollowStatus();
         checkFriendshipStatus();
@@ -93,23 +117,98 @@ const Profile = () => {
       if (error) throw error;
       setProfile(data);
     } catch (error) {
-      toast.error('Failed to load profile');
+      toast.error('Ошибка загрузки профиля');
     } finally {
       setLoading(false);
     }
   };
 
   const fetchStats = async () => {
-    const [moviesData, followersData, followingData] = await Promise.all([
+    const [moviesData, followersData, followingData, commentsData] = await Promise.all([
       supabase.from('user_movies').select('id', { count: 'exact' }).eq('user_id', userId),
       supabase.from('follows').select('id', { count: 'exact' }).eq('following_id', userId),
       supabase.from('follows').select('id', { count: 'exact' }).eq('follower_id', userId),
+      supabase.from('profile_comments').select('id', { count: 'exact' }).eq('profile_id', userId),
     ]);
 
     setStats({
       movies: moviesData.count || 0,
       followers: followersData.count || 0,
       following: followingData.count || 0,
+      comments: commentsData.count || 0,
+    });
+  };
+
+  const fetchComments = async () => {
+    try {
+      setCommentsLoading(true);
+      const { data, error } = await supabase
+        .from("profile_comments")
+        .select(`
+          id,
+          content,
+          created_at,
+          author_id,
+          author:profiles(username, display_name, avatar_url)
+        `)
+        .eq("profile_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setComments(data || []);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUserId || !newComment.trim()) return;
+
+    setSubmittingComment(true);
+    try {
+      const { error } = await supabase.from("profile_comments").insert({
+        profile_id: userId,
+        author_id: currentUserId,
+        content: newComment.trim(),
+      });
+
+      if (error) throw error;
+      setNewComment("");
+      toast.success("Комментарий добавлен");
+      fetchComments();
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Ошибка добавления комментария");
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const { error } = await supabase
+        .from("profile_comments")
+        .delete()
+        .eq("id", commentId);
+
+      if (error) throw error;
+      toast.success("Комментарий удален");
+      fetchComments();
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Ошибка удаления комментария");
+    }
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString("ru-RU", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -145,18 +244,18 @@ const Profile = () => {
           .delete()
           .eq('follower_id', currentUserId)
           .eq('following_id', userId);
-        toast.success('Unfollowed');
+        toast.success('Отписано');
       } else {
         await supabase.from('follows').insert({
           follower_id: currentUserId,
           following_id: userId,
         });
-        toast.success('Following');
+        toast.success('Подписано');
       }
       setIsFollowing(!isFollowing);
       fetchStats();
     } catch (error) {
-      toast.error('Failed to update follow status');
+      toast.error('Ошибка обновления подписки');
     }
   };
 
@@ -169,10 +268,10 @@ const Profile = () => {
         friend_id: userId,
         status: 'pending',
       });
-      toast.success('Friend request sent');
+      toast.success('Запрос на дружбу отправлен');
       setFriendshipStatus('pending');
     } catch (error) {
-      toast.error('Failed to send friend request');
+      toast.error('Ошибка отправки запроса');
     }
   };
 
@@ -187,32 +286,66 @@ const Profile = () => {
   if (!profile) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <p className="text-center text-muted-foreground">Profile not found</p>
+        <p className="text-center text-muted-foreground">Профиль не найден</p>
       </div>
     );
   }
 
   const isOwnProfile = currentUserId === userId;
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'online':
+        return 'bg-green-500';
+      case 'idle':
+        return 'bg-yellow-500';
+      case 'dnd':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'online':
+        return '🟢 Онлайн';
+      case 'idle':
+        return '🟡 Неактивен';
+      case 'dnd':
+        return '🔴 Не беспокоить';
+      default:
+        return '⚪ Оффлайн';
+    }
+  };
+
   const backgroundStyle = profile.background_gif_url
     ? { backgroundImage: `url(${profile.background_gif_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-    : {};
+    : {
+      background: `linear-gradient(135deg, ${profile.profile_color}20, ${profile.profile_accent}20)`
+    };
 
   return (
     <div className="min-h-screen">
-      <div className="relative h-64 bg-gradient-to-br from-primary/20 to-accent/20" style={backgroundStyle}>
+      <div className="relative h-64" style={backgroundStyle}>
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
       </div>
 
       <div className="container mx-auto px-4 -mt-32 relative z-10">
-        <Card className="card-glow">
+        <Card className="card-glow border-2" style={{ borderColor: profile.profile_color + '40' }}>
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row gap-6 items-start">
-              <Avatar className="w-32 h-32 border-4 border-background">
-                <AvatarImage src={profile.avatar_url || undefined} />
-                <AvatarFallback className="text-3xl">
-                  {profile.username?.[0]?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="w-32 h-32 border-4" style={{ borderColor: profile.profile_color }}>
+                  <AvatarImage src={profile.avatar_url || undefined} />
+                  <AvatarFallback className="text-3xl">
+                    {profile.username?.[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div
+                  className={`absolute bottom-2 right-2 w-5 h-5 rounded-full border-2 border-background ${getStatusColor(profile.status)}`}
+                />
+              </div>
 
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-4">
@@ -221,43 +354,57 @@ const Profile = () => {
                       {profile.display_name || profile.username}
                     </h1>
                     <p className="text-muted-foreground">@{profile.username}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-medium">
-                        Level {profile.level}
+
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <span
+                        className="px-3 py-1 rounded-full text-sm font-medium text-white"
+                        style={{ backgroundColor: profile.profile_color }}
+                      >
+                        <Sparkles className="w-3 h-3 inline mr-1" />
+                        Уровень {profile.level}
                       </span>
                       <span className="text-sm text-muted-foreground">{profile.xp} XP</span>
+                      {profile.location && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <MapPin className="w-4 h-4" />
+                          {profile.location}
+                        </div>
+                      )}
+                      <span className="text-sm">{getStatusText(profile.status)}</span>
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     {isOwnProfile ? (
-                      <Button onClick={() => setShowEditor(true)}>Edit Profile</Button>
+                      <Button onClick={() => setShowEditor(true)} style={{ backgroundColor: profile.profile_color }}>
+                        Редактировать профиль
+                      </Button>
                     ) : (
                       <>
                         <Button onClick={handleFollow} variant={isFollowing ? "outline" : "default"}>
                           {isFollowing ? <UserCheck className="w-4 h-4 mr-2" /> : <UserPlus className="w-4 h-4 mr-2" />}
-                          {isFollowing ? 'Following' : 'Follow'}
+                          {isFollowing ? 'Подписано' : 'Подписаться'}
                         </Button>
                         {!friendshipStatus && (
                           <Button onClick={handleFriendRequest} variant="outline">
                             <Users className="w-4 h-4 mr-2" />
-                            Add Friend
+                            Добавить в друзья
                           </Button>
                         )}
                         {friendshipStatus === 'pending' && (
                           <Button variant="outline" disabled>
-                            Request Pending
+                            Запрос отправлен
                           </Button>
                         )}
                         {friendshipStatus === 'accepted' && (
                           <>
                             <Button variant="outline" disabled>
                               <Users className="w-4 h-4 mr-2" />
-                              Friends
+                              Друзья
                             </Button>
                             <Button onClick={() => setShowChat(true)} variant="outline">
                               <MessageSquare className="w-4 h-4 mr-2" />
-                              Message
+                              Сообщение
                             </Button>
                           </>
                         )}
@@ -267,24 +414,28 @@ const Profile = () => {
                 </div>
 
                 {profile.bio && (
-                  <p className="text-muted-foreground mb-4">{profile.bio}</p>
+                  <p className="text-muted-foreground mb-4 whitespace-pre-wrap">{profile.bio}</p>
                 )}
 
-                <div className="flex gap-6">
+                <div className="flex gap-6 flex-wrap">
                   <div className="text-center">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center justify-center gap-1">
                       <Film className="w-4 h-4" />
                       <span className="font-bold text-lg">{stats.movies}</span>
                     </div>
-                    <span className="text-sm text-muted-foreground">Movies</span>
+                    <span className="text-sm text-muted-foreground">Фильмы</span>
                   </div>
                   <div className="text-center">
                     <span className="font-bold text-lg">{stats.followers}</span>
-                    <div className="text-sm text-muted-foreground">Followers</div>
+                    <div className="text-sm text-muted-foreground">Подписчики</div>
                   </div>
                   <div className="text-center">
                     <span className="font-bold text-lg">{stats.following}</span>
-                    <div className="text-sm text-muted-foreground">Following</div>
+                    <div className="text-sm text-muted-foreground">Подписки</div>
+                  </div>
+                  <div className="text-center">
+                    <span className="font-bold text-lg">{stats.comments}</span>
+                    <div className="text-sm text-muted-foreground">Комментарии</div>
                   </div>
                 </div>
               </div>
@@ -293,31 +444,33 @@ const Profile = () => {
         </Card>
 
         <Tabs defaultValue="favorites" className="mt-8">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-4 md:grid-cols-7">
             <TabsTrigger value="favorites">
-              <Star className="w-4 h-4 mr-2" />
-              Top 50
+              <Star className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Top 50</span>
             </TabsTrigger>
             <TabsTrigger value="lists">
-              <List className="w-4 h-4 mr-2" />
-              Lists
+              <List className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Списки</span>
             </TabsTrigger>
             <TabsTrigger value="friends">
-              <Users className="w-4 h-4 mr-2" />
-              Friends
-            </TabsTrigger>
-            <TabsTrigger value="watched">
-              <Film className="w-4 h-4 mr-2" />
-              Watched
+              <Users className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Друзья</span>
             </TabsTrigger>
             <TabsTrigger value="activity">
-              Activity
+              <span className="hidden sm:inline">Активность</span>
+              <span className="sm:hidden">Акт.</span>
             </TabsTrigger>
-            <TabsTrigger value="customizations">
-              Customizations
+            <TabsTrigger value="watched" className="hidden sm:inline-flex">
+              <Film className="w-4 h-4 mr-2" />
+              Просмотрено
             </TabsTrigger>
-            <TabsTrigger value="stats">
-              Stats
+            <TabsTrigger value="customizations" className="hidden sm:inline-flex">
+              Кастомизация
+            </TabsTrigger>
+            <TabsTrigger value="stats" className="hidden md:inline-flex">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Статистика
             </TabsTrigger>
           </TabsList>
 
@@ -327,6 +480,10 @@ const Profile = () => {
 
           <TabsContent value="lists" className="mt-6 animate-fade-in">
             <TopListsManager userId={userId!} isOwnProfile={isOwnProfile} />
+          </TabsContent>
+
+          <TabsContent value="friends" className="mt-6 animate-fade-in">
+            <FriendsList userId={userId!} />
           </TabsContent>
 
           <TabsContent value="watched" className="mt-6 animate-fade-in">
@@ -342,13 +499,97 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="stats" className="mt-6 animate-fade-in">
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-muted-foreground">Stats coming soon...</p>
-              </CardContent>
-            </Card>
+            <ProfileStats userId={userId!} />
           </TabsContent>
         </Tabs>
+
+        <div className="mt-8">
+          <Card className="card-glow">
+            <CardContent className="pt-6">
+              <h2 className="text-xl font-bold mb-6">💬 Комментарии</h2>
+
+              {currentUserId && (
+                <form onSubmit={handleSubmitComment} className="space-y-3 mb-6">
+                  <Textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Напиши комментарий..."
+                    rows={3}
+                    maxLength={500}
+                  />
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">
+                      {newComment.length}/500
+                    </span>
+                    <Button
+                      type="submit"
+                      disabled={submittingComment || !newComment.trim()}
+                      size="sm"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Отправить
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              <div className="space-y-4">
+                {commentsLoading ? (
+                  <p className="text-muted-foreground">Загрузка комментариев...</p>
+                ) : comments.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    Комментариев еще нет. Будь первым! 👋
+                  </p>
+                ) : (
+                  comments.map((comment) => (
+                    <div
+                      key={comment.id}
+                      className="flex gap-3 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                    >
+                      <Link to={`/profile/${comment.author_id}`}>
+                        <Avatar className="w-10 h-10 cursor-pointer hover:ring-2 ring-primary">
+                          <AvatarImage
+                            src={comment.author?.avatar_url || undefined}
+                          />
+                          <AvatarFallback>
+                            {comment.author?.username?.[0]?.toUpperCase() || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Link>
+
+                      <div className="flex-1 min-w-0">
+                        <Link to={`/profile/${comment.author_id}`}>
+                          <p className="font-medium hover:underline cursor-pointer">
+                            {comment.author?.display_name ||
+                              comment.author?.username ||
+                              "Unknown"}
+                          </p>
+                        </Link>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          {formatDate(comment.created_at)}
+                        </p>
+                        <p className="text-sm break-words whitespace-pre-wrap">
+                          {comment.content}
+                        </p>
+                      </div>
+
+                      {(isOwnProfile || currentUserId === comment.author_id) && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteComment(comment.id)}
+                          className="text-destructive hover:bg-destructive/20"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {showEditor && (
