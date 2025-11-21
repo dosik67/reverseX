@@ -1,13 +1,12 @@
-// src/pages/Profile.tsx — улучшенная версия
+// src/pages/Profile.tsx — полная улучшенная версия
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import supabase from "@/utils/supabase";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
   UserPlus,
@@ -23,7 +22,10 @@ import {
   Trash2,
   Send,
   Search,
-  ChevronDown,
+  Heart,
+  Share2,
+  Trophy,
+  TrendingUp,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProfileEditor from "@/components/ProfileEditor";
@@ -33,7 +35,6 @@ import ChatWindow from "@/components/ChatWindow";
 import TopListsManager from "@/components/TopListsManager";
 import ProfileCustomizations from "@/components/ProfileCustomizations";
 import ProfileStats from "@/components/ProfileStats";
-import FriendsList from "@/components/FriendsList";
 import { FriendsSystem } from "@/components/FriendsSystem";
 import WatchedInteractive from "@/components/WatchedInteractive";
 
@@ -50,6 +51,8 @@ interface Profile {
   level: number;
   xp: number;
   location: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface Comment {
@@ -64,42 +67,72 @@ interface Comment {
   };
 }
 
+interface ProfileStats {
+  movies: number;
+  followers: number;
+  following: number;
+  comments: number;
+  likes: number;
+}
+
 const Profile = () => {
   const { userId } = useParams();
+  const navigate = useNavigate();
+  
+  // State основной профиль
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [friendshipStatus, setFriendshipStatus] = useState<string | null>(null);
-  const [stats, setStats] = useState({ movies: 0, followers: 0, following: 0, comments: 0 });
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  
+  // State взаимодействия
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [friendshipStatus, setFriendshipStatus] = useState<string | null>(null);
+  const [isLiked, setIsLiked] = useState(false);
+  
+  // State статистика
+  const [stats, setStats] = useState<ProfileStats>({
+    movies: 0,
+    followers: 0,
+    following: 0,
+    comments: 0,
+    likes: 0,
+  });
+  
+  // State комментарии
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
   const [commentFilter, setCommentFilter] = useState("");
+  
+  // State активная вкладка
+  const [activeTab, setActiveTab] = useState("favorites");
 
+  // Получить текущего пользователя
   useEffect(() => {
     getCurrentUser();
   }, []);
 
+  // Загрузить данные профиля при изменении userId
   useEffect(() => {
     if (userId) {
       fetchProfile();
       fetchStats();
       fetchComments();
-      if (currentUserId && currentUserId !== userId) {
-        checkFollowStatus();
-        checkFriendshipStatus();
-      }
+      checkFollowStatus();
+      checkFriendshipStatus();
     }
   }, [userId, currentUserId]);
 
+  // Real-time подписка на изменения дружбы
   useEffect(() => {
     if (!currentUserId || !userId) return;
+    
     const channel = supabase
-      .channel("friendship_status")
+      .channel(`friendship_${currentUserId}_${userId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "friendships" },
@@ -127,17 +160,26 @@ const Profile = () => {
       const user = (data as any)?.user;
       setCurrentUserId(user?.id || null);
     } catch (e) {
+      console.error("Error getting current user:", e);
       setCurrentUserId(null);
     }
   };
 
   const fetchProfile = async () => {
+    if (!userId) return;
     try {
-      const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+      
       if (error) throw error;
       setProfile(data);
+      setIsOwnProfile(currentUserId === userId);
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching profile:", err);
       toast.error("Ошибка загрузки профиля");
     } finally {
       setLoading(false);
@@ -145,26 +187,30 @@ const Profile = () => {
   };
 
   const fetchStats = async () => {
+    if (!userId) return;
     try {
-      const [moviesData, followersData, followingData, commentsData] = await Promise.all([
+      const [moviesRes, followersRes, followingRes, commentsRes, likesRes] = await Promise.all([
         supabase.from("user_movies").select("id", { count: "exact" }).eq("user_id", userId),
         supabase.from("follows").select("id", { count: "exact" }).eq("following_id", userId),
         supabase.from("follows").select("id", { count: "exact" }).eq("follower_id", userId),
         supabase.from("profile_comments").select("id", { count: "exact" }).eq("profile_id", userId),
+        supabase.from("profile_likes").select("id", { count: "exact" }).eq("profile_id", userId),
       ]);
 
       setStats({
-        movies: (moviesData as any).count || 0,
-        followers: (followersData as any).count || 0,
-        following: (followingData as any).count || 0,
-        comments: (commentsData as any).count || 0,
+        movies: (moviesRes as any).count || 0,
+        followers: (followersRes as any).count || 0,
+        following: (followingRes as any).count || 0,
+        comments: (commentsRes as any).count || 0,
+        likes: (likesRes as any).count || 0,
       });
     } catch (e) {
-      console.error(e);
+      console.error("Error fetching stats:", e);
     }
   };
 
   const fetchComments = async () => {
+    if (!userId) return;
     try {
       setCommentsLoading(true);
       const { data, error } = await supabase
@@ -182,7 +228,7 @@ const Profile = () => {
       if (error) throw error;
       setComments(data || []);
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching comments:", err);
     } finally {
       setCommentsLoading(false);
     }
@@ -190,7 +236,10 @@ const Profile = () => {
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentUserId || !newComment.trim()) return;
+    if (!currentUserId || !newComment.trim()) {
+      toast.error("Необходимо войти и написать комментарий");
+      return;
+    }
 
     setSubmittingComment(true);
     try {
@@ -199,12 +248,14 @@ const Profile = () => {
         author_id: currentUserId,
         content: newComment.trim(),
       });
+      
       if (error) throw error;
       setNewComment("");
-      toast.success("Комментарий добавлен");
+      toast.success("✅ Комментарий добавлен");
       fetchComments();
+      fetchStats();
     } catch (err) {
-      console.error(err);
+      console.error("Error submitting comment:", err);
       toast.error("Ошибка добавления комментария");
     } finally {
       setSubmittingComment(false);
@@ -212,22 +263,30 @@ const Profile = () => {
   };
 
   const handleDeleteComment = async (commentId: string) => {
+    if (!window.confirm("Удалить комментарий?")) return;
+    
     try {
-      const { error } = await supabase.from("profile_comments").delete().eq("id", commentId);
+      const { error } = await supabase
+        .from("profile_comments")
+        .delete()
+        .eq("id", commentId);
+      
       if (error) throw error;
-      toast.success("Комментарий удален");
+      toast.success("✅ Комментарий удален");
       fetchComments();
+      fetchStats();
     } catch (err) {
-      console.error(err);
+      console.error("Error deleting comment:", err);
       toast.error("Ошибка удаления комментария");
     }
   };
 
-  const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-
   const checkFollowStatus = async () => {
-    if (!currentUserId) return setIsFollowing(false);
+    if (!currentUserId || !userId || currentUserId === userId) {
+      setIsFollowing(false);
+      return;
+    }
+    
     try {
       const { data } = await supabase
         .from("follows")
@@ -235,80 +294,102 @@ const Profile = () => {
         .eq("follower_id", currentUserId)
         .eq("following_id", userId)
         .maybeSingle();
+      
       setIsFollowing(!!data);
     } catch (err) {
-      console.error(err);
+      console.error("Error checking follow status:", err);
     }
   };
 
   const checkFriendshipStatus = async () => {
-    if (!currentUserId || !userId) return setFriendshipStatus(null);
+    if (!currentUserId || !userId || currentUserId === userId) {
+      setFriendshipStatus(null);
+      return;
+    }
+    
     try {
       const { data } = await supabase
         .from("friendships")
         .select("status")
-        .or(`and(user_id.eq.${currentUserId},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${currentUserId})`)
-        .maybeSingle();
-
-      setFriendshipStatus((data as any)?.status || null);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleFollow = async () => {
-    if (!currentUserId) return;
-    try {
-      if (isFollowing) {
-        await supabase.from("follows").delete().eq("follower_id", currentUserId).eq("following_id", userId);
-        toast.success("Отписано");
-      } else {
-        await supabase.from("follows").insert({ follower_id: currentUserId, following_id: userId });
-        toast.success("Подписано");
-      }
-      setIsFollowing(!isFollowing);
-      fetchStats();
-    } catch (err) {
-      console.error(err);
-      toast.error("Ошибка обновления подписки");
-    }
-  };
-
-  const handleFriendRequest = async () => {
-    if (!currentUserId || !userId) return toast.error("Нужно войти в аккаунт");
-
-    try {
-      const { data: existing, error: existingErr } = await supabase
-        .from("friendships")
-        .select("id,status,user_id,friend_id")
         .or(
           `and(user_id.eq.${currentUserId},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${currentUserId})`
         )
         .maybeSingle();
 
-      if (existingErr) throw existingErr;
+      setFriendshipStatus((data as any)?.status || null);
+    } catch (err) {
+      console.error("Error checking friendship status:", err);
+    }
+  };
+
+  const handleFollow = async () => {
+    if (!currentUserId) {
+      navigate("/login");
+      return;
+    }
+    
+    try {
+      if (isFollowing) {
+        await supabase
+          .from("follows")
+          .delete()
+          .eq("follower_id", currentUserId)
+          .eq("following_id", userId);
+        toast.success("✅ Отписано");
+      } else {
+        await supabase
+          .from("follows")
+          .insert({ follower_id: currentUserId, following_id: userId });
+        toast.success("✅ Подписано");
+      }
+      
+      setIsFollowing(!isFollowing);
+      fetchStats();
+    } catch (err) {
+      console.error("Error updating follow status:", err);
+      toast.error("Ошибка обновления подписки");
+    }
+  };
+
+  const handleFriendRequest = async () => {
+    if (!currentUserId) {
+      navigate("/login");
+      return;
+    }
+    
+    if (!userId) {
+      toast.error("Ошибка: пользователь не найден");
+      return;
+    }
+
+    try {
+      const { data: existing } = await supabase
+        .from("friendships")
+        .select("status")
+        .or(
+          `and(user_id.eq.${currentUserId},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${currentUserId})`
+        )
+        .maybeSingle();
 
       if (existing) {
-        if ((existing as any).status === "pending") {
-          toast("Запрос уже отправлен или ожидает подтверждения");
-          setFriendshipStatus("pending");
+        const status = (existing as any).status;
+        if (status === "pending") {
+          toast.info("📤 Запрос уже отправлен");
           return;
         }
-        if ((existing as any).status === "accepted") {
-          toast("Вы уже в друзьях");
-          setFriendshipStatus("accepted");
+        if (status === "accepted") {
+          toast.info("👥 Вы уже в друзьях");
           return;
         }
       }
 
-      const { error } = await supabase.from("friendships").insert({
+      await supabase.from("friendships").insert({
         user_id: currentUserId,
         friend_id: userId,
         status: "pending",
       });
 
-      if (error) throw error;
-      toast.success("Запрос на дружбу отправлен");
+      toast.success("✅ Запрос на дружбу отправлен");
       setFriendshipStatus("pending");
     } catch (err) {
       console.error("Error sending friend request:", err);
@@ -316,23 +397,42 @@ const Profile = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  const handleLike = async () => {
+    if (!currentUserId) {
+      navigate("/login");
+      return;
+    }
 
-  if (!profile) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <p className="text-center text-muted-foreground">Профиль не найден</p>
-      </div>
-    );
-  }
+    try {
+      if (isLiked) {
+        await supabase
+          .from("profile_likes")
+          .delete()
+          .eq("user_id", currentUserId)
+          .eq("profile_id", userId);
+        toast.success("❤️ Лайк удален");
+      } else {
+        await supabase
+          .from("profile_likes")
+          .insert({ user_id: currentUserId, profile_id: userId });
+        toast.success("❤️ Профиль понравился");
+      }
 
-  const isOwnProfile = currentUserId === userId;
+      setIsLiked(!isLiked);
+      fetchStats();
+    } catch (err) {
+      console.error("Error liking profile:", err);
+      toast.error("Ошибка при лайке");
+    }
+  };
+
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString("ru-RU", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -360,46 +460,91 @@ const Profile = () => {
     }
   };
 
-  const backgroundStyle = profile.background_gif_url
-    ? { backgroundImage: `url(${profile.background_gif_url})`, backgroundSize: "cover", backgroundPosition: "center" }
+  const backgroundStyle = profile?.background_gif_url
+    ? {
+        backgroundImage: `url(${profile.background_gif_url})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }
     : {
-        background: `linear-gradient(135deg, ${profile.profile_color}20, ${profile.profile_accent}20)`,
+        background: `linear-gradient(135deg, ${profile?.profile_color}20, ${profile?.profile_accent}20)`,
       };
 
-  const filteredComments = comments.filter(c =>
+  const filteredComments = comments.filter((c) =>
     c.content.toLowerCase().includes(commentFilter.toLowerCase()) ||
     c.author?.username.toLowerCase().includes(commentFilter.toLowerCase())
   );
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground">Загрузка профиля...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6 text-center">
+            <p className="text-lg text-muted-foreground mb-4">😔 Профиль не найден</p>
+            <Button onClick={() => navigate("/")} className="w-full">
+              Вернуться на главную
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      <div className="relative h-48 md:h-64" style={backgroundStyle}>
-        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+      {/* Фон профиля */}
+      <div className="relative h-48 md:h-64 w-full" style={backgroundStyle}>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
       </div>
 
-      <div className="container mx-auto px-3 sm:px-4 -mt-28 md:-mt-32 relative z-10">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 -mt-28 md:-mt-32 relative z-10 pb-8">
         {/* Карточка профиля */}
-        <Card className="card-glow border-2 mb-6 shadow-lg" style={{ borderColor: profile.profile_color + "40" }}>
-          <CardContent className="pt-4 sm:pt-6">
-            <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-start">
+        <Card className="card-glow border-2 mb-6 shadow-xl" style={{ borderColor: profile.profile_color + "40" }}>
+          <CardContent className="pt-4 sm:pt-6 md:pt-8">
+            <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 md:gap-8 items-start">
               {/* Аватар и статус */}
               <div className="relative flex-shrink-0">
-                <Avatar className="w-24 sm:w-32 h-24 sm:h-32 border-4" style={{ borderColor: profile.profile_color }}>
-                  <AvatarImage src={profile.avatar_url || undefined} />
-                  <AvatarFallback className="text-2xl sm:text-3xl">{profile.username?.[0]?.toUpperCase()}</AvatarFallback>
+                <Avatar
+                  className="w-24 sm:w-32 md:w-40 h-24 sm:h-32 md:h-40 border-4"
+                  style={{ borderColor: profile.profile_color }}
+                >
+                  <AvatarImage src={profile.avatar_url || undefined} alt={profile.username} />
+                  <AvatarFallback className="text-2xl sm:text-3xl md:text-4xl font-bold">
+                    {profile.username?.[0]?.toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
-                <div className={`absolute bottom-2 right-2 w-4 sm:w-5 h-4 sm:h-5 rounded-full border-2 border-background ${getStatusColor(profile.status)}`} />
+                <div
+                  className={`absolute bottom-2 right-2 w-4 sm:w-5 md:w-6 h-4 sm:h-5 md:h-6 rounded-full border-2 border-background ${getStatusColor(
+                    profile.status
+                  )}`}
+                />
               </div>
 
-              {/* Инфо и кнопки */}
+              {/* Основная информация */}
               <div className="flex-1 w-full">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
                   <div className="min-w-0">
-                    <h1 className="text-2xl sm:text-3xl font-bold mb-1 truncate">{profile.display_name || profile.username}</h1>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 truncate">
+                      {profile.display_name || profile.username}
+                    </h1>
                     <p className="text-sm sm:text-base text-muted-foreground mb-3">@{profile.username}</p>
 
                     <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm">
-                      <span className="px-2 sm:px-3 py-1 rounded-full font-medium text-white inline-flex items-center gap-1 whitespace-nowrap" style={{ backgroundColor: profile.profile_color }}>
+                      <span
+                        className="px-2 sm:px-3 py-1 rounded-full font-medium text-white inline-flex items-center gap-1 whitespace-nowrap"
+                        style={{ backgroundColor: profile.profile_color }}
+                      >
                         <Sparkles className="w-3 h-3" />
                         Lvl {profile.level}
                       </span>
@@ -417,71 +562,80 @@ const Profile = () => {
                   {/* Кнопки действия */}
                   <div className="flex gap-2 flex-wrap w-full sm:w-auto">
                     {isOwnProfile ? (
-                      <Button onClick={() => setShowEditor(true)} className="flex-1 sm:flex-none" style={{ backgroundColor: profile.profile_color }}>
-                        Редактировать
+                      <Button
+                        onClick={() => setShowEditor(true)}
+                        className="flex-1 sm:flex-none"
+                        style={{ backgroundColor: profile.profile_color }}
+                      >
+                        ✏️ Редактировать
                       </Button>
                     ) : (
                       <>
                         <Button onClick={handleFollow} variant={isFollowing ? "outline" : "default"} className="flex-1 sm:flex-none">
                           {isFollowing ? (
                             <>
-                              <UserCheck className="w-4 h-4 mr-1 sm:mr-2" />
+                              <UserCheck className="w-4 h-4 mr-2" />
                               <span className="hidden sm:inline">Подписано</span>
-                              <span className="sm:hidden">Подписано</span>
                             </>
                           ) : (
                             <>
-                              <UserPlus className="w-4 h-4 mr-1 sm:mr-2" />
+                              <UserPlus className="w-4 h-4 mr-2" />
                               Подписаться
                             </>
                           )}
                         </Button>
 
+                        <Button onClick={handleLike} variant={isLiked ? "default" : "outline"} size="icon" className="flex-shrink-0">
+                          <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
+                        </Button>
+
+                        <Button onClick={() => setShowChat(true)} variant="outline" className="flex-1 sm:flex-none">
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Сообщение
+                        </Button>
+
                         {!friendshipStatus && (
                           <Button onClick={handleFriendRequest} variant="outline" className="flex-1 sm:flex-none">
-                            <Users className="w-4 h-4 mr-1 sm:mr-2" />
+                            <Users className="w-4 h-4 mr-2" />
                             <span className="hidden sm:inline">Добавить</span>
-                            <span className="sm:hidden">+</span>
                           </Button>
                         )}
 
                         {friendshipStatus === "pending" && (
                           <Button variant="outline" disabled className="flex-1 sm:flex-none">
-                            Ожидание...
+                            ⏳ Ожидание...
                           </Button>
                         )}
 
                         {friendshipStatus === "accepted" && (
-                          <>
-                            <Button variant="outline" disabled className="hidden sm:inline-flex">
-                              <Users className="w-4 h-4 mr-2" />
-                              Друзья
-                            </Button>
-                            <Button onClick={() => setShowChat(true)} variant="outline" className="flex-1 sm:flex-none">
-                              <MessageSquare className="w-4 h-4 mr-1 sm:mr-2" />
-                              <span className="hidden sm:inline">Сообщение</span>
-                              <span className="sm:hidden">Чат</span>
-                            </Button>
-                          </>
+                          <Button variant="outline" disabled className="flex-1 sm:flex-none">
+                            <Users className="w-4 h-4 mr-2" />
+                            <span className="hidden sm:inline">Друзья</span>
+                          </Button>
                         )}
                       </>
                     )}
                   </div>
                 </div>
 
-                {profile.bio && <p className="text-sm text-muted-foreground mb-4 whitespace-pre-wrap line-clamp-3">{profile.bio}</p>}
+                {profile.bio && (
+                  <p className="text-sm text-muted-foreground mb-6 whitespace-pre-wrap line-clamp-4 leading-relaxed">
+                    {profile.bio}
+                  </p>
+                )}
 
                 {/* Статистика */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
                   {[
                     { icon: Film, label: "Фильмы", value: stats.movies },
                     { icon: Users, label: "Подписчики", value: stats.followers },
-                    { icon: Users, label: "Подписки", value: stats.following },
+                    { icon: TrendingUp, label: "Подписки", value: stats.following },
                     { icon: MessageSquare, label: "Комментарии", value: stats.comments },
+                    { icon: Heart, label: "Лайки", value: stats.likes },
                   ].map((stat) => (
                     <div key={stat.label} className="text-center">
                       <div className="flex items-center justify-center gap-1 mb-1">
-                        <stat.icon className="w-4 h-4 text-muted-foreground" />
+                        <stat.icon className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                         <span className="font-bold text-base sm:text-lg">{stat.value}</span>
                       </div>
                       <span className="text-xs sm:text-sm text-muted-foreground">{stat.label}</span>
@@ -494,102 +648,124 @@ const Profile = () => {
         </Card>
 
         {/* Вкладки контента */}
-        <Tabs defaultValue="favorites" className="mb-8">
-          <TabsList className="grid w-full grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-1">
-            <TabsTrigger value="favorites" className="text-xs sm:text-sm">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+          <TabsList className="grid w-full grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-1 h-auto p-1">
+            <TabsTrigger value="favorites" className="text-xs sm:text-sm py-2">
               <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-2" />
               <span className="hidden sm:inline">Top 50</span>
-              <span className="sm:hidden">Top</span>
             </TabsTrigger>
-            <TabsTrigger value="lists" className="text-xs sm:text-sm">
+            <TabsTrigger value="lists" className="text-xs sm:text-sm py-2">
               <List className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-2" />
               <span className="hidden sm:inline">Списки</span>
             </TabsTrigger>
-            <TabsTrigger value="friends" className="text-xs sm:text-sm">
+            <TabsTrigger value="friends" className="text-xs sm:text-sm py-2">
               <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-2" />
               <span className="hidden sm:inline">Друзья</span>
             </TabsTrigger>
-            <TabsTrigger value="activity" className="text-xs sm:text-sm">
+            <TabsTrigger value="activity" className="text-xs sm:text-sm py-2">
               <span className="hidden sm:inline">Активность</span>
               <span className="sm:hidden">Акт</span>
             </TabsTrigger>
-            <TabsTrigger value="watched" className="text-xs sm:text-sm">
+            <TabsTrigger value="watched" className="text-xs sm:text-sm py-2">
               <Film className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-2" />
               <span className="hidden sm:inline">Просмотрено</span>
-              <span className="sm:hidden">Пр</span>
             </TabsTrigger>
-            <TabsTrigger value="customizations" className="hidden lg:inline-flex text-xs sm:text-sm">
-              Кастомизация
+            <TabsTrigger value="customizations" className="hidden lg:inline-flex text-xs py-2">
+              ✨ Кастомизация
             </TabsTrigger>
-            <TabsTrigger value="stats" className="hidden lg:inline-flex text-xs sm:text-sm">
-              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+            <TabsTrigger value="stats" className="hidden lg:inline-flex text-xs py-2">
+              <BarChart3 className="w-3 h-3 mr-2" />
               Статистика
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="favorites" className="mt-6 animate-fade-in">
-            <FavoriteMovies userId={userId!} isOwnProfile={isOwnProfile} />
-          </TabsContent>
+          <div className="mt-6 animate-fade-in">
+            <TabsContent value="favorites" className="m-0">
+              <FavoriteMovies userId={userId!} isOwnProfile={isOwnProfile} />
+            </TabsContent>
 
-          <TabsContent value="lists" className="mt-6 animate-fade-in">
-            <TopListsManager userId={userId!} isOwnProfile={isOwnProfile} />
-          </TabsContent>
+            <TabsContent value="lists" className="m-0">
+              <TopListsManager userId={userId!} isOwnProfile={isOwnProfile} />
+            </TabsContent>
 
-          <TabsContent value="friends" className="mt-6 animate-fade-in">
-            <FriendsSystem userId={userId!} currentUserId={currentUserId} onMessage={() => setShowChat(true)} />
-          </TabsContent>
+            <TabsContent value="friends" className="m-0">
+              <FriendsSystem userId={userId!} currentUserId={currentUserId} onMessage={() => setShowChat(true)} />
+            </TabsContent>
 
-          <TabsContent value="watched" className="mt-6 animate-fade-in">
-            <WatchedInteractive userId={userId!} />
-          </TabsContent>
+            <TabsContent value="watched" className="m-0">
+              <WatchedInteractive userId={userId!} />
+            </TabsContent>
 
-          <TabsContent value="activity" className="mt-6 animate-fade-in">
-            <UserActivity userId={userId!} showOnlyWatched={false} />
-          </TabsContent>
+            <TabsContent value="activity" className="m-0">
+              <UserActivity userId={userId!} showOnlyWatched={false} />
+            </TabsContent>
 
-          <TabsContent value="customizations" className="mt-6 animate-fade-in">
-            <ProfileCustomizations level={profile.level} />
-          </TabsContent>
+            <TabsContent value="customizations" className="m-0">
+              <ProfileCustomizations level={profile.level} />
+            </TabsContent>
 
-          <TabsContent value="stats" className="mt-6 animate-fade-in">
-            <ProfileStats userId={userId!} />
-          </TabsContent>
+            <TabsContent value="stats" className="m-0">
+              <ProfileStats userId={userId!} />
+            </TabsContent>
+          </div>
         </Tabs>
 
         {/* Комментарии */}
-        <Card className="card-glow shadow-lg">
-          <CardContent className="pt-4 sm:pt-6">
-            <h2 className="text-lg sm:text-xl font-bold mb-4">💬 Комментарии</h2>
-
-            {currentUserId && (
-              <form onSubmit={handleSubmitComment} className="space-y-3 mb-6">
+        <Card className="card-glow shadow-xl">
+          <CardHeader>
+            <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              Комментарии ({comments.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Форма добавления комментария */}
+            {currentUserId && !isOwnProfile ? (
+              <form onSubmit={handleSubmitComment} className="space-y-3">
                 <Textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Напиши комментарий..."
+                  placeholder="Поделись мыслями об этом профиле..."
                   rows={3}
                   maxLength={500}
                   className="text-sm resize-none"
                 />
                 <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-2">
                   <span className="text-xs text-muted-foreground">{newComment.length}/500</span>
-                  <Button type="submit" disabled={submittingComment || !newComment.trim()} size="sm" className="w-full sm:w-auto">
+                  <Button
+                    type="submit"
+                    disabled={submittingComment || !newComment.trim()}
+                    size="sm"
+                    className="w-full sm:w-auto"
+                  >
                     <Send className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                     Отправить
                   </Button>
                 </div>
               </form>
+            ) : isOwnProfile && currentUserId ? (
+              <div className="p-4 rounded-lg bg-secondary/30 text-center">
+                <p className="text-sm text-muted-foreground">Ты не можешь комментировать свой профиль</p>
+              </div>
+            ) : (
+              <div className="p-4 rounded-lg bg-secondary/30 text-center">
+                <p className="text-sm text-muted-foreground mb-3">Войди, чтобы оставить комментарий</p>
+                <Button size="sm" onClick={() => navigate("/login")} className="w-full">
+                  Войти
+                </Button>
+              </div>
             )}
 
             {/* Поиск комментариев */}
             {comments.length > 0 && (
-              <div className="mb-4 relative">
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                <Input
+                <input
+                  type="text"
                   placeholder="Поиск по комментариям..."
                   value={commentFilter}
                   onChange={(e) => setCommentFilter(e.target.value)}
-                  className="pl-9 text-sm"
+                  className="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             )}
@@ -597,41 +773,56 @@ const Profile = () => {
             {/* Список комментариев */}
             <div className="space-y-3">
               {commentsLoading ? (
-                <p className="text-sm text-muted-foreground py-8 text-center">Загрузка...</p>
+                <div className="text-center py-8">
+                  <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Загрузка комментариев...</p>
+                </div>
               ) : filteredComments.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8 text-sm">
-                  {comments.length === 0 ? "Комментариев еще нет. Будь первым! 👋" : "Комментарии не найдены"}
-                </p>
+                <div className="text-center py-12">
+                  <MessageSquare className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">
+                    {comments.length === 0 ? "Комментариев еще нет. Будь первым! 👋" : "Комментарии не найдены"}
+                  </p>
+                </div>
               ) : (
                 filteredComments.map((comment) => (
-                  <div key={comment.id} className="flex gap-2 sm:gap-3 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors">
+                  <div
+                    key={comment.id}
+                    className="flex gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors duration-200"
+                  >
                     <Link to={`/profile/${comment.author_id}`} className="flex-shrink-0">
-                      <Avatar className="w-8 h-8 sm:w-10 sm:h-10 cursor-pointer hover:ring-2 ring-primary">
+                      <Avatar className="w-8 h-8 sm:w-10 sm:h-10 cursor-pointer hover:ring-2 ring-primary transition-all">
                         <AvatarImage src={comment.author?.avatar_url || undefined} />
-                        <AvatarFallback className="text-xs">{comment.author?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
+                        <AvatarFallback className="text-xs">
+                          {comment.author?.username?.[0]?.toUpperCase() || "U"}
+                        </AvatarFallback>
                       </Avatar>
                     </Link>
 
                     <div className="flex-1 min-w-0">
-                      <Link to={`/profile/${comment.author_id}`}>
-                        <p className="font-medium text-sm hover:underline cursor-pointer truncate">
-                          {comment.author?.display_name || comment.author?.username || "Unknown"}
-                        </p>
-                      </Link>
-                      <p className="text-xs text-muted-foreground mb-1">{formatDate(comment.created_at)}</p>
-                      <p className="text-sm break-words whitespace-pre-wrap">{comment.content}</p>
-                    </div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <Link to={`/profile/${comment.author_id}`}>
+                            <p className="font-medium text-sm hover:underline cursor-pointer truncate">
+                              {comment.author?.display_name || comment.author?.username || "Unknown"}
+                            </p>
+                          </Link>
+                          <p className="text-xs text-muted-foreground">{formatDate(comment.created_at)}</p>
+                        </div>
 
-                    {(isOwnProfile || currentUserId === comment.author_id) && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDeleteComment(comment.id)}
-                        className="text-destructive hover:bg-destructive/20 flex-shrink-0 h-8 w-8 p-0"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
+                        {(isOwnProfile || currentUserId === comment.author_id) && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteComment(comment.id)}
+                            className="text-destructive hover:bg-destructive/20 flex-shrink-0 h-7 w-7 p-0"
+                          >
+                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-sm break-words whitespace-pre-wrap mt-2">{comment.content}</p>
+                    </div>
                   </div>
                 ))
               )}
@@ -640,12 +831,25 @@ const Profile = () => {
         </Card>
       </div>
 
+      {/* Модальные окна */}
       {showEditor && (
-        <ProfileEditor profile={profile} open={showEditor} onClose={() => setShowEditor(false)} onUpdate={fetchProfile} />
+        <ProfileEditor
+          profile={profile}
+          open={showEditor}
+          onClose={() => setShowEditor(false)}
+          onUpdate={fetchProfile}
+        />
       )}
 
       {showChat && !isOwnProfile && profile && (
-        <ChatWindow open={showChat} onClose={() => setShowChat(false)} friendId={userId!} friendUsername={profile.username} friendAvatar={profile.avatar_url} currentUserId={currentUserId!} />
+        <ChatWindow
+          open={showChat}
+          onClose={() => setShowChat(false)}
+          friendId={userId!}
+          friendUsername={profile.username}
+          friendAvatar={profile.avatar_url}
+          currentUserId={currentUserId!}
+        />
       )}
     </div>
   );
