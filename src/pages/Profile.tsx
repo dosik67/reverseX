@@ -207,28 +207,14 @@ const Profile = () => {
     if (!userId) return;
     
     try {
-      // Временные данные для демонстрации
-      const demoProfile: Profile = {
-        id: userId,
-        username: "zhandosturabal",
-        display_name: "Zhandos Turabal",
-        bio: "Любитель кино и сериалов. Особенно ценю качественное повествование и глубоких персонажей.",
-        avatar_url: null,
-        background_gif_url: null,
-        profile_color: "#3B82F6",
-        profile_accent: "#8B5CF6",
-        status: "online",
-        level: 12,
-        xp: 3450,
-        location: "Алматы, Казахстан"
-      };
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
       
-      setProfile(demoProfile);
-      
-      // Для реального использования раскомментируйте:
-      // const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
-      // if (error) throw error;
-      // setProfile(data);
+      if (error) throw error;
+      setProfile(data);
     } catch (err) {
       console.error(err);
       toast.error("Ошибка загрузки профиля");
@@ -238,55 +224,60 @@ const Profile = () => {
   };
 
   const fetchStats = async () => {
-    setStats({
-      movies: 127,
-      followers: 456,
-      following: 234,
-      comments: 89
-    });
+    if (!userId) return;
+    
+    try {
+      // Получаем статистику из базы
+      const { data: userMovies } = await supabase
+        .from('user_movies')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      const { data: followers } = await supabase
+        .from('friendships')
+        .select('id', { count: 'exact', head: true })
+        .eq('friend_id', userId)
+        .eq('status', 'accepted');
+
+      const { data: following } = await supabase
+        .from('friendships')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('status', 'accepted');
+
+      const { data: comments } = await supabase
+        .from('profile_comments')
+        .select('id', { count: 'exact', head: true })
+        .eq('profile_id', userId);
+
+      setStats({
+        movies: userMovies?.length || 0,
+        followers: followers?.length || 0,
+        following: following?.length || 0,
+        comments: comments?.length || 0
+      });
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+      setStats({ movies: 0, followers: 0, following: 0, comments: 0 });
+    }
   };
 
   const fetchComments = async () => {
+    if (!userId) return;
+    
     try {
       setCommentsLoading(true);
-      // Временные данные комментариев
-      const demoComments: Comment[] = [
-        {
-          id: "1",
-          content: "Отличный вкус в кино! Мне тоже нравятся твои подборки.",
-          created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          author_id: "2",
-          author: {
-            username: "cinemalover",
-            display_name: "Киноман",
-            avatar_url: null
-          }
-        },
-        {
-          id: "2", 
-          content: "Привет! Как тебе новый сезон твоего любимого сериала?",
-          created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-          author_id: "3",
-          author: {
-            username: "seriesfan",
-            display_name: "Фанат сериалов",
-            avatar_url: null
-          }
-        }
-      ];
+      const { data, error } = await supabase
+        .from("profile_comments")
+        .select(`id, content, created_at, author_id, author:profiles(username, display_name, avatar_url)`)
+        .eq("profile_id", userId)
+        .order("created_at", { ascending: false });
       
-      setComments(demoComments);
-      
-      // Для реального использования раскомментируйте:
-      // const { data, error } = await supabase
-      //   .from("profile_comments")
-      //   .select(`id, content, created_at, author_id, author:profiles(username, display_name, avatar_url)`)
-      //   .eq("profile_id", userId)
-      //   .order("created_at", { ascending: false });
-      // if (error) throw error;
-      // setComments(data || []);
+      if (error) throw error;
+      setComments(data || []);
     } catch (err) {
       console.error(err);
+      setComments([]);
     } finally {
       setCommentsLoading(false);
     }

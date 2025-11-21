@@ -17,7 +17,6 @@ import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
-import Customize from "./pages/Customize";
 import { AppProvider } from "@/context/AppContext";
 
 import supabase from "@/utils/supabase";
@@ -75,7 +74,6 @@ const App = () => {
                 <Route path="/series/:id" element={<SeriesDetail />} />
                 <Route path="/profile/:userId" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />
-                <Route path="/customize" element={<Customize />} />
                 <Route path="/games" element={<PlaceholderPage title="Games" icon={Gamepad} />} />
                 <Route path="/music" element={<PlaceholderPage title="Music" icon={Music} />} />
                 <Route path="/books" element={<PlaceholderPage title="Books" icon={Book} />} />

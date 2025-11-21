@@ -34,59 +34,44 @@ const ProfileSidebar = ({ userId, userLevel = 1, userXP = 0 }: ProfileSidebarPro
     try {
       setLoading(true);
 
-      // Демо данные для друзей
-      const demoFriends: Friend[] = [
-        {
-          id: "1",
-          username: "friend1",
-          display_name: "Friend One",
-          avatar_url: null,
-          level: 8,
-        },
-        {
-          id: "2",
-          username: "friend2",
-          display_name: "Friend Two",
-          avatar_url: null,
-          level: 6,
-        },
-        {
-          id: "3",
-          username: "friend3",
-          display_name: "Friend Three",
-          avatar_url: null,
-          level: 5,
-        },
-        {
-          id: "4",
-          username: "friend4",
-          display_name: "Friend Four",
-          avatar_url: null,
-          level: 4,
-        },
-        {
-          id: "5",
-          username: "friend5",
-          display_name: "Friend Five",
-          avatar_url: null,
-          level: 3,
-        },
-      ];
+      // Загружаем друзей из базы данных
+      const { data: friendships, error: friendshipError } = await supabase
+        .from('friendships')
+        .select('friend_id, friend:profiles(id, username, display_name, avatar_url, level)')
+        .eq('user_id', userId)
+        .eq('status', 'accepted')
+        .limit(5);
 
-      setTopFriends(demoFriends);
+      if (friendshipError) {
+        console.error('Error fetching friendships:', friendshipError);
+        setTopFriends([]);
+      } else {
+        const friends = (friendships || []).map((f: any) => ({
+          id: f.friend_id,
+          username: f.friend?.username || 'Unknown',
+          display_name: f.friend?.display_name,
+          avatar_url: f.friend?.avatar_url,
+          level: f.friend?.level || 1,
+        }));
+        setTopFriends(friends);
+      }
 
-      // Демо данные для топ списков
-      const demoTopRated = [
-        { id: 1, title: "The Shawshank Redemption", rating: 9.3 },
-        { id: 2, title: "The Godfather", rating: 9.2 },
-        { id: 3, title: "The Dark Knight", rating: 9.0 },
-        { id: 4, title: "Pulp Fiction", rating: 8.9 },
-        { id: 5, title: "Forrest Gump", rating: 8.8 },
-      ];
+      // Загружаем топ списки пользователя
+      const { data: topLists, error: listsError } = await supabase
+        .from('top_lists')
+        .select('id, title, rating')
+        .eq('user_id', userId)
+        .order('rating', { ascending: false })
+        .limit(5);
 
-      setTopRated(demoTopRated);
+      if (listsError) {
+        console.error('Error fetching top lists:', listsError);
+        setTopRated([]);
+      } else {
+        setTopRated(topLists || []);
+      }
     } catch (error) {
-      console.error("Error fetching sidebar data:", error);
+      console.error('Error fetching sidebar data:', error);
     } finally {
       setLoading(false);
     }

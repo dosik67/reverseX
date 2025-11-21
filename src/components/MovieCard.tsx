@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -11,17 +12,24 @@ interface Movie {
 }
 
 const MovieCard = ({ movie }: { movie: Movie }) => {
+  const [imageError, setImageError] = useState(false);
+
+  const getPosterUrl = () => {
+    if (!movie.poster || imageError) {
+      return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450"%3E%3Crect fill="%231a1a2e" width="300" height="450"/%3E%3Ctext x="150" y="225" font-size="20" fill="%23666" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+    }
+    return movie.poster;
+  };
+
   return (
     <Link to={`/movie/${movie.id}`}>
       <Card className="overflow-hidden hover-lift cursor-pointer group">
         <div className="aspect-[2/3] relative overflow-hidden">
           <img
-            src={movie.poster}
+            src={getPosterUrl()}
             alt={movie.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-            onError={(e) => {
-              e.currentTarget.src = 'https://placehold.co/300x450/1a1a2e/ffffff?text=No+Image';
-            }}
+            onError={() => setImageError(true)}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="absolute bottom-0 left-0 right-0 p-3 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
