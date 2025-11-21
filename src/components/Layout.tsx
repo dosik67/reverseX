@@ -64,23 +64,25 @@ const Layout = () => {
   useScrollRestoration();
 
   useEffect(() => {
+    console.log("🔄 Layout: Проверка сессии...");
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("📋 Сессия:", session ? "Найдена" : "Не найдена");
       setSession(session);
       if (session?.user) {
         fetchProfile(session.user.id);
       } else {
-        navigate('/auth');
+        console.log("⚠️ Нет авторизации, но показываем контент");
       }
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("🔄 Auth state changed:", session ? "Авторизован" : "Не авторизован");
       setSession(session);
       if (session?.user) {
         fetchProfile(session.user.id);
       } else {
         setProfile(null);
-        navigate('/auth');
       }
     });
 
@@ -173,22 +175,34 @@ const Layout = () => {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">{profile?.display_name || profile?.username}</p>
+                      <p className="text-sm font-medium">{profile?.display_name || profile?.username || 'Guest'}</p>
                       <p className="text-xs text-muted-foreground">Level {profile?.level || 1}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to={`/profile/${profile?.id}`} className="flex items-center gap-2">
-                      <User className="w-4 h-4" />
-                      {t('nav.profile')}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2">
-                    <LogOut className="w-4 h-4" />
-                    {t('nav.signOut')}
-                  </DropdownMenuItem>
+                  {session?.user?.id && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to={`/profile/${profile?.id}`} className="flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          {t('nav.profile')}
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2">
+                        <LogOut className="w-4 h-4" />
+                        {t('nav.signOut')}
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {!session?.user?.id && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/auth" className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        Sign In
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -200,17 +214,21 @@ const Layout = () => {
         <Outlet />
       </main>
 
-      <NotificationsPanel
-        open={showNotifications}
-        onClose={() => setShowNotifications(false)}
-        userId={session.user.id}
-      />
-      
-      <MessagesPanel
-        open={showMessages}
-        onClose={() => setShowMessages(false)}
-        userId={session.user.id}
-      />
+      {session?.user?.id && (
+        <>
+          <NotificationsPanel
+            open={showNotifications}
+            onClose={() => setShowNotifications(false)}
+            userId={session.user.id}
+          />
+          
+          <MessagesPanel
+            open={showMessages}
+            onClose={() => setShowMessages(false)}
+            userId={session.user.id}
+          />
+        </>
+      )}
     </div>
   );
 };

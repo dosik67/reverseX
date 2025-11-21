@@ -25,14 +25,15 @@ const App = () => {
   useEffect(() => {
     async function checkSupabase() {
       try {
+        console.log("🔍 Проверка подключения Supabase...");
         const { data, error } = await supabase.from("comments").select("*").limit(1);
         if (error) {
-          console.error("Supabase error:", error.message);
+          console.error("❌ Ошибка Supabase:", error.message);
         } else {
-          console.log("Подключение к Supabase успешно:", data);
+          console.log("✅ Подключение к Supabase успешно:", data);
         }
       } catch (err) {
-        console.error("Ошибка при подключении к Supabase:", err);
+        console.error("❌ Ошибка при подключении к Supabase:", err);
       }
     }
 
