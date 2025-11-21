@@ -83,7 +83,7 @@ const WatchedInteractive = ({ userId }: WatchedInteractiveProps) => {
         seriesRes.data?.map((s: any) => ({
           ...s,
           type: "series",
-          title: m.title,
+          title: s.title,
           poster_path: s.poster_path,
           release_date: s.release_date,
         })) || []
