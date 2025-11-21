@@ -34,6 +34,7 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import ProfileSidebar from "@/components/ProfileSidebar";
 
 // Интерфейсы
 interface Profile {
@@ -554,10 +555,13 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - 3 Column Layout */}
       <div className="container mx-auto px-4 -mt-20 relative z-10">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+          {/* Left Column - Main Profile */}
+          <div className="lg:col-span-6 space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
           <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
@@ -588,159 +592,98 @@ const Profile = () => {
               <p className="text-sm text-muted-foreground">Комментарии</p>
             </CardContent>
           </Card>
-        </div>
+            </div>
 
-        {/* Bio Section */}
-        {profile.bio && (
-          <Card className="mb-8 bg-card/50 backdrop-blur-sm border-0 shadow-lg">
-            <CardContent className="p-6">
-              <h3 className="font-semibold mb-3 text-lg">О себе</h3>
-              <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{profile.bio}</p>
-            </CardContent>
-          </Card>
-        )}
+            {/* Bio Section */}
+            {profile.bio && (
+              <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-3 text-lg">О себе</h3>
+                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{profile.bio}</p>
+                </CardContent>
+              </Card>
+            )}
 
-        {/* Enhanced Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="bg-card/30 backdrop-blur-sm rounded-2xl p-1 border">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 bg-transparent p-0 h-auto">
-              <TabsTrigger 
-                value="favorites" 
-                className="flex-col md:flex-row h-auto py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl transition-all"
-              >
-                <Star className="w-4 h-4 mb-1 md:mb-0 md:mr-2" />
-                <span className="text-xs md:text-sm">Top 50</span>
-              </TabsTrigger>
-              
-              <TabsTrigger 
-                value="lists" 
-                className="flex-col md:flex-row h-auto py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl transition-all"
-              >
-                <List className="w-4 h-4 mb-1 md:mb-0 md:mr-2" />
-                <span className="text-xs md:text-sm">Списки</span>
-              </TabsTrigger>
-              
-              <TabsTrigger 
-                value="friends" 
-                className="flex-col md:flex-row h-auto py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl transition-all"
-              >
-                <Users className="w-4 h-4 mb-1 md:mb-0 md:mr-2" />
-                <span className="text-xs md:text-sm">Друзья</span>
-              </TabsTrigger>
-              
-              <TabsTrigger 
-                value="activity" 
-                className="flex-col md:flex-row h-auto py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl transition-all"
-              >
-                <Calendar className="w-4 h-4 mb-1 md:mb-0 md:mr-2" />
-                <span className="text-xs md:text-sm">Активность</span>
-              </TabsTrigger>
-              
-              <TabsTrigger 
-                value="watched" 
-                className="flex-col md:flex-row h-auto py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl transition-all"
-              >
-                <Eye className="w-4 h-4 mb-1 md:mb-0 md:mr-2" />
-                <span className="text-xs md:text-sm">Просмотрено</span>
-              </TabsTrigger>
-              
-              <TabsTrigger 
-                value="customizations" 
-                className="flex-col md:flex-row h-auto py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl transition-all"
-              >
-                <Sparkles className="w-4 h-4 mb-1 md:mb-0 md:mr-2" />
-                <span className="text-xs md:text-sm">Оформление</span>
-              </TabsTrigger>
-              
-              <TabsTrigger 
-                value="stats" 
-                className="flex-col md:flex-row h-auto py-3 px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl transition-all"
-              >
-                <BarChart3 className="w-4 h-4 mb-1 md:mb-0 md:mr-2" />
-                <span className="text-xs md:text-sm">Статистика</span>
-              </TabsTrigger>
-            </TabsList>
+            {/* Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <div className="bg-card/30 backdrop-blur-sm rounded-2xl p-1 border">
+                <TabsList className="grid w-full grid-cols-4 bg-transparent p-0 h-auto">
+                  <TabsTrigger 
+                    value="favorites" 
+                    className="flex-col h-auto py-3 px-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl transition-all"
+                  >
+                    <Star className="w-4 h-4 mb-1" />
+                    <span className="text-xs">Top 50</span>
+                  </TabsTrigger>
+                  
+                  <TabsTrigger 
+                    value="activity" 
+                    className="flex-col h-auto py-3 px-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl transition-all"
+                  >
+                    <Calendar className="w-4 h-4 mb-1" />
+                    <span className="text-xs">Активность</span>
+                  </TabsTrigger>
+                  
+                  <TabsTrigger 
+                    value="watched" 
+                    className="flex-col h-auto py-3 px-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl transition-all"
+                  >
+                    <Eye className="w-4 h-4 mb-1" />
+                    <span className="text-xs">Просмотрено</span>
+                  </TabsTrigger>
+                  
+                  <TabsTrigger 
+                    value="stats" 
+                    className="flex-col h-auto py-3 px-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl transition-all"
+                  >
+                    <BarChart3 className="w-4 h-4 mb-1" />
+                    <span className="text-xs">Статистика</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              {/* Tab Contents */}
+              <TabsContent value="favorites" className="animate-fade-in space-y-6">
+                <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <FavoriteMovies userId={userId!} isOwnProfile={isOwnProfile} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="watched" className="animate-fade-in space-y-6">
+                <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <WatchedInteractive userId={userId!} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="activity" className="animate-fade-in space-y-6">
+                <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <UserActivity userId={userId!} showOnlyWatched={false} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="stats" className="animate-fade-in space-y-6">
+                <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <ProfileStats userId={userId!} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
 
-          {/* Tab Contents */}
-          <TabsContent value="favorites" className="animate-fade-in space-y-6">
-            <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
-              <CardContent className="p-6">
-                <FavoriteMovies userId={userId!} isOwnProfile={isOwnProfile} />
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {/* Right Column - Sidebar with Friends */}
+          <div className="lg:col-span-6 h-fit sticky top-24">
+            <ProfileSidebar userId={userId!} userLevel={profile.level} userXP={profile.xp} />
+          </div>
+        </div>
 
-          <TabsContent value="lists" className="animate-fade-in space-y-6">
-            <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
-              <CardContent className="p-6">
-                <TopListsManager userId={userId!} isOwnProfile={isOwnProfile} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="friends" className="animate-fade-in space-y-6">
-            <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div className="space-y-6">
-                  {/* Friends Search */}
-                  <div className="flex gap-3">
-                    <div className="flex-1 relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Введите имя или ID друга..."
-                        className="pl-10 bg-background/50 backdrop-blur-sm"
-                        onChange={(e) => handleSearchFriends(e.target.value)}
-                      />
-                    </div>
-                    {isOwnProfile && (
-                      <Button className="bg-primary hover:bg-primary/90">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Найти друзей
-                      </Button>
-                    )}
-                  </div>
-                  
-                  <FriendsSystem userId={userId!} currentUserId={currentUserId} onMessage={() => setShowChat(true)} />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="watched" className="animate-fade-in space-y-6">
-            <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
-              <CardContent className="p-6">
-                <WatchedInteractive userId={userId!} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="activity" className="animate-fade-in space-y-6">
-            <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
-              <CardContent className="p-6">
-                <UserActivity userId={userId!} showOnlyWatched={false} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="customizations" className="animate-fade-in space-y-6">
-            <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
-              <CardContent className="p-6">
-                <ProfileCustomizations level={profile.level} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="stats" className="animate-fade-in space-y-6">
-            <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
-              <CardContent className="p-6">
-                <ProfileStats userId={userId!} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Enhanced Comments Section */}
+        {/* Full Width Comments Section */}
         <div className="mt-8">
           <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
             <CardContent className="p-6">

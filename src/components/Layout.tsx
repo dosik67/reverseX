@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Film, Home, Tv, Gamepad, Music, Book, Bell, MessageSquare, User, LogOut } from "lucide-react";
+import { Film, Home, Tv, Gamepad, Music, Book, Bell, MessageSquare, User, LogOut, Settings, Sparkles } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -155,6 +155,18 @@ const Layout = () => {
                         <Link to={`/profile/${session.user.id}`} className="flex items-center gap-2">
                           <User className="w-4 h-4" />
                           Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/customize" className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" />
+                          Customize Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/settings" className="flex items-center gap-2">
+                          <Settings className="w-4 h-4" />
+                          Settings
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
