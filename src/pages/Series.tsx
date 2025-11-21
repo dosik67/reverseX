@@ -86,7 +86,7 @@ const Series = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4 gradient-text">
-          {t('series.explore') || 'Explore Series'}
+          {t('Исследуйте сериалы') || 'Explore Series'}
         </h1>
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Check, X, MessageSquare, Search, UserPlus } from "lucide-react";
+import { Check, X, MessageSquare, Search, UserPlus, Share2 } from "lucide-react";
 
 interface ProfileMini {
   id: string;
@@ -154,12 +154,32 @@ const FriendsSystem = ({ userId, currentUserId, onMessage }: FriendsSystemProps)
     if (!searchQuery.trim() || !currentUserId) return;
     setSearching(true);
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id,username,display_name,avatar_url")
-        .or(`username.ilike.%${searchQuery}%,id.eq.${searchQuery}`)
-        .neq("id", currentUserId)
-        .limit(10);
+      // Проверяем, является ли запрос UUID (ID пользователя)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(searchQuery);
+      
+      let data, error;
+      
+      if (isUUID) {
+        // Если это UUID, ищем по ID
+        const result = await supabase
+          .from("profiles")
+          .select("id,username,display_name,avatar_url")
+          .eq("id", searchQuery)
+          .neq("id", currentUserId)
+          .limit(1);
+        data = result.data;
+        error = result.error;
+      } else {
+        // Иначе ищем по username
+        const result = await supabase
+          .from("profiles")
+          .select("id,username,display_name,avatar_url")
+          .ilike("username", `%${searchQuery}%`)
+          .neq("id", currentUserId)
+          .limit(10);
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) throw error;
       setSearchResults(data || []);
@@ -242,6 +262,12 @@ const FriendsSystem = ({ userId, currentUserId, onMessage }: FriendsSystemProps)
     }
   };
 
+  const handleCopyProfileLink = (userId: string, username: string) => {
+    const link = `${window.location.origin}/profile/${userId}`;
+    navigator.clipboard.writeText(link);
+    toast.success(`Ссылка на профиль @${username} скопирована!`);
+  };
+
   const renderFriendRow = (friend: ProfileMini) => (
     <div
       key={friend.id}
@@ -260,9 +286,18 @@ const FriendsSystem = ({ userId, currentUserId, onMessage }: FriendsSystemProps)
 
       <div className="flex gap-2">
         {currentUserId && (
-          <Button size="sm" variant="outline" onClick={() => onMessage?.(friend.id)}>
-            <MessageSquare className="w-4 h-4" />
-          </Button>
+          <>
+            <Button size="sm" variant="outline" onClick={() => onMessage?.(friend.id)}>
+              <MessageSquare className="w-4 h-4" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => handleCopyProfileLink(friend.id, friend.username)}
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
+          </>
         )}
       </div>
     </div>
@@ -348,6 +383,30 @@ const FriendsSystem = ({ userId, currentUserId, onMessage }: FriendsSystemProps)
 
   return (
     <div className="space-y-6">
+      {/* Кнопка поделиться своим профилем */}
+      {currentUserId === userId && (
+        <Card className="card-glow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">🔗 Ваша ссылка профиля</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Поделитесь ссылкой, чтобы другие могли вас найти
+                </p>
+              </div>
+              <Button onClick={() => {
+                const link = `${window.location.origin}/profile/${userId}`;
+                navigator.clipboard.writeText(link);
+                toast.success("Ссылка скопирована!");
+              }}>
+                <Share2 className="w-4 h-4 mr-2" />
+                Скопировать ссылку
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {currentUserId === userId && (
         <Card className="card-glow">
           <CardContent className="pt-6">

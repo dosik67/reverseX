@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { useState, useEffect, useLayoutEffect } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import supabase from "@/utils/supabase";
 import { Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,38 @@ import MessagesPanel from "./MessagesPanel";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 
+// Хук для сохранения и восстановления позиции скролла
+const useScrollRestoration = () => {
+  const { pathname } = useLocation();
+
+  // Восстанавливаем позицию сразу после смены маршрута
+  useLayoutEffect(() => {
+    const savedScroll = sessionStorage.getItem(`scroll-pos:${pathname}`);
+    if (savedScroll) {
+      window.scrollTo(0, parseInt(savedScroll, 10));
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname]);
+
+  // Сохраняем позицию при скролле
+  useEffect(() => {
+    const saveScrollPosition = () => {
+      sessionStorage.setItem(`scroll-pos:${pathname}`, window.scrollY.toString());
+    };
+
+    window.addEventListener("scroll", saveScrollPosition);
+    // Сохраняем также перед уходом со страницы
+    const handleBeforeUnload = () => saveScrollPosition();
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("scroll", saveScrollPosition);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [pathname]);
+};
+
 const Layout = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -28,8 +60,10 @@ const Layout = () => {
   const [showMessages, setShowMessages] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Добавляем хук восстановления скролла
+  useScrollRestoration();
+
   useEffect(() => {
-    // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
@@ -40,10 +74,7 @@ const Layout = () => {
       setLoading(false);
     });
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session?.user) {
         fetchProfile(session.user.id);
@@ -64,7 +95,6 @@ const Layout = () => {
       .single();
     setProfile(data);
 
-    // Check if user has admin role
     const { data: roleData } = await supabase
       .from('user_roles')
       .select('role')
@@ -91,12 +121,10 @@ const Layout = () => {
     );
   }
 
-  if (!session) {
-    return null;
-  }
+  if (!session) return null;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
@@ -107,42 +135,12 @@ const Layout = () => {
               </Link>
 
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/" className="flex items-center gap-2">
-                    <Home className="w-4 h-4" />
-                    {t('nav.home')}
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/movies" className="flex items-center gap-2">
-                    <Film className="w-4 h-4" />
-                    {t('nav.movies')}
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/series" className="flex items-center gap-2">
-                    <Tv className="w-4 h-4" />
-                    {t('nav.series')}
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/games" className="flex items-center gap-2">
-                    <Gamepad className="w-4 h-4" />
-                    {t('nav.games')}
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/music" className="flex items-center gap-2">
-                    <Music className="w-4 h-4" />
-                    {t('nav.music')}
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/books" className="flex items-center gap-2">
-                    <Book className="w-4 h-4" />
-                    {t('nav.books')}
-                  </Link>
-                </Button>
+                <Button variant="ghost" size="sm" asChild><Link to="/" className="flex items-center gap-2"><Home className="w-4 h-4" />{t('nav.home')}</Link></Button>
+                <Button variant="ghost" size="sm" asChild><Link to="/movies" className="flex items-center gap-2"><Film className="w-4 h-4" />{t('nav.movies')}</Link></Button>
+                <Button variant="ghost" size="sm" asChild><Link to="/series" className="flex items-center gap-2"><Tv className="w-4 h-4" />{t('nav.series')}</Link></Button>
+                <Button variant="ghost" size="sm" asChild><Link to="/games" className="flex items-center gap-2"><Gamepad className="w-4 h-4" />{t('nav.games')}</Link></Button>
+                <Button variant="ghost" size="sm" asChild><Link to="/music" className="flex items-center gap-2"><Music className="w-4 h-4" />{t('nav.music')}</Link></Button>
+                <Button variant="ghost" size="sm" asChild><Link to="/books" className="flex items-center gap-2"><Book className="w-4 h-4" />{t('nav.books')}</Link></Button>
                 {isAdmin && (
                   <Button variant="ghost" size="sm" asChild>
                     <Link to="/admin" className="flex items-center gap-2">
@@ -155,23 +153,11 @@ const Layout = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <div>
-                <LanguageSwitcher />
-              </div>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowNotifications(!showNotifications)}
-              >
+              <LanguageSwitcher />
+              <Button variant="ghost" size="icon" onClick={() => setShowNotifications(!showNotifications)}>
                 <Bell className="w-5 h-5" />
               </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowMessages(!showMessages)}
-              >
+              <Button variant="ghost" size="icon" onClick={() => setShowMessages(!showMessages)}>
                 <MessageSquare className="w-5 h-5" />
               </Button>
 
@@ -180,9 +166,7 @@ const Layout = () => {
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar>
                       <AvatarImage src={profile?.avatar_url} />
-                      <AvatarFallback>
-                        {profile?.username?.[0]?.toUpperCase() || 'U'}
-                      </AvatarFallback>
+                      <AvatarFallback>{profile?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
@@ -212,7 +196,7 @@ const Layout = () => {
         </div>
       </nav>
 
-      <main>
+      <main className="flex-1">
         <Outlet />
       </main>
 

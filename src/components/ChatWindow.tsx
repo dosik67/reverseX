@@ -1,32 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import supabase from "@/utils/supabase";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Film, Gamepad, Book, Music, Tv } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
-
-interface Message {
-  id: string;
-  content: string;
-  sender_id: string;
-  created_at: string;
-  metadata?: {
-    type?: 'movie' | 'anime' | 'game' | 'book' | 'music';
-    itemId?: string;
-    title?: string;
-    poster?: string;
-  };
-}
+import { Send, Loader2, X, File, AlertCircle } from "lucide-react";
 
 interface ChatWindowProps {
   open: boolean;
@@ -37,264 +15,276 @@ interface ChatWindowProps {
   currentUserId: string;
 }
 
-const ChatWindow = ({ open, onClose, friendId, friendUsername, friendAvatar, currentUserId }: ChatWindowProps) => {
+interface Message {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  file_url?: string;
+  file_name?: string;
+  created_at: string;
+  sender: {
+    username: string;
+    avatar_url: string | null;
+  };
+}
+
+const ChatWindow = ({
+  open,
+  onClose,
+  friendId,
+  friendUsername,
+  friendAvatar,
+  currentUserId,
+}: ChatWindowProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState("");
+  const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(true);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
   useEffect(() => {
     if (open) {
       fetchMessages();
-      subscribeToMessages();
-      markMessagesAsRead();
+      const subscription = supabase
+        .channel(`chat_${currentUserId}_${friendId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "messages",
+          },
+          () => {
+            fetchMessages();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(subscription);
+      };
     }
-  }, [open, friendId]);
+  }, [open, friendId, currentUserId]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   const scrollToBottom = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const fetchMessages = async () => {
     try {
       const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${currentUserId})`)
-        .order('created_at', { ascending: true });
+        .from("messages")
+        .select(
+          `
+          id,
+          sender_id,
+          receiver_id,
+          content,
+          file_url,
+          file_name,
+          created_at,
+          sender:profiles(username, avatar_url)
+        `
+        )
+        .or(
+          `and(sender_id.eq.${currentUserId},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${currentUserId})`
+        )
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
       setMessages(data || []);
-    } catch (error: any) {
-      toast.error('Failed to load messages');
+    } catch (error) {
+      console.error("Error fetching messages:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const subscribeToMessages = () => {
-    const channel = supabase
-      .channel(`chat_${currentUserId}_${friendId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `or(and(sender_id.eq.${currentUserId},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${currentUserId}))`,
-        },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
-        }
-      )
-      .subscribe();
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  };
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("Файл слишком большой. Максимум 5MB");
+      return;
+    }
 
-  const markMessagesAsRead = async () => {
-    await supabase
-      .from('messages')
-      .update({ read: true })
-      .eq('receiver_id', currentUserId)
-      .eq('sender_id', friendId)
-      .eq('read', false);
-  };
-
-  const sendMessage = async () => {
-    if (!newMessage.trim()) return;
-
+    setUploading(true);
     try {
-      const { error } = await supabase.from('messages').insert({
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("chat-files")
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("chat-files")
+        .getPublicUrl(fileName);
+
+      await supabase.from("messages").insert({
         sender_id: currentUserId,
         receiver_id: friendId,
-        content: newMessage.trim(),
+        content: `📎 Отправил файл`,
+        file_url: publicUrl,
+        file_name: file.name,
+      });
+
+      toast.success("Файл отправлен");
+      fetchMessages();
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Ошибка загрузки файла");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageText.trim()) return;
+
+    setSending(true);
+    try {
+      const { error } = await supabase.from("messages").insert({
+        sender_id: currentUserId,
+        receiver_id: friendId,
+        content: messageText.trim(),
       });
 
       if (error) throw error;
-      setNewMessage("");
-    } catch (error: any) {
-      toast.error('Failed to send message');
+      setMessageText("");
+      fetchMessages();
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Ошибка отправки сообщения");
+    } finally {
+      setSending(false);
     }
   };
 
-  const sendRecommendation = async (type: 'movie' | 'anime' | 'game' | 'book' | 'music') => {
-    const content = `Check out this ${type}!`;
-    try {
-      const { error } = await supabase.from('messages').insert({
-        sender_id: currentUserId,
-        receiver_id: friendId,
-        content,
-      });
-
-      if (error) throw error;
-      toast.success(`${type} recommendation sent!`);
-    } catch (error: any) {
-      toast.error('Failed to send recommendation');
-    }
-  };
-
-  const getMediaIcon = (type?: string) => {
-    switch (type) {
-      case 'movie': return <Film className="w-4 h-4" />;
-      case 'anime': return <Tv className="w-4 h-4" />;
-      case 'game': return <Gamepad className="w-4 h-4" />;
-      case 'book': return <Book className="w-4 h-4" />;
-      case 'music': return <Music className="w-4 h-4" />;
-      default: return null;
-    }
+  const formatTime = (date: string) => {
+    return new Date(date).toLocaleTimeString("ru-RU", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl h-[80vh] flex flex-col">
+      <DialogContent className="max-w-2xl h-[600px] flex flex-col">
         <DialogHeader>
-          <div className="flex items-center gap-3">
-            <Avatar>
-              <AvatarImage src={friendAvatar || undefined} />
-              <AvatarFallback>{friendUsername[0].toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div>
-              <DialogTitle>{friendUsername}</DialogTitle>
-              <DialogDescription>Send messages and recommendations</DialogDescription>
-            </div>
-          </div>
+          <DialogTitle className="flex items-center gap-3">
+            <img
+              src={friendAvatar || ""}
+              alt={friendUsername}
+              className="w-8 h-8 rounded-full object-cover"
+            />
+            {friendUsername}
+          </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4" ref={scrollRef}>
+        <div className="flex-1 overflow-y-auto space-y-4 mb-4">
           {loading ? (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
-                    <div className="h-3 bg-muted animate-pulse rounded w-1/2" />
-                  </div>
-                </div>
-              ))}
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="w-6 h-6 animate-spin" />
             </div>
           ) : messages.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              No messages yet. Start a conversation!
+            <div className="flex justify-center items-center h-full text-muted-foreground">
+              <p>Нет сообщений. Начни разговор!</p>
             </div>
           ) : (
-            <div className="space-y-4 py-4">
-              {messages.map((message) => {
-                const isOwn = message.sender_id === currentUserId;
-                return (
+            messages.map((message) => {
+              const isOwn = message.sender_id === currentUserId;
+              return (
+                <div
+                  key={message.id}
+                  className={`flex gap-2 ${isOwn ? "justify-end" : "justify-start"}`}
+                >
                   <div
-                    key={message.id}
-                    className={`flex gap-3 animate-fade-in ${isOwn ? 'flex-row-reverse' : ''}`}
+                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      isOwn
+                        ? "bg-primary text-primary-foreground rounded-br-none"
+                        : "bg-secondary text-secondary-foreground rounded-bl-none"
+                    }`}
                   >
-                    {!isOwn && (
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={friendAvatar || undefined} />
-                        <AvatarFallback>{friendUsername[0].toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-[70%]`}>
-                      <div
-                        className={`px-4 py-2 rounded-2xl ${
-                          isOwn
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}
+                    <p className="text-sm break-words">{message.content}</p>
+
+                    {message.file_url && (
+                      <a
+                        href={message.file_url}
+                        download={message.file_name}
+                        className="mt-2 flex items-center gap-2 text-xs hover:underline"
                       >
-                        {message.metadata?.type && (
-                          <div className="flex items-center gap-2 mb-1 opacity-70">
-                            {getMediaIcon(message.metadata.type)}
-                            <span className="text-xs">Recommendation</span>
-                          </div>
-                        )}
-                        <p className="text-sm">{message.content}</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                      </span>
-                    </div>
+                        <File className="w-4 h-4" />
+                        {message.file_name}
+                      </a>
+                    )}
+
+                    <p className="text-xs opacity-70 mt-1">
+                      {formatTime(message.created_at)}
+                    </p>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })
           )}
-        </ScrollArea>
+          <div ref={messagesEndRef} />
+        </div>
 
-        <div className="space-y-3">
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => sendRecommendation('movie')}
-              className="gap-1"
-            >
-              <Film className="w-4 h-4" />
-              Movie
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => sendRecommendation('anime')}
-              className="gap-1"
-            >
-              <Tv className="w-4 h-4" />
-              Anime
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => sendRecommendation('game')}
-              className="gap-1"
-            >
-              <Gamepad className="w-4 h-4" />
-              Game
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => sendRecommendation('book')}
-              className="gap-1"
-            >
-              <Book className="w-4 h-4" />
-              Book
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => sendRecommendation('music')}
-              className="gap-1"
-            >
-              <Music className="w-4 h-4" />
-              Music
-            </Button>
+        <div className="border-t pt-4">
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2 mb-3 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-muted-foreground">Максимум файла: 5MB</p>
           </div>
 
-          <div className="flex gap-2">
-            <Textarea
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="resize-none"
-              rows={2}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
+          <form onSubmit={handleSendMessage} className="flex gap-2">
+            <input
+              type="file"
+              id="file-input"
+              onChange={handleFileUpload}
+              className="hidden"
+              disabled={uploading}
             />
-            <Button onClick={sendMessage} size="icon" className="shrink-0 h-auto">
-              <Send className="w-4 h-4" />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => document.getElementById("file-input")?.click()}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <File className="w-4 h-4" />
+              )}
             </Button>
-          </div>
+
+            <Input
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              placeholder="Напиши сообщение..."
+              disabled={sending}
+            />
+
+            <Button type="submit" disabled={sending || !messageText.trim()} size="sm">
+              {sending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </Button>
+          </form>
         </div>
       </DialogContent>
     </Dialog>

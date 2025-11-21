@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, Palette, Sparkles } from "lucide-react";
 
 interface ProfileEditorProps {
   profile: any;
@@ -23,6 +23,10 @@ const ProfileEditor = ({ profile, open, onClose, onUpdate }: ProfileEditorProps)
     bio: profile.bio || '',
     avatar_url: profile.avatar_url || '',
     background_gif_url: profile.background_gif_url || '',
+    profile_color: profile.profile_color || '#3b82f6',
+    profile_accent: profile.profile_accent || '#8b5cf6',
+    status: profile.status || 'offline',
+    location: profile.location || '',
   });
 
   const uploadFile = async (file: File, bucket: string) => {
@@ -46,10 +50,9 @@ const ProfileEditor = ({ profile, open, onClose, onUpdate }: ProfileEditorProps)
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size
-    const maxSize = type === 'avatar' ? 5 : 10; // MB
+    const maxSize = type === 'avatar' ? 5 : 10;
     if (file.size > maxSize * 1024 * 1024) {
-      toast.error(`File too large. Max ${maxSize}MB`);
+      toast.error(`Файл слишком большой. Максимум ${maxSize}MB`);
       return;
     }
 
@@ -63,9 +66,9 @@ const ProfileEditor = ({ profile, open, onClose, onUpdate }: ProfileEditorProps)
         [type === 'avatar' ? 'avatar_url' : 'background_gif_url']: url
       }));
 
-      toast.success('File uploaded successfully');
+      toast.success('Файл загружен успешно');
     } catch (error) {
-      toast.error('Failed to upload file');
+      toast.error('Ошибка при загрузке файла');
     } finally {
       setUploading(null);
     }
@@ -83,11 +86,11 @@ const ProfileEditor = ({ profile, open, onClose, onUpdate }: ProfileEditorProps)
 
       if (error) throw error;
 
-      toast.success('Profile updated successfully');
+      toast.success('Профиль обновлен');
       onUpdate();
       onClose();
     } catch (error) {
-      toast.error('Failed to update profile');
+      toast.error('Ошибка обновления профиля');
     } finally {
       setLoading(false);
     }
@@ -97,34 +100,97 @@ const ProfileEditor = ({ profile, open, onClose, onUpdate }: ProfileEditorProps)
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Profile</DialogTitle>
+          <DialogTitle>Редактировать профиль</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <div>
-              <Label htmlFor="display_name">Display Name</Label>
+              <Label htmlFor="display_name">Имя профиля</Label>
               <Input
                 id="display_name"
                 value={formData.display_name}
                 onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-                placeholder="Your display name"
+                placeholder="Твое имя"
               />
             </div>
 
             <div>
-              <Label htmlFor="bio">Bio</Label>
+              <Label htmlFor="location">Местоположение</Label>
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                placeholder="Город, страна"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="bio">О себе</Label>
               <Textarea
                 id="bio"
                 value={formData.bio}
                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                placeholder="Tell us about yourself..."
-                rows={4}
+                placeholder="Расскажи о себе, добавь смайлики или ASCII-арт..."
+                rows={5}
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="profile_color">Основной цвет</Label>
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="color"
+                    id="profile_color"
+                    value={formData.profile_color}
+                    onChange={(e) => setFormData({ ...formData, profile_color: e.target.value })}
+                    className="w-12 h-10 rounded cursor-pointer"
+                  />
+                  <Input
+                    value={formData.profile_color}
+                    onChange={(e) => setFormData({ ...formData, profile_color: e.target.value })}
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="profile_accent">Цвет акцента</Label>
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="color"
+                    id="profile_accent"
+                    value={formData.profile_accent}
+                    onChange={(e) => setFormData({ ...formData, profile_accent: e.target.value })}
+                    className="w-12 h-10 rounded cursor-pointer"
+                  />
+                  <Input
+                    value={formData.profile_accent}
+                    onChange={(e) => setFormData({ ...formData, profile_accent: e.target.value })}
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div>
-              <Label>Avatar</Label>
+              <Label htmlFor="status">Статус</Label>
+              <select
+                id="status"
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                className="w-full px-3 py-2 border rounded-md bg-background"
+              >
+                <option value="offline">Оффлайн</option>
+                <option value="online">Онлайн</option>
+                <option value="idle">Неактивен</option>
+                <option value="dnd">Не беспокоить</option>
+              </select>
+            </div>
+
+            <div>
+              <Label>Аватар</Label>
               <div className="flex items-center gap-4 mt-2">
                 {formData.avatar_url && (
                   <img
@@ -152,15 +218,15 @@ const ProfileEditor = ({ profile, open, onClose, onUpdate }: ProfileEditorProps)
                     ) : (
                       <Upload className="w-4 h-4 mr-2" />
                     )}
-                    Upload Avatar
+                    Загрузить аватар
                   </Button>
-                  <p className="text-xs text-muted-foreground mt-1">Max 5MB</p>
+                  <p className="text-xs text-muted-foreground mt-1">Максимум 5MB</p>
                 </div>
               </div>
             </div>
 
             <div>
-              <Label>Profile Background (GIF)</Label>
+              <Label>Фон профиля</Label>
               <div className="mt-2">
                 {formData.background_gif_url && (
                   <div className="mb-4 h-32 rounded-lg overflow-hidden">
@@ -190,9 +256,9 @@ const ProfileEditor = ({ profile, open, onClose, onUpdate }: ProfileEditorProps)
                     ) : (
                       <Upload className="w-4 h-4 mr-2" />
                     )}
-                    Upload Background
+                    Загрузить фон
                   </Button>
-                  <p className="text-xs text-muted-foreground mt-1">Max 10MB, GIF recommended</p>
+                  <p className="text-xs text-muted-foreground mt-1">Максимум 10MB, GIF рекомендуется</p>
                 </div>
               </div>
             </div>
@@ -200,10 +266,10 @@ const ProfileEditor = ({ profile, open, onClose, onUpdate }: ProfileEditorProps)
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              Отмена
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Changes'}
+              {loading ? 'Сохранение...' : 'Сохранить'}
             </Button>
           </div>
         </form>

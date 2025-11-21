@@ -1,4 +1,4 @@
-// src/pages/Profile.tsx (или src/components/Profile.tsx) — полный файл
+// src/pages/Profile.tsx — улучшенная версия
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import supabase from "@/utils/supabase";
@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
   UserPlus,
@@ -21,6 +22,8 @@ import {
   BarChart3,
   Trash2,
   Send,
+  Search,
+  ChevronDown,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProfileEditor from "@/components/ProfileEditor";
@@ -75,6 +78,7 @@ const Profile = () => {
   const [newComment, setNewComment] = useState("");
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [commentFilter, setCommentFilter] = useState("");
 
   useEffect(() => {
     getCurrentUser();
@@ -362,80 +366,101 @@ const Profile = () => {
         background: `linear-gradient(135deg, ${profile.profile_color}20, ${profile.profile_accent}20)`,
       };
 
+  const filteredComments = comments.filter(c =>
+    c.content.toLowerCase().includes(commentFilter.toLowerCase()) ||
+    c.author?.username.toLowerCase().includes(commentFilter.toLowerCase())
+  );
+
   return (
-    <div className="min-h-screen">
-      <div className="relative h-64" style={backgroundStyle}>
+    <div className="min-h-screen bg-background">
+      <div className="relative h-48 md:h-64" style={backgroundStyle}>
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
       </div>
 
-      <div className="container mx-auto px-4 -mt-32 relative z-10">
-        <Card className="card-glow border-2" style={{ borderColor: profile.profile_color + "40" }}>
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-6 items-start">
-              <div className="relative">
-                <Avatar className="w-32 h-32 border-4" style={{ borderColor: profile.profile_color }}>
+      <div className="container mx-auto px-3 sm:px-4 -mt-28 md:-mt-32 relative z-10">
+        {/* Карточка профиля */}
+        <Card className="card-glow border-2 mb-6 shadow-lg" style={{ borderColor: profile.profile_color + "40" }}>
+          <CardContent className="pt-4 sm:pt-6">
+            <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-start">
+              {/* Аватар и статус */}
+              <div className="relative flex-shrink-0">
+                <Avatar className="w-24 sm:w-32 h-24 sm:h-32 border-4" style={{ borderColor: profile.profile_color }}>
                   <AvatarImage src={profile.avatar_url || undefined} />
-                  <AvatarFallback className="text-3xl">{profile.username?.[0]?.toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="text-2xl sm:text-3xl">{profile.username?.[0]?.toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <div className={`absolute bottom-2 right-2 w-5 h-5 rounded-full border-2 border-background ${getStatusColor(profile.status)}`} />
+                <div className={`absolute bottom-2 right-2 w-4 sm:w-5 h-4 sm:h-5 rounded-full border-2 border-background ${getStatusColor(profile.status)}`} />
               </div>
 
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h1 className="text-3xl font-bold mb-1">{profile.display_name || profile.username}</h1>
-                    <p className="text-muted-foreground">@{profile.username}</p>
+              {/* Инфо и кнопки */}
+              <div className="flex-1 w-full">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
+                  <div className="min-w-0">
+                    <h1 className="text-2xl sm:text-3xl font-bold mb-1 truncate">{profile.display_name || profile.username}</h1>
+                    <p className="text-sm sm:text-base text-muted-foreground mb-3">@{profile.username}</p>
 
-                    <div className="flex items-center gap-2 mt-2 flex-wrap">
-                      <span className="px-3 py-1 rounded-full text-sm font-medium text-white" style={{ backgroundColor: profile.profile_color }}>
-                        <Sparkles className="w-3 h-3 inline mr-1" />
-                        Уровень {profile.level}
+                    <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm">
+                      <span className="px-2 sm:px-3 py-1 rounded-full font-medium text-white inline-flex items-center gap-1 whitespace-nowrap" style={{ backgroundColor: profile.profile_color }}>
+                        <Sparkles className="w-3 h-3" />
+                        Lvl {profile.level}
                       </span>
-                      <span className="text-sm text-muted-foreground">{profile.xp} XP</span>
+                      <span className="text-muted-foreground">{profile.xp} XP</span>
                       {profile.location && (
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <MapPin className="w-4 h-4" />
-                          {profile.location}
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <MapPin className="w-3 sm:w-4 h-3 sm:h-4 flex-shrink-0" />
+                          <span className="truncate">{profile.location}</span>
                         </div>
                       )}
-                      <span className="text-sm">{getStatusText(profile.status)}</span>
+                      <span className="text-xs">{getStatusText(profile.status)}</span>
                     </div>
                   </div>
 
-                  <div className="flex gap-2 flex-wrap">
+                  {/* Кнопки действия */}
+                  <div className="flex gap-2 flex-wrap w-full sm:w-auto">
                     {isOwnProfile ? (
-                      <Button onClick={() => setShowEditor(true)} style={{ backgroundColor: profile.profile_color }}>
-                        Редактировать профиль
+                      <Button onClick={() => setShowEditor(true)} className="flex-1 sm:flex-none" style={{ backgroundColor: profile.profile_color }}>
+                        Редактировать
                       </Button>
                     ) : (
                       <>
-                        <Button onClick={handleFollow} variant={isFollowing ? "outline" : "default"}>
-                          {isFollowing ? <UserCheck className="w-4 h-4 mr-2" /> : <UserPlus className="w-4 h-4 mr-2" />}
-                          {isFollowing ? "Подписано" : "Подписаться"}
+                        <Button onClick={handleFollow} variant={isFollowing ? "outline" : "default"} className="flex-1 sm:flex-none">
+                          {isFollowing ? (
+                            <>
+                              <UserCheck className="w-4 h-4 mr-1 sm:mr-2" />
+                              <span className="hidden sm:inline">Подписано</span>
+                              <span className="sm:hidden">Подписано</span>
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus className="w-4 h-4 mr-1 sm:mr-2" />
+                              Подписаться
+                            </>
+                          )}
                         </Button>
 
                         {!friendshipStatus && (
-                          <Button onClick={handleFriendRequest} variant="outline">
-                            <Users className="w-4 h-4 mr-2" />
-                            Добавить в друзья
+                          <Button onClick={handleFriendRequest} variant="outline" className="flex-1 sm:flex-none">
+                            <Users className="w-4 h-4 mr-1 sm:mr-2" />
+                            <span className="hidden sm:inline">Добавить</span>
+                            <span className="sm:hidden">+</span>
                           </Button>
                         )}
 
                         {friendshipStatus === "pending" && (
-                          <Button variant="outline" disabled>
-                            Запрос отправлен
+                          <Button variant="outline" disabled className="flex-1 sm:flex-none">
+                            Ожидание...
                           </Button>
                         )}
 
                         {friendshipStatus === "accepted" && (
                           <>
-                            <Button variant="outline" disabled>
+                            <Button variant="outline" disabled className="hidden sm:inline-flex">
                               <Users className="w-4 h-4 mr-2" />
                               Друзья
                             </Button>
-                            <Button onClick={() => setShowChat(true)} variant="outline">
-                              <MessageSquare className="w-4 h-4 mr-2" />
-                              Сообщение
+                            <Button onClick={() => setShowChat(true)} variant="outline" className="flex-1 sm:flex-none">
+                              <MessageSquare className="w-4 h-4 mr-1 sm:mr-2" />
+                              <span className="hidden sm:inline">Сообщение</span>
+                              <span className="sm:hidden">Чат</span>
                             </Button>
                           </>
                         )}
@@ -444,61 +469,60 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {profile.bio && <p className="text-muted-foreground mb-4 whitespace-pre-wrap">{profile.bio}</p>}
+                {profile.bio && <p className="text-sm text-muted-foreground mb-4 whitespace-pre-wrap line-clamp-3">{profile.bio}</p>}
 
-                <div className="flex gap-6 flex-wrap">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Film className="w-4 h-4" />
-                      <span className="font-bold text-lg">{stats.movies}</span>
+                {/* Статистика */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
+                  {[
+                    { icon: Film, label: "Фильмы", value: stats.movies },
+                    { icon: Users, label: "Подписчики", value: stats.followers },
+                    { icon: Users, label: "Подписки", value: stats.following },
+                    { icon: MessageSquare, label: "Комментарии", value: stats.comments },
+                  ].map((stat) => (
+                    <div key={stat.label} className="text-center">
+                      <div className="flex items-center justify-center gap-1 mb-1">
+                        <stat.icon className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-bold text-base sm:text-lg">{stat.value}</span>
+                      </div>
+                      <span className="text-xs sm:text-sm text-muted-foreground">{stat.label}</span>
                     </div>
-                    <span className="text-sm text-muted-foreground">Фильмы</span>
-                  </div>
-                  <div className="text-center">
-                    <span className="font-bold text-lg">{stats.followers}</span>
-                    <div className="text-sm text-muted-foreground">Подписчики</div>
-                  </div>
-                  <div className="text-center">
-                    <span className="font-bold text-lg">{stats.following}</span>
-                    <div className="text-sm text-muted-foreground">Подписки</div>
-                  </div>
-                  <div className="text-center">
-                    <span className="font-bold text-lg">{stats.comments}</span>
-                    <div className="text-sm text-muted-foreground">Комментарии</div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="favorites" className="mt-8">
-          <TabsList className="grid w-full grid-cols-4 md:grid-cols-7">
-            <TabsTrigger value="favorites">
-              <Star className="w-4 h-4 mr-1 md:mr-2" />
+        {/* Вкладки контента */}
+        <Tabs defaultValue="favorites" className="mb-8">
+          <TabsList className="grid w-full grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-1">
+            <TabsTrigger value="favorites" className="text-xs sm:text-sm">
+              <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-2" />
               <span className="hidden sm:inline">Top 50</span>
+              <span className="sm:hidden">Top</span>
             </TabsTrigger>
-            <TabsTrigger value="lists">
-              <List className="w-4 h-4 mr-1 md:mr-2" />
+            <TabsTrigger value="lists" className="text-xs sm:text-sm">
+              <List className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-2" />
               <span className="hidden sm:inline">Списки</span>
             </TabsTrigger>
-            <TabsTrigger value="friends">
-              <Users className="w-4 h-4 mr-1 md:mr-2" />
+            <TabsTrigger value="friends" className="text-xs sm:text-sm">
+              <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-2" />
               <span className="hidden sm:inline">Друзья</span>
             </TabsTrigger>
-            <TabsTrigger value="activity">
+            <TabsTrigger value="activity" className="text-xs sm:text-sm">
               <span className="hidden sm:inline">Активность</span>
-              <span className="sm:hidden">Акт.</span>
+              <span className="sm:hidden">Акт</span>
             </TabsTrigger>
-            <TabsTrigger value="watched" className="hidden sm:inline-flex">
-              <Film className="w-4 h-4 mr-2" />
-              Просмотрено
+            <TabsTrigger value="watched" className="text-xs sm:text-sm">
+              <Film className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-2" />
+              <span className="hidden sm:inline">Просмотрено</span>
+              <span className="sm:hidden">Пр</span>
             </TabsTrigger>
-            <TabsTrigger value="customizations" className="hidden sm:inline-flex">
+            <TabsTrigger value="customizations" className="hidden lg:inline-flex text-xs sm:text-sm">
               Кастомизация
             </TabsTrigger>
-            <TabsTrigger value="stats" className="hidden md:inline-flex">
-              <BarChart3 className="w-4 h-4 mr-2" />
+            <TabsTrigger value="stats" className="hidden lg:inline-flex text-xs sm:text-sm">
+              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
               Статистика
             </TabsTrigger>
           </TabsList>
@@ -532,61 +556,88 @@ const Profile = () => {
           </TabsContent>
         </Tabs>
 
-        <div className="mt-8">
-          <Card className="card-glow">
-            <CardContent className="pt-6">
-              <h2 className="text-xl font-bold mb-6">💬 Комментарии</h2>
+        {/* Комментарии */}
+        <Card className="card-glow shadow-lg">
+          <CardContent className="pt-4 sm:pt-6">
+            <h2 className="text-lg sm:text-xl font-bold mb-4">💬 Комментарии</h2>
 
-              {currentUserId && (
-                <form onSubmit={handleSubmitComment} className="space-y-3 mb-6">
-                  <Textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Напиши комментарий..." rows={3} maxLength={500} />
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground">{newComment.length}/500</span>
-                    <Button type="submit" disabled={submittingComment || !newComment.trim()} size="sm">
-                      <Send className="w-4 h-4 mr-2" />
-                      Отправить
-                    </Button>
-                  </div>
-                </form>
-              )}
+            {currentUserId && (
+              <form onSubmit={handleSubmitComment} className="space-y-3 mb-6">
+                <Textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Напиши комментарий..."
+                  rows={3}
+                  maxLength={500}
+                  className="text-sm resize-none"
+                />
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{newComment.length}/500</span>
+                  <Button type="submit" disabled={submittingComment || !newComment.trim()} size="sm" className="w-full sm:w-auto">
+                    <Send className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                    Отправить
+                  </Button>
+                </div>
+              </form>
+            )}
 
-              <div className="space-y-4">
-                {commentsLoading ? (
-                  <p className="text-muted-foreground">Загрузка комментариев...</p>
-                ) : comments.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">Комментариев еще нет. Будь первым! 👋</p>
-                ) : (
-                  comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-3 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors">
-                      <Link to={`/profile/${comment.author_id}`}>
-                        <Avatar className="w-10 h-10 cursor-pointer hover:ring-2 ring-primary">
-                          <AvatarImage src={comment.author?.avatar_url || undefined} />
-                          <AvatarFallback>{comment.author?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
-                        </Avatar>
-                      </Link>
-
-                      <div className="flex-1 min-w-0">
-                        <Link to={`/profile/${comment.author_id}`}>
-                          <p className="font-medium hover:underline cursor-pointer">
-                            {comment.author?.display_name || comment.author?.username || "Unknown"}
-                          </p>
-                        </Link>
-                        <p className="text-xs text-muted-foreground mb-2">{formatDate(comment.created_at)}</p>
-                        <p className="text-sm break-words whitespace-pre-wrap">{comment.content}</p>
-                      </div>
-
-                      {(isOwnProfile || currentUserId === comment.author_id) && (
-                        <Button size="sm" variant="ghost" onClick={() => handleDeleteComment(comment.id)} className="text-destructive hover:bg-destructive/20">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))
-                )}
+            {/* Поиск комментариев */}
+            {comments.length > 0 && (
+              <div className="mb-4 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder="Поиск по комментариям..."
+                  value={commentFilter}
+                  onChange={(e) => setCommentFilter(e.target.value)}
+                  className="pl-9 text-sm"
+                />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+
+            {/* Список комментариев */}
+            <div className="space-y-3">
+              {commentsLoading ? (
+                <p className="text-sm text-muted-foreground py-8 text-center">Загрузка...</p>
+              ) : filteredComments.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8 text-sm">
+                  {comments.length === 0 ? "Комментариев еще нет. Будь первым! 👋" : "Комментарии не найдены"}
+                </p>
+              ) : (
+                filteredComments.map((comment) => (
+                  <div key={comment.id} className="flex gap-2 sm:gap-3 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors">
+                    <Link to={`/profile/${comment.author_id}`} className="flex-shrink-0">
+                      <Avatar className="w-8 h-8 sm:w-10 sm:h-10 cursor-pointer hover:ring-2 ring-primary">
+                        <AvatarImage src={comment.author?.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs">{comment.author?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
+                      </Avatar>
+                    </Link>
+
+                    <div className="flex-1 min-w-0">
+                      <Link to={`/profile/${comment.author_id}`}>
+                        <p className="font-medium text-sm hover:underline cursor-pointer truncate">
+                          {comment.author?.display_name || comment.author?.username || "Unknown"}
+                        </p>
+                      </Link>
+                      <p className="text-xs text-muted-foreground mb-1">{formatDate(comment.created_at)}</p>
+                      <p className="text-sm break-words whitespace-pre-wrap">{comment.content}</p>
+                    </div>
+
+                    {(isOwnProfile || currentUserId === comment.author_id) && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className="text-destructive hover:bg-destructive/20 flex-shrink-0 h-8 w-8 p-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {showEditor && (
