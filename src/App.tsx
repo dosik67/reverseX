@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,10 +18,13 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 
 import supabase from "@/utils/supabase";
+import "./App.css";
 
 const queryClient = new QueryClient();
 
 const App = () => {
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     async function checkSupabase() {
       try {
@@ -39,6 +42,17 @@ const App = () => {
 
     checkSupabase();
   }, []);
+
+  if (error) {
+    return (
+      <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a', color: 'white' }}>
+        <div style={{ textAlign: 'center' }}>
+          <h1>Error</h1>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
