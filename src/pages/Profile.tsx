@@ -598,7 +598,7 @@ const Profile = () => {
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <div className="bg-card/30 backdrop-blur-sm rounded-2xl p-1 border">
-                <TabsList className="grid w-full grid-cols-4 bg-transparent p-0 h-auto">
+                <TabsList className="grid w-full grid-cols-5 bg-transparent p-0 h-auto">
                   <TabsTrigger 
                     value="favorites" 
                     className="flex-col h-auto py-3 px-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl transition-all"
@@ -621,6 +621,14 @@ const Profile = () => {
                   >
                     <Eye className="w-4 h-4 mb-1" />
                     <span className="text-xs">Просмотрено</span>
+                  </TabsTrigger>
+
+                  <TabsTrigger 
+                    value="customizations" 
+                    className="flex-col h-auto py-3 px-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl transition-all"
+                  >
+                    <Sparkles className="w-4 h-4 mb-1" />
+                    <span className="text-xs">Оформление</span>
                   </TabsTrigger>
                   
                   <TabsTrigger 
@@ -664,6 +672,77 @@ const Profile = () => {
                     <ProfileStats userId={userId!} />
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="customizations" className="animate-fade-in space-y-6">
+                {isOwnProfile ? (
+                  <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
+                    <CardContent className="p-6">
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="font-bold mb-3 flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-primary" />
+                            Основной цвет
+                          </h3>
+                          <div className="grid grid-cols-4 gap-3">
+                            {['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#06B6D4', '#EF4444', '#6366F1'].map((color) => (
+                              <button
+                                key={color}
+                                className="w-12 h-12 rounded-lg border-2 border-transparent hover:border-foreground transition-all"
+                                style={{ backgroundColor: color }}
+                                title={color}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="font-bold mb-3">Акцентный цвет</h3>
+                          <div className="grid grid-cols-4 gap-3">
+                            {['#FF006E', '#FB5607', '#FFBE0B', '#8338EC', '#3A86FF', '#06FFA5', '#FF006E', '#FB5607'].map((color) => (
+                              <button
+                                key={color}
+                                className="w-12 h-12 rounded-lg border-2 border-transparent hover:border-foreground transition-all"
+                                style={{ backgroundColor: color }}
+                                title={color}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="font-bold mb-3">Стиль карточек</h3>
+                          <div className="grid grid-cols-2 gap-3">
+                            <Card className="p-4 cursor-pointer hover:border-primary border-2 transition-all">
+                              <p className="text-sm">Минимальный</p>
+                            </Card>
+                            <Card className="p-4 cursor-pointer hover:border-primary border-2 transition-all border-current">
+                              <p className="text-sm">С контуром</p>
+                            </Card>
+                            <Card className="p-4 cursor-pointer hover:border-primary border-2 transition-all shadow-lg">
+                              <p className="text-sm">Приподнятый</p>
+                            </Card>
+                            <Card className="p-4 cursor-pointer hover:border-primary border-2 transition-all bg-gradient-to-br from-primary/20 to-accent/20">
+                              <p className="text-sm">Градиент</p>
+                            </Card>
+                          </div>
+                        </div>
+
+                        <Button className="w-full bg-primary hover:bg-primary/90">
+                          <Send className="w-4 h-4 mr-2" />
+                          Сохранить оформление
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
+                    <CardContent className="p-12 text-center">
+                      <Sparkles className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+                      <p className="text-muted-foreground">Оформление видно только на собственном профиле</p>
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
             </Tabs>
           </div>
