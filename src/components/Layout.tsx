@@ -12,10 +12,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import supabase from "@/utils/supabase";
+import NotificationsPanelComponent from "./NotificationsPanelComponent";
+import MessagesPanelComponent from "./MessagesPanelComponent";
 
 const Layout = () => {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
 
   useEffect(() => {
     // Проверяем сессию
@@ -63,9 +67,12 @@ const Layout = () => {
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2">
-              <Film className="w-6 h-6 text-primary" />
-              <span className="text-xl font-bold gradient-text">Reverse</span>
+            <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <img 
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 80'%3E%3Ctext x='50' y='60' font-size='48' font-weight='bold' fill='%23d946ef' font-family='Arial'%3Ereverse%3C/text%3E%3C/svg%3E"
+                alt="Reverse"
+                className="h-10 w-auto"
+              />
             </Link>
 
             <div className="hidden md:flex items-center gap-1">
@@ -110,10 +117,20 @@ const Layout = () => {
             <div className="flex items-center gap-2">
               {session?.user ? (
                 <>
-                  <Button variant="ghost" size="icon">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    title="Notifications"
+                  >
                     <Bell className="w-5 h-5" />
                   </Button>
-                  <Button variant="ghost" size="icon">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => setShowMessages(!showMessages)}
+                    title="Messages"
+                  >
                     <MessageSquare className="w-5 h-5" />
                   </Button>
 
@@ -147,6 +164,20 @@ const Layout = () => {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+
+                  {/* Notifications Panel */}
+                  {showNotifications && (
+                    <NotificationsPanelComponent 
+                      onClose={() => setShowNotifications(false)}
+                    />
+                  )}
+
+                  {/* Messages Panel */}
+                  {showMessages && (
+                    <MessagesPanelComponent 
+                      onClose={() => setShowMessages(false)}
+                    />
+                  )}
                 </>
               ) : (
                 <Button asChild size="sm">

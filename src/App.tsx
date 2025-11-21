@@ -16,6 +16,7 @@ import Profile from "./pages/Profile";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
+import { AppProvider } from "@/context/AppContext";
 
 import supabase from "@/utils/supabase";
 import "./App.css";
@@ -56,29 +57,31 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
+      <AppProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
 
-            <Route element={<Layout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/movies" element={<Movies />} />
-              <Route path="/movie/:id" element={<MovieDetail />} />
-              <Route path="/series" element={<Series />} />
-              <Route path="/series/:id" element={<SeriesDetail />} />
-              <Route path="/profile/:userId" element={<Profile />} />
-              <Route path="/games" element={<PlaceholderPage title="Games" icon={Gamepad} />} />
-              <Route path="/music" element={<PlaceholderPage title="Music" icon={Music} />} />
-              <Route path="/books" element={<PlaceholderPage title="Books" icon={Book} />} />
-            </Route>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/movies" element={<Movies />} />
+                <Route path="/movie/:id" element={<MovieDetail />} />
+                <Route path="/series" element={<Series />} />
+                <Route path="/series/:id" element={<SeriesDetail />} />
+                <Route path="/profile/:userId" element={<Profile />} />
+                <Route path="/games" element={<PlaceholderPage title="Games" icon={Gamepad} />} />
+                <Route path="/music" element={<PlaceholderPage title="Music" icon={Music} />} />
+                <Route path="/books" element={<PlaceholderPage title="Books" icon={Book} />} />
+              </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AppProvider>
     </QueryClientProvider>
   );
 };

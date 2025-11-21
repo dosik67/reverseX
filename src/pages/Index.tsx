@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, TrendingUp, Sparkles } from "lucide-react";
 import MovieCard from "@/components/MovieCard";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface Movie {
   id: number;
@@ -115,6 +116,27 @@ const Index = () => {
       </div>
 
       <div className="container mx-auto px-4 py-12">
+        {/* Quick Links */}
+        <div className="mb-8 flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/movies" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              All Movies
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/series" className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Series
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/profile" className="flex items-center gap-2">
+              My Profile
+            </Link>
+          </Button>
+        </div>
+
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {[...Array(20)].map((_, i) => (
