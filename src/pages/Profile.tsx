@@ -1,4 +1,4 @@
-// src/pages/Profile.tsx — полная улучшенная версия
+// src/pages/Profile.tsx — упрощённая рабочая версия
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import supabase from "@/utils/supabase";
@@ -23,20 +23,8 @@ import {
   Send,
   Search,
   Heart,
-  Share2,
-  Trophy,
-  TrendingUp,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import ProfileEditor from "@/components/ProfileEditor";
-import FavoriteMovies from "@/components/FavoriteMovies";
-import UserActivity from "@/components/UserActivity";
-import ChatWindow from "@/components/ChatWindow";
-import TopListsManager from "@/components/TopListsManager";
-import ProfileCustomizations from "@/components/ProfileCustomizations";
-import ProfileStats from "@/components/ProfileStats";
-import { FriendsSystem } from "@/components/FriendsSystem";
-import WatchedInteractive from "@/components/WatchedInteractive";
 
 interface Profile {
   id: string;
@@ -51,8 +39,6 @@ interface Profile {
   level: number;
   xp: number;
   location: string | null;
-  created_at?: string;
-  updated_at?: string;
 }
 
 interface Comment {
@@ -67,92 +53,38 @@ interface Comment {
   };
 }
 
-interface ProfileStats {
-  movies: number;
-  followers: number;
-  following: number;
-  comments: number;
-  likes: number;
-}
-
 const Profile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   
-  // State основной профиль
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showEditor, setShowEditor] = useState(false);
-  const [showChat, setShowChat] = useState(false);
-  
-  // State взаимодействия
   const [isFollowing, setIsFollowing] = useState(false);
   const [friendshipStatus, setFriendshipStatus] = useState<string | null>(null);
-  const [isLiked, setIsLiked] = useState(false);
-  
-  // State статистика
-  const [stats, setStats] = useState<ProfileStats>({
-    movies: 0,
-    followers: 0,
-    following: 0,
-    comments: 0,
-    likes: 0,
-  });
-  
-  // State комментарии
+  const [stats, setStats] = useState({ movies: 0, followers: 0, following: 0, comments: 0, likes: 0 });
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
   const [commentFilter, setCommentFilter] = useState("");
-  
-  // State активная вкладка
-  const [activeTab, setActiveTab] = useState("favorites");
 
-  // Получить текущего пользователя
   useEffect(() => {
     getCurrentUser();
   }, []);
 
-  // Загрузить данные профиля при изменении userId
   useEffect(() => {
     if (userId) {
       fetchProfile();
       fetchStats();
       fetchComments();
-      checkFollowStatus();
-      checkFriendshipStatus();
+      if (currentUserId && currentUserId !== userId) {
+        checkFollowStatus();
+        checkFriendshipStatus();
+      }
     }
   }, [userId, currentUserId]);
-
-  // Real-time подписка на изменения дружбы
-  useEffect(() => {
-    if (!currentUserId || !userId) return;
-    
-    const channel = supabase
-      .channel(`friendship_${currentUserId}_${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "friendships" },
-        (payload) => {
-          const row: any = (payload as any).new || (payload as any).old;
-          if (!row) return;
-          const involvesPair =
-            (row.user_id === currentUserId && row.friend_id === userId) ||
-            (row.user_id === userId && row.friend_id === currentUserId);
-          if (involvesPair) {
-            checkFriendshipStatus();
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [currentUserId, userId]);
 
   const getCurrentUser = async () => {
     try {
@@ -356,11 +288,6 @@ const Profile = () => {
       navigate("/login");
       return;
     }
-    
-    if (!userId) {
-      toast.error("Ошибка: пользователь не найден");
-      return;
-    }
 
     try {
       const { data: existing } = await supabase
@@ -397,35 +324,6 @@ const Profile = () => {
     }
   };
 
-  const handleLike = async () => {
-    if (!currentUserId) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      if (isLiked) {
-        await supabase
-          .from("profile_likes")
-          .delete()
-          .eq("user_id", currentUserId)
-          .eq("profile_id", userId);
-        toast.success("❤️ Лайк удален");
-      } else {
-        await supabase
-          .from("profile_likes")
-          .insert({ user_id: currentUserId, profile_id: userId });
-        toast.success("❤️ Профиль понравился");
-      }
-
-      setIsLiked(!isLiked);
-      fetchStats();
-    } catch (err) {
-      console.error("Error liking profile:", err);
-      toast.error("Ошибка при лайке");
-    }
-  };
-
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString("ru-RU", {
       day: "numeric",
@@ -435,29 +333,21 @@ const Profile = () => {
     });
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "online":
-        return "bg-green-500";
-      case "idle":
-        return "bg-yellow-500";
-      case "dnd":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
+    const colors: { [key: string]: string } = {
+      online: "bg-green-500",
+      idle: "bg-yellow-500",
+      dnd: "bg-red-500",
+    };
+    return colors[status] || "bg-gray-500";
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
-      case "online":
-        return "🟢 Онлайн";
-      case "idle":
-        return "🟡 Неактивен";
-      case "dnd":
-        return "🔴 Не беспокоить";
-      default:
-        return "⚪ Оффлайн";
-    }
+    const statuses: { [key: string]: string } = {
+      online: "🟢 Онлайн",
+      idle: "🟡 Неактивен",
+      dnd: "🔴 Не беспокоить",
+    };
+    return statuses[status] || "⚪ Оффлайн";
   };
 
   const backgroundStyle = profile?.background_gif_url
@@ -513,7 +403,7 @@ const Profile = () => {
         <Card className="card-glow border-2 mb-6 shadow-xl" style={{ borderColor: profile.profile_color + "40" }}>
           <CardContent className="pt-4 sm:pt-6 md:pt-8">
             <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 md:gap-8 items-start">
-              {/* Аватар и статус */}
+              {/* Аватар */}
               <div className="relative flex-shrink-0">
                 <Avatar
                   className="w-24 sm:w-32 md:w-40 h-24 sm:h-32 md:h-40 border-4"
@@ -531,18 +421,18 @@ const Profile = () => {
                 />
               </div>
 
-              {/* Основная информация */}
+              {/* Информация */}
               <div className="flex-1 w-full">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
                   <div className="min-w-0">
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 truncate">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1">
                       {profile.display_name || profile.username}
                     </h1>
                     <p className="text-sm sm:text-base text-muted-foreground mb-3">@{profile.username}</p>
 
                     <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm">
                       <span
-                        className="px-2 sm:px-3 py-1 rounded-full font-medium text-white inline-flex items-center gap-1 whitespace-nowrap"
+                        className="px-2 sm:px-3 py-1 rounded-full font-medium text-white inline-flex items-center gap-1"
                         style={{ backgroundColor: profile.profile_color }}
                       >
                         <Sparkles className="w-3 h-3" />
@@ -551,19 +441,19 @@ const Profile = () => {
                       <span className="text-muted-foreground">{profile.xp} XP</span>
                       {profile.location && (
                         <div className="flex items-center gap-1 text-muted-foreground">
-                          <MapPin className="w-3 sm:w-4 h-3 sm:h-4 flex-shrink-0" />
-                          <span className="truncate">{profile.location}</span>
+                          <MapPin className="w-3 sm:w-4 h-3 sm:h-4" />
+                          {profile.location}
                         </div>
                       )}
                       <span className="text-xs">{getStatusText(profile.status)}</span>
                     </div>
                   </div>
 
-                  {/* Кнопки действия */}
+                  {/* Кнопки */}
                   <div className="flex gap-2 flex-wrap w-full sm:w-auto">
                     {isOwnProfile ? (
                       <Button
-                        onClick={() => setShowEditor(true)}
+                        onClick={() => toast.info("Редактирование в разработке")}
                         className="flex-1 sm:flex-none"
                         style={{ backgroundColor: profile.profile_color }}
                       >
@@ -575,7 +465,7 @@ const Profile = () => {
                           {isFollowing ? (
                             <>
                               <UserCheck className="w-4 h-4 mr-2" />
-                              <span className="hidden sm:inline">Подписано</span>
+                              Подписано
                             </>
                           ) : (
                             <>
@@ -585,57 +475,33 @@ const Profile = () => {
                           )}
                         </Button>
 
-                        <Button onClick={handleLike} variant={isLiked ? "default" : "outline"} size="icon" className="flex-shrink-0">
-                          <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
+                        <Button onClick={handleFriendRequest} variant="outline" className="flex-1 sm:flex-none">
+                          <Users className="w-4 h-4 mr-2" />
+                          <span className="hidden sm:inline">Добавить</span>
                         </Button>
-
-                        <Button onClick={() => setShowChat(true)} variant="outline" className="flex-1 sm:flex-none">
-                          <MessageSquare className="w-4 h-4 mr-2" />
-                          Сообщение
-                        </Button>
-
-                        {!friendshipStatus && (
-                          <Button onClick={handleFriendRequest} variant="outline" className="flex-1 sm:flex-none">
-                            <Users className="w-4 h-4 mr-2" />
-                            <span className="hidden sm:inline">Добавить</span>
-                          </Button>
-                        )}
-
-                        {friendshipStatus === "pending" && (
-                          <Button variant="outline" disabled className="flex-1 sm:flex-none">
-                            ⏳ Ожидание...
-                          </Button>
-                        )}
-
-                        {friendshipStatus === "accepted" && (
-                          <Button variant="outline" disabled className="flex-1 sm:flex-none">
-                            <Users className="w-4 h-4 mr-2" />
-                            <span className="hidden sm:inline">Друзья</span>
-                          </Button>
-                        )}
                       </>
                     )}
                   </div>
                 </div>
 
                 {profile.bio && (
-                  <p className="text-sm text-muted-foreground mb-6 whitespace-pre-wrap line-clamp-4 leading-relaxed">
+                  <p className="text-sm text-muted-foreground mb-6 whitespace-pre-wrap">
                     {profile.bio}
                   </p>
                 )}
 
                 {/* Статистика */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
                   {[
                     { icon: Film, label: "Фильмы", value: stats.movies },
                     { icon: Users, label: "Подписчики", value: stats.followers },
-                    { icon: TrendingUp, label: "Подписки", value: stats.following },
+                    { icon: Users, label: "Подписки", value: stats.following },
                     { icon: MessageSquare, label: "Комментарии", value: stats.comments },
                     { icon: Heart, label: "Лайки", value: stats.likes },
                   ].map((stat) => (
                     <div key={stat.label} className="text-center">
                       <div className="flex items-center justify-center gap-1 mb-1">
-                        <stat.icon className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
+                        <stat.icon className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span className="font-bold text-base sm:text-lg">{stat.value}</span>
                       </div>
                       <span className="text-xs sm:text-sm text-muted-foreground">{stat.label}</span>
@@ -647,69 +513,6 @@ const Profile = () => {
           </CardContent>
         </Card>
 
-        {/* Вкладки контента */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid w-full grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-1 h-auto p-1">
-            <TabsTrigger value="favorites" className="text-xs sm:text-sm py-2">
-              <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-2" />
-              <span className="hidden sm:inline">Top 50</span>
-            </TabsTrigger>
-            <TabsTrigger value="lists" className="text-xs sm:text-sm py-2">
-              <List className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-2" />
-              <span className="hidden sm:inline">Списки</span>
-            </TabsTrigger>
-            <TabsTrigger value="friends" className="text-xs sm:text-sm py-2">
-              <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-2" />
-              <span className="hidden sm:inline">Друзья</span>
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="text-xs sm:text-sm py-2">
-              <span className="hidden sm:inline">Активность</span>
-              <span className="sm:hidden">Акт</span>
-            </TabsTrigger>
-            <TabsTrigger value="watched" className="text-xs sm:text-sm py-2">
-              <Film className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-2" />
-              <span className="hidden sm:inline">Просмотрено</span>
-            </TabsTrigger>
-            <TabsTrigger value="customizations" className="hidden lg:inline-flex text-xs py-2">
-              ✨ Кастомизация
-            </TabsTrigger>
-            <TabsTrigger value="stats" className="hidden lg:inline-flex text-xs py-2">
-              <BarChart3 className="w-3 h-3 mr-2" />
-              Статистика
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="mt-6 animate-fade-in">
-            <TabsContent value="favorites" className="m-0">
-              <FavoriteMovies userId={userId!} isOwnProfile={isOwnProfile} />
-            </TabsContent>
-
-            <TabsContent value="lists" className="m-0">
-              <TopListsManager userId={userId!} isOwnProfile={isOwnProfile} />
-            </TabsContent>
-
-            <TabsContent value="friends" className="m-0">
-              <FriendsSystem userId={userId!} currentUserId={currentUserId} onMessage={() => setShowChat(true)} />
-            </TabsContent>
-
-            <TabsContent value="watched" className="m-0">
-              <WatchedInteractive userId={userId!} />
-            </TabsContent>
-
-            <TabsContent value="activity" className="m-0">
-              <UserActivity userId={userId!} showOnlyWatched={false} />
-            </TabsContent>
-
-            <TabsContent value="customizations" className="m-0">
-              <ProfileCustomizations level={profile.level} />
-            </TabsContent>
-
-            <TabsContent value="stats" className="m-0">
-              <ProfileStats userId={userId!} />
-            </TabsContent>
-          </div>
-        </Tabs>
-
         {/* Комментарии */}
         <Card className="card-glow shadow-xl">
           <CardHeader>
@@ -719,7 +522,7 @@ const Profile = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Форма добавления комментария */}
+            {/* Форма комментария */}
             {currentUserId && !isOwnProfile ? (
               <form onSubmit={handleSubmitComment} className="space-y-3">
                 <Textarea
@@ -743,26 +546,21 @@ const Profile = () => {
                   </Button>
                 </div>
               </form>
-            ) : isOwnProfile && currentUserId ? (
-              <div className="p-4 rounded-lg bg-secondary/30 text-center">
-                <p className="text-sm text-muted-foreground">Ты не можешь комментировать свой профиль</p>
-              </div>
             ) : (
               <div className="p-4 rounded-lg bg-secondary/30 text-center">
-                <p className="text-sm text-muted-foreground mb-3">Войди, чтобы оставить комментарий</p>
-                <Button size="sm" onClick={() => navigate("/login")} className="w-full">
-                  Войти
-                </Button>
+                <p className="text-sm text-muted-foreground">
+                  {isOwnProfile ? "Ты не можешь комментировать свой профиль" : "Войди, чтобы оставить комментарий"}
+                </p>
               </div>
             )}
 
-            {/* Поиск комментариев */}
+            {/* Поиск */}
             {comments.length > 0 && (
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="Поиск по комментариям..."
+                  placeholder="Поиск комментариев..."
                   value={commentFilter}
                   onChange={(e) => setCommentFilter(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -770,59 +568,40 @@ const Profile = () => {
               </div>
             )}
 
-            {/* Список комментариев */}
+            {/* Комментарии */}
             <div className="space-y-3">
               {commentsLoading ? (
-                <div className="text-center py-8">
-                  <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Загрузка комментариев...</p>
-                </div>
+                <p className="text-sm text-muted-foreground text-center py-8">⏳ Загрузка...</p>
               ) : filteredComments.length === 0 ? (
-                <div className="text-center py-12">
-                  <MessageSquare className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-                  <p className="text-muted-foreground text-sm">
-                    {comments.length === 0 ? "Комментариев еще нет. Будь первым! 👋" : "Комментарии не найдены"}
-                  </p>
-                </div>
+                <p className="text-center text-muted-foreground py-12 text-sm">
+                  {comments.length === 0 ? "Комментариев еще нет 👋" : "Не найдено"}
+                </p>
               ) : (
                 filteredComments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    className="flex gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors duration-200"
-                  >
-                    <Link to={`/profile/${comment.author_id}`} className="flex-shrink-0">
-                      <Avatar className="w-8 h-8 sm:w-10 sm:h-10 cursor-pointer hover:ring-2 ring-primary transition-all">
-                        <AvatarImage src={comment.author?.avatar_url || undefined} />
-                        <AvatarFallback className="text-xs">
-                          {comment.author?.username?.[0]?.toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Link>
+                  <div key={comment.id} className="flex gap-2 sm:gap-3 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition">
+                    <Avatar className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
+                      <AvatarImage src={comment.author?.avatar_url || undefined} />
+                      <AvatarFallback className="text-xs">
+                        {comment.author?.username?.[0]?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <Link to={`/profile/${comment.author_id}`}>
-                            <p className="font-medium text-sm hover:underline cursor-pointer truncate">
-                              {comment.author?.display_name || comment.author?.username || "Unknown"}
-                            </p>
-                          </Link>
-                          <p className="text-xs text-muted-foreground">{formatDate(comment.created_at)}</p>
-                        </div>
-
-                        {(isOwnProfile || currentUserId === comment.author_id) && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDeleteComment(comment.id)}
-                            className="text-destructive hover:bg-destructive/20 flex-shrink-0 h-7 w-7 p-0"
-                          >
-                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                          </Button>
-                        )}
-                      </div>
-                      <p className="text-sm break-words whitespace-pre-wrap mt-2">{comment.content}</p>
+                      <p className="font-medium text-sm">{comment.author?.display_name || comment.author?.username}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(comment.created_at)}</p>
+                      <p className="text-sm break-words whitespace-pre-wrap mt-1">{comment.content}</p>
                     </div>
+
+                    {(isOwnProfile || currentUserId === comment.author_id) && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className="text-destructive flex-shrink-0 h-8 w-8 p-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 ))
               )}
@@ -830,27 +609,6 @@ const Profile = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Модальные окна */}
-      {showEditor && (
-        <ProfileEditor
-          profile={profile}
-          open={showEditor}
-          onClose={() => setShowEditor(false)}
-          onUpdate={fetchProfile}
-        />
-      )}
-
-      {showChat && !isOwnProfile && profile && (
-        <ChatWindow
-          open={showChat}
-          onClose={() => setShowChat(false)}
-          friendId={userId!}
-          friendUsername={profile.username}
-          friendAvatar={profile.avatar_url}
-          currentUserId={currentUserId!}
-        />
-      )}
     </div>
   );
 };
