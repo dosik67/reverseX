@@ -108,17 +108,20 @@ const SeriesCard = ({ series }: { series: Series }) => {
           toast.success('Removed from Top 50');
         } else {
           // Get or create top list
-          const { data: existingList } = await supabase
+          let topListId: string | undefined;
+          
+          const { data: existingList, error: listError } = await supabase
             .from('top_lists')
             .select('id')
             .eq('user_id', currentUserId)
             .eq('media_type', 'anime')
             .single();
 
-          let topListId = existingList?.id;
-
-          if (!topListId) {
-            const { data: newList } = await supabase
+          if (existingList) {
+            topListId = existingList.id;
+          } else if (!listError || listError.code === 'PGRST116') {
+            // List doesn't exist, create it
+            const { data: newList, error: createError } = await supabase
               .from('top_lists')
               .insert({
                 user_id: currentUserId,
@@ -128,7 +131,10 @@ const SeriesCard = ({ series }: { series: Series }) => {
               .select('id')
               .single();
 
+            if (createError) throw createError;
             topListId = newList?.id;
+          } else {
+            throw listError;
           }
 
           if (topListId) {
@@ -142,13 +148,15 @@ const SeriesCard = ({ series }: { series: Series }) => {
 
             const nextRank = (items?.[0]?.rank || 0) + 1;
 
-            await supabase.from('top_list_items').insert({
+            const { error: insertError } = await supabase.from('top_list_items').insert({
               top_list_id: topListId,
               item_id: series.id.toString(),
               rank: nextRank,
               title: series.title,
               poster_url: series.poster,
             });
+
+            if (insertError) throw insertError;
           }
 
           setIsFavorite(true);
