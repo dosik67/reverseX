@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Star, Heart } from "lucide-react";
+import { Star, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import supabase from "@/utils/supabase";
 import { toast } from "sonner";
@@ -16,7 +16,6 @@ interface Series {
 const FALLBACK_IMAGE = 'https://placehold.co/342x513/1a1a2e/ffffff?text=No+Image';
 
 const SeriesCard = ({ series }: { series: Series }) => {
-  const [isFavorite, setIsFavorite] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -31,145 +30,85 @@ const SeriesCard = ({ series }: { series: Series }) => {
     }
   }, []);
 
-  const checkIfFavorite = useCallback(async (userId?: string | null) => {
-    const userIdToUse = userId || currentUserId;
-    if (!userIdToUse) return;
-
-    try {
-      const { data: topList } = await supabase
-        .from('top_lists')
-        .select('id')
-        .eq('user_id', userIdToUse)
-        .eq('media_type', 'anime')
-        .single();
-
-      if (!topList) {
-        setIsFavorite(false);
-        return;
-      }
-
-      const { data: item } = await supabase
-        .from('top_list_items')
-        .select('id')
-        .eq('top_list_id', topList.id)
-        .eq('item_id', series.id.toString())
-        .single();
-
-      setIsFavorite(!!item);
-    } catch (error) {
-      if ((error as any).code !== 'PGRST116') {
-        console.error('Error checking favorite:', error);
-      }
-      setIsFavorite(false);
-    }
-  }, [series.id, currentUserId]);
-
   useEffect(() => {
-    const initializeUser = async () => {
-      const userId = await getCurrentUser();
-      if (userId) {
-        checkIfFavorite(userId);
-      }
-    };
+    getCurrentUser();
+  }, [getCurrentUser]);
 
-    initializeUser();
-  }, [getCurrentUser, checkIfFavorite]);
-
-  const handleAddToFavorites = useCallback(
+  const handleAddToTop50 = useCallback(
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
       if (!currentUserId) {
-        toast.error('Please sign in to add favorites');
+        toast.error('Please sign in to add to Top 50');
         return;
       }
 
       setLoading(true);
       try {
-        if (isFavorite) {
-          // Remove from top list
-          const { data: topList } = await supabase
+        let topListId: string | undefined;
+
+        const { data: existingList, error: listError } = await supabase
+          .from('top_lists')
+          .select('id')
+          .eq('user_id', currentUserId)
+          .eq('media_type', 'anime')
+          .single();
+
+        if (existingList) {
+          topListId = existingList.id;
+        } else if (!listError || listError.code === 'PGRST116') {
+          const { data: newList, error: createError } = await supabase
             .from('top_lists')
+            .insert({ user_id: currentUserId, title: 'Top 50 Anime', media_type: 'anime' })
             .select('id')
-            .eq('user_id', currentUserId)
-            .eq('media_type', 'anime')
             .single();
 
-          if (topList) {
-            await supabase
-              .from('top_list_items')
-              .delete()
-              .eq('top_list_id', topList.id)
-              .eq('item_id', series.id.toString());
-          }
-
-          setIsFavorite(false);
-          toast.success('Removed from Top 50');
-        } else {
-          // Get or create top list
-          let topListId: string | undefined;
-          
-          const { data: existingList, error: listError } = await supabase
-            .from('top_lists')
-            .select('id')
-            .eq('user_id', currentUserId)
-            .eq('media_type', 'anime')
-            .single();
-
-          if (existingList) {
-            topListId = existingList.id;
-          } else if (!listError || listError.code === 'PGRST116') {
-            // List doesn't exist, create it
-            const { data: newList, error: createError } = await supabase
-              .from('top_lists')
-              .insert({
-                user_id: currentUserId,
-                title: 'Top 50 Series',
-                media_type: 'anime',
-              })
-              .select('id')
-              .single();
-
-            if (createError) throw createError;
-            topListId = newList?.id;
-          } else {
-            throw listError;
-          }
-
-          if (topListId) {
-            // Get next rank
-            const { data: items } = await supabase
-              .from('top_list_items')
-              .select('rank')
-              .eq('top_list_id', topListId)
-              .order('rank', { ascending: false })
-              .limit(1);
-
-            const nextRank = (items?.[0]?.rank || 0) + 1;
-
-            const { error: insertError } = await supabase.from('top_list_items').insert({
-              top_list_id: topListId,
-              item_id: series.id.toString(),
-              rank: nextRank,
-              title: series.title,
-              poster_url: series.poster,
-            });
-
-            if (insertError) throw insertError;
-          }
-
-          setIsFavorite(true);
-          toast.success('Added to Top 50');
+          if (createError) throw createError;
+          topListId = newList?.id;
         }
+
+        if (!topListId) throw new Error('Failed to create or find top list');
+
+        const { data: existingItem } = await supabase
+          .from('top_list_items')
+          .select('id')
+          .eq('top_list_id', topListId)
+          .eq('item_id', series.id.toString())
+          .single();
+
+        if (existingItem) {
+          toast.info('Already in Top 50');
+          return;
+        }
+
+        const { data: items } = await supabase
+          .from('top_list_items')
+          .select('rank')
+          .eq('top_list_id', topListId)
+          .order('rank', { ascending: false })
+          .limit(1);
+
+        const nextRank = (items?.[0]?.rank || 0) + 1;
+
+        const { error: insertError } = await supabase.from('top_list_items').insert({
+          top_list_id: topListId,
+          item_id: series.id.toString(),
+          rank: nextRank,
+          title: series.title,
+          poster_url: series.poster,
+        });
+
+        if (insertError) throw insertError;
+        toast.success('Added to Top 50');
       } catch (error) {
         console.error(error);
-        toast.error('Failed to update Top 50');
+        toast.error('Failed to add to Top 50');
       } finally {
         setLoading(false);
       }
     },
-    [currentUserId, isFavorite, series.id]
+    [currentUserId, series.id]
   );
 
   const posterUrl = useMemo(() => {
@@ -191,15 +130,12 @@ const SeriesCard = ({ series }: { series: Series }) => {
             }}
           />
           <button
-            onClick={handleAddToFavorites}
+            onClick={handleAddToTop50}
             disabled={loading}
             className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 disabled:opacity-50"
+            title="Add to Top 50"
           >
-            <Heart
-              className="w-5 h-5 transition-colors"
-              fill={isFavorite ? "#ef4444" : "none"}
-              color={isFavorite ? "#ef4444" : "white"}
-            />
+            <Plus className="w-5 h-5 transition-colors text-white" />
           </button>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="absolute bottom-0 left-0 right-0 p-3 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
