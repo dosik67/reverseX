@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import SeriesCard from "@/components/SeriesCard";
+import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useTranslation } from "react-i18next";
 
 interface Series {
@@ -19,6 +20,7 @@ const SERIES_PER_PAGE = 20;
 
 const Series = () => {
   const { t } = useTranslation();
+  useScrollRestore();
   const [allSeries, setAllSeries] = useState<Series[]>([]);
   const [displaySeries, setDisplaySeries] = useState<Series[]>([]);
   const [searchQuery, setSearchQuery] = useState("");

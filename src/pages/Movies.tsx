@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import MovieCard from "@/components/MovieCard";
+import { useScrollRestore } from "@/hooks/useScrollRestore";
 
 interface Movie {
   id: number;
@@ -20,6 +21,7 @@ const MOVIES_PER_PAGE = 20;
 
 const Movies = () => {
   const { t } = useTranslation();
+  useScrollRestore();
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [displayMovies, setDisplayMovies] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState("");

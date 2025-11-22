@@ -83,18 +83,11 @@ const SeriesCard = ({ series }: { series: Series }) => {
           setIsFavorite(false);
           toast.success('Removed from favorites');
         } else {
-          const { data: maxRank } = await supabase
-            .from('favorite_movies')
-            .select('rank')
-            .eq('user_id', currentUserId)
-            .order('rank', { ascending: false })
-            .limit(1)
-            .single();
-
+          // Add to favorites - use timestamp for instant rank
           await supabase.from('favorite_movies').insert({
             user_id: currentUserId,
             movie_id: series.id,
-            rank: (maxRank?.rank || 0) + 1,
+            rank: Date.now(),
           });
           setIsFavorite(true);
           toast.success('Added to favorites');
