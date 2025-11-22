@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Star, Heart } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import supabase from "@/utils/supabase";
 import { toast } from "sonner";
 
@@ -16,120 +15,146 @@ interface Movie {
   description?: string;
 }
 
+const FALLBACK_IMAGE = 'https://placehold.co/342x513/1a1a2e/ffffff?text=No+Image';
+
 const MovieCard = ({ movie }: { movie: Movie }) => {
-  const [imageError, setImageError] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    getCurrentUser();
-    checkIfFavorite();
-  }, [movie.id]);
-
-  const getCurrentUser = async () => {
-    const { data } = await supabase.auth.getUser();
-    setCurrentUserId(data.user?.id || null);
-  };
-
-  const checkIfFavorite = async () => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) return;
-
-    const { data: favorite } = await supabase
-      .from('favorite_movies')
-      .select('id')
-      .eq('user_id', data.user.id)
-      .eq('movie_id', movie.id)
-      .single();
-
-    setIsFavorite(!!favorite);
-  };
-
-  const handleAddToFavorites = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!currentUserId) {
-      toast.error('Please sign in to add favorites');
-      return;
-    }
-
-    setLoading(true);
+  // Memoize the current user getter
+  const getCurrentUser = useCallback(async () => {
     try {
-      if (isFavorite) {
-        // Remove from favorites
-        await supabase
-          .from('favorite_movies')
-          .delete()
-          .eq('user_id', currentUserId)
-          .eq('movie_id', movie.id);
-
-        setIsFavorite(false);
-        toast.success('Removed from favorites');
-      } else {
-        // Add to favorites
-        const { data: maxRank } = await supabase
-          .from('favorite_movies')
-          .select('rank')
-          .eq('user_id', currentUserId)
-          .order('rank', { ascending: false })
-          .limit(1)
-          .single();
-
-        await supabase.from('favorite_movies').insert({
-          user_id: currentUserId,
-          movie_id: movie.id,
-          rank: (maxRank?.rank || 0) + 1,
-        });
-
-        setIsFavorite(true);
-        toast.success('Added to favorites');
-      }
+      const { data } = await supabase.auth.getUser();
+      setCurrentUserId(data.user?.id || null);
+      return data.user?.id;
     } catch (error) {
-      console.error(error);
-      toast.error('Failed to update favorites');
-    } finally {
-      setLoading(false);
+      console.error("Error getting user:", error);
+      return null;
     }
-  };
+  }, []);
 
-  const getPosterUrl = () => {
-    if (!movie.poster || imageError) {
-      return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450"%3E%3Crect fill="%231a1a2e" width="300" height="450"/%3E%3Ctext x="150" y="225" font-size="20" fill="%23666" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+  // Memoize the favorite checker
+  const checkIfFavorite = useCallback(async (userId?: string | null) => {
+    const userIdToUse = userId || currentUserId;
+    if (!userIdToUse) return;
+
+    try {
+      const { data: favorite } = await supabase
+        .from('favorite_movies')
+        .select('id')
+        .eq('user_id', userIdToUse)
+        .eq('movie_id', movie.id)
+        .single();
+
+      setIsFavorite(!!favorite);
+    } catch (error) {
+      // Handle not found errors gracefully
+      if ((error as any).code !== 'PGRST116') {
+        console.error('Error checking favorite:', error);
+      }
     }
-    return movie.poster;
-  };
+  }, [movie.id, currentUserId]);
+
+  // Initialize user and check favorite status
+  useEffect(() => {
+    const initializeUser = async () => {
+      const userId = await getCurrentUser();
+      if (userId) {
+        checkIfFavorite(userId);
+      }
+    };
+
+    initializeUser();
+  }, [getCurrentUser, checkIfFavorite]);
+
+  const handleAddToFavorites = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!currentUserId) {
+        toast.error('Please sign in to add favorites');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        if (isFavorite) {
+          // Remove from favorites
+          await supabase
+            .from('favorite_movies')
+            .delete()
+            .eq('user_id', currentUserId)
+            .eq('movie_id', movie.id);
+
+          setIsFavorite(false);
+          toast.success('Removed from favorites');
+        } else {
+          // Add to favorites
+          const { data: maxRank } = await supabase
+            .from('favorite_movies')
+            .select('rank')
+            .eq('user_id', currentUserId)
+            .order('rank', { ascending: false })
+            .limit(1)
+            .single();
+
+          await supabase.from('favorite_movies').insert({
+            user_id: currentUserId,
+            movie_id: movie.id,
+            rank: (maxRank?.rank || 0) + 1,
+          });
+
+          setIsFavorite(true);
+          toast.success('Added to favorites');
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('Failed to update favorites');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [currentUserId, isFavorite, movie.id]
+  );
+
+  // Memoize poster URL
+  const posterUrl = useMemo(() => {
+    if (!movie.poster) return FALLBACK_IMAGE;
+    // Use smaller image size from TMDB for faster loading
+    return movie.poster.replace('/w500/', '/w342/');
+  }, [movie.poster]);
 
   return (
     <Link to={`/movie/${movie.id}`}>
       <Card className="overflow-hidden hover-lift cursor-pointer group relative">
-        <div className="aspect-[2/3] relative overflow-hidden">
+        <div className="aspect-[2/3] relative overflow-hidden bg-muted">
           <img
-            src={getPosterUrl()}
+            src={posterUrl}
             alt={movie.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-            onError={() => setImageError(true)}
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.src = FALLBACK_IMAGE;
+            }}
           />
+          <button
+            onClick={handleAddToFavorites}
+            disabled={loading}
+            className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 disabled:opacity-50"
+          >
+            <Heart
+              className="w-5 h-5 transition-colors"
+              fill={isFavorite ? "#ef4444" : "none"}
+              color={isFavorite ? "#ef4444" : "white"}
+            />
+          </button>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
-          {/* Favorite Button */}
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={handleAddToFavorites}
-              disabled={loading}
-              className={`${isFavorite ? 'text-red-500' : 'text-white'}`}
-            >
-              <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
-            </Button>
-          </div>
-
           <div className="absolute bottom-0 left-0 right-0 p-3 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
             <div className="flex items-center gap-1 text-yellow-400 mb-1">
               <Star className="w-4 h-4 fill-current" />
-              <span className="text-sm font-semibold">{movie.rating.toFixed(1)}</span>
+              <span className="text-sm font-semibold">{Number(movie.rating).toFixed(1)}</span>
             </div>
             <h3 className="text-sm font-semibold text-white line-clamp-2">{movie.title}</h3>
             <p className="text-xs text-white/70">{movie.year}</p>

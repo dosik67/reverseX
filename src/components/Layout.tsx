@@ -158,6 +158,12 @@ const Layout = () => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to={`/profile/${session.user.id}/edit`} className="flex items-center gap-2">
+                          <Settings className="w-4 h-4" />
+                          Edit Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/settings" className="flex items-center gap-2">
                           <Settings className="w-4 h-4" />
                           Settings
