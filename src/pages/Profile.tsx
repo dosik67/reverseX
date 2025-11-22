@@ -36,6 +36,7 @@ import {
 import { Link } from "react-router-dom";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import FavoriteMovies from "@/components/FavoriteMovies";
+import Top50Profile from "@/components/Top50Profile";
 
 // Интерфейсы
 interface Profile {
@@ -636,11 +637,7 @@ const Profile = () => {
 
               {/* Tab Contents */}
               <TabsContent value="favorites" className="animate-fade-in space-y-6">
-                <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg">
-                  <CardContent className="p-6">
-                    <FavoriteMovies userId={userId!} isOwnProfile={isOwnProfile} />
-                  </CardContent>
-                </Card>
+                <Top50Profile userId={userId!} />
               </TabsContent>
 
               <TabsContent value="watched" className="animate-fade-in space-y-6">

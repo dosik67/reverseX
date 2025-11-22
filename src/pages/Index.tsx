@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, TrendingUp, Sparkles, Star } from "lucide-react";
+import { Search, TrendingUp, Sparkles } from "lucide-react";
 import MovieCard from "@/components/MovieCard";
-import Top50Modal from "@/components/Top50Modal";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -35,7 +34,6 @@ const Index = () => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
-  const [showTop50, setShowTop50] = useState(false);
 
   useEffect(() => {
     fetchMovies();
@@ -120,15 +118,6 @@ const Index = () => {
       <div className="container mx-auto px-4 py-12">
         {/* Quick Links */}
         <div className="mb-8 flex flex-wrap gap-2">
-          <Button 
-            variant="default" 
-            size="sm" 
-            onClick={() => setShowTop50(true)}
-            className="flex items-center gap-2 bg-gradient-to-r from-primary to-accent"
-          >
-            <Star className="w-4 h-4" />
-            Top 50
-          </Button>
           <Button variant="outline" size="sm" asChild>
             <Link to="/movies" className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
@@ -147,8 +136,6 @@ const Index = () => {
             </Link>
           </Button>
         </div>
-
-        <Top50Modal open={showTop50} onOpenChange={setShowTop50} />
 
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
