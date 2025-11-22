@@ -21,13 +21,15 @@ const MOVIES_PER_PAGE = 20;
 
 const Movies = () => {
   const { t } = useTranslation();
-  useScrollRestore();
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [displayMovies, setDisplayMovies] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+
+  // Restore scroll after content loads (50ms delay for DOM to render)
+  useScrollRestore(!loading ? 0 : 50);
 
   useEffect(() => {
     fetchMovies();

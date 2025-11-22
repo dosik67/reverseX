@@ -20,13 +20,15 @@ const SERIES_PER_PAGE = 20;
 
 const Series = () => {
   const { t } = useTranslation();
-  useScrollRestore();
   const [allSeries, setAllSeries] = useState<Series[]>([]);
   const [displaySeries, setDisplaySeries] = useState<Series[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+
+  // Restore scroll after content loads (50ms delay for DOM to render)
+  useScrollRestore(!loading ? 0 : 50);
 
   useEffect(() => {
     fetchSeries();
