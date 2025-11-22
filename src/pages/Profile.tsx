@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProfileSidebar from "@/components/ProfileSidebar";
+import FavoriteMovies from "@/components/FavoriteMovies";
 
 // Интерфейсы
 interface Profile {
@@ -65,14 +66,6 @@ interface Comment {
 }
 
 // Временные компоненты-заглушки (замените на ваши реальные компоненты)
-const FavoriteMovies = ({ userId, isOwnProfile }: { userId: string; isOwnProfile: boolean }) => (
-  <div className="text-center py-12">
-    <Star className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-    <h3 className="text-xl font-semibold mb-2">Любимые фильмы</h3>
-    <p className="text-muted-foreground">Раздел в разработке</p>
-  </div>
-);
-
 const UserActivity = ({ userId, showOnlyWatched }: { userId: string; showOnlyWatched: boolean }) => (
   <div className="text-center py-12">
     <Calendar className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />

@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Star, Heart } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import supabase from "@/utils/supabase";
+import { toast } from "sonner";
 
 interface Series {
   id: number;
@@ -17,7 +17,6 @@ const SeriesCard = ({ series }: { series: Series }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     getCurrentUser();
@@ -56,11 +55,7 @@ const SeriesCard = ({ series }: { series: Series }) => {
     e.stopPropagation();
 
     if (!currentUserId) {
-      toast({
-        title: "Error",
-        description: "Please sign in to add favorites",
-        variant: "destructive",
-      });
+      toast.error('Please sign in to add favorites');
       return;
     }
 
@@ -74,10 +69,7 @@ const SeriesCard = ({ series }: { series: Series }) => {
           .eq('user_id', currentUserId)
           .eq('movie_id', series.id);
         setIsFavorite(false);
-        toast({
-          title: "Success",
-          description: "Removed from favorites",
-        });
+        toast.success('Removed from favorites');
       } else {
         // Add to favorites
         const { data: maxRank } = await supabase
@@ -94,22 +86,18 @@ const SeriesCard = ({ series }: { series: Series }) => {
           rank: (maxRank?.rank || 0) + 1,
         });
         setIsFavorite(true);
-        toast({
-          title: "Success",
-          description: "Added to favorites",
-        });
+        toast.success('Added to favorites');
       }
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error",
-        description: "Failed to update favorites",
-        variant: "destructive",
-      });
+      toast.error('Failed to update favorites');
     } finally {
       setLoading(false);
     }
   };
+
+  return (
+    <Link to={`/series/${series.id}`}>
       <Card className="overflow-hidden hover-lift cursor-pointer group relative">
         <div className="aspect-[2/3] relative overflow-hidden">
           <img
