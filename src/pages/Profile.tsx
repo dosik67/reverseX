@@ -637,7 +637,7 @@ const Profile = () => {
 
               {/* Tab Contents */}
               <TabsContent value="favorites" className="animate-fade-in space-y-6">
-                <Top50Profile userId={userId!} />
+                <Top50Profile userId={userId!} isOwnProfile={isOwnProfile} />
               </TabsContent>
 
               <TabsContent value="watched" className="animate-fade-in space-y-6">
