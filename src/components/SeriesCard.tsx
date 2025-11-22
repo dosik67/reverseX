@@ -36,18 +36,31 @@ const SeriesCard = ({ series }: { series: Series }) => {
     if (!userIdToUse) return;
 
     try {
-      const { data: favorite } = await supabase
-        .from('favorite_movies')
+      const { data: topList } = await supabase
+        .from('top_lists')
         .select('id')
         .eq('user_id', userIdToUse)
-        .eq('movie_id', series.id)
+        .eq('media_type', 'anime')
         .single();
 
-      setIsFavorite(!!favorite);
+      if (!topList) {
+        setIsFavorite(false);
+        return;
+      }
+
+      const { data: item } = await supabase
+        .from('top_list_items')
+        .select('id')
+        .eq('top_list_id', topList.id)
+        .eq('item_id', series.id.toString())
+        .single();
+
+      setIsFavorite(!!item);
     } catch (error) {
       if ((error as any).code !== 'PGRST116') {
         console.error('Error checking favorite:', error);
       }
+      setIsFavorite(false);
     }
   }, [series.id, currentUserId]);
 
@@ -75,26 +88,75 @@ const SeriesCard = ({ series }: { series: Series }) => {
       setLoading(true);
       try {
         if (isFavorite) {
-          await supabase
-            .from('favorite_movies')
-            .delete()
+          // Remove from top list
+          const { data: topList } = await supabase
+            .from('top_lists')
+            .select('id')
             .eq('user_id', currentUserId)
-            .eq('movie_id', series.id);
+            .eq('media_type', 'anime')
+            .single();
+
+          if (topList) {
+            await supabase
+              .from('top_list_items')
+              .delete()
+              .eq('top_list_id', topList.id)
+              .eq('item_id', series.id.toString());
+          }
+
           setIsFavorite(false);
-          toast.success('Removed from favorites');
+          toast.success('Removed from Top 50');
         } else {
-          // Add to favorites - use timestamp for instant rank
-          await supabase.from('favorite_movies').insert({
-            user_id: currentUserId,
-            movie_id: series.id,
-            rank: Date.now(),
-          });
+          // Get or create top list
+          const { data: existingList } = await supabase
+            .from('top_lists')
+            .select('id')
+            .eq('user_id', currentUserId)
+            .eq('media_type', 'anime')
+            .single();
+
+          let topListId = existingList?.id;
+
+          if (!topListId) {
+            const { data: newList } = await supabase
+              .from('top_lists')
+              .insert({
+                user_id: currentUserId,
+                title: 'Top 50 Series',
+                media_type: 'anime',
+              })
+              .select('id')
+              .single();
+
+            topListId = newList?.id;
+          }
+
+          if (topListId) {
+            // Get next rank
+            const { data: items } = await supabase
+              .from('top_list_items')
+              .select('rank')
+              .eq('top_list_id', topListId)
+              .order('rank', { ascending: false })
+              .limit(1);
+
+            const nextRank = (items?.[0]?.rank || 0) + 1;
+
+            await supabase.from('top_list_items').insert({
+              top_list_id: topListId,
+              item_id: series.id.toString(),
+              rank: nextRank,
+              title: series.title,
+              poster_url: series.poster,
+            });
+          }
+
           setIsFavorite(true);
-          toast.success('Added to favorites');
+          toast.success('Added to Top 50');
         }
       } catch (error) {
         console.error(error);
-        toast.error('Failed to update favorites');
+        toast.error('Failed to update Top 50');
       } finally {
         setLoading(false);
       }
