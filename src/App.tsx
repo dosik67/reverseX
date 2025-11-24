@@ -18,6 +18,7 @@ import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { AppProvider } from "@/context/AppContext";
 
 import supabase from "@/utils/supabase";
@@ -29,6 +30,8 @@ const App = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("🚀 App component mounted");
+    
     async function checkSupabase() {
       try {
         console.log("🔍 Проверка подключения Supabase...");
@@ -58,35 +61,37 @@ const App = () => {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AppProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AppProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
 
-              <Route element={<Layout />}>
-                <Route path="/" element={<Index />} />
-                <Route path="/movies" element={<Movies />} />
-                <Route path="/movie/:id" element={<MovieDetail />} />
-                <Route path="/series" element={<Series />} />
-                <Route path="/series/:id" element={<SeriesDetail />} />
-                <Route path="/profile/:userId" element={<Profile />} />
-                <Route path="/profile/:userId/edit" element={<ProfileEdit />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/games" element={<PlaceholderPage title="Games" icon={Gamepad} />} />
-                <Route path="/music" element={<PlaceholderPage title="Music" icon={Music} />} />
-                <Route path="/books" element={<PlaceholderPage title="Books" icon={Book} />} />
-              </Route>
+                <Route element={<Layout />}>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/movies" element={<Movies />} />
+                  <Route path="/movie/:id" element={<MovieDetail />} />
+                  <Route path="/series" element={<Series />} />
+                  <Route path="/series/:id" element={<SeriesDetail />} />
+                  <Route path="/profile/:userId" element={<Profile />} />
+                  <Route path="/profile/:userId/edit" element={<ProfileEdit />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/games" element={<PlaceholderPage title="Games" icon={Gamepad} />} />
+                  <Route path="/music" element={<PlaceholderPage title="Music" icon={Music} />} />
+                  <Route path="/books" element={<PlaceholderPage title="Books" icon={Book} />} />
+                </Route>
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AppProvider>
-    </QueryClientProvider>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AppProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 

@@ -3,4 +3,13 @@ import App from "./App.tsx";
 import "./index.css";
 import "./i18n/config";
 
-createRoot(document.getElementById("root")!).render(<App />);
+console.log("📍 main.tsx loaded");
+console.log("📍 Mounting React app...");
+
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+createRoot(rootElement).render(<App />);
+console.log("📍 React app mounted successfully");
