@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -56,15 +57,23 @@ const SortableItem = ({ item, isOwnProfile, onRemove }: { item: TopListItem; isO
       )}
       <span className="font-bold text-lg text-primary w-8">#{item.rank}</span>
       {item.poster_url && (
-        <img 
-          src={item.poster_url.replace('/w500/', '/w342/')} 
-          alt={item.title}
-          className="w-12 h-16 object-cover rounded flex-shrink-0"
-        />
+        <Link 
+          to={`/${activeCategory === 'movie' ? 'movie' : 'series'}/${item.item_id}`}
+          className="flex-shrink-0 hover:opacity-80 transition-opacity"
+        >
+          <img 
+            src={item.poster_url.replace('/w500/', '/w342/')} 
+            alt={item.title}
+            className="w-12 h-16 object-cover rounded cursor-pointer hover:scale-105 transition-transform"
+          />
+        </Link>
       )}
-      <div className="flex-1 min-w-0">
-        <h4 className="font-semibold truncate">{item.title}</h4>
-      </div>
+      <Link 
+        to={`/${activeCategory === 'movie' ? 'movie' : 'series'}/${item.item_id}`}
+        className="flex-1 min-w-0 hover:text-primary transition-colors"
+      >
+        <h4 className="font-semibold truncate cursor-pointer">{item.title}</h4>
+      </Link>
       {isOwnProfile && (
         <Button 
           variant="ghost" 

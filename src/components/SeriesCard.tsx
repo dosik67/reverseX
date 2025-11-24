@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Star, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -16,30 +16,18 @@ interface Series {
 const FALLBACK_IMAGE = 'https://placehold.co/342x513/1a1a2e/ffffff?text=No+Image';
 
 const SeriesCard = ({ series }: { series: Series }) => {
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const getCurrentUser = useCallback(async () => {
-    try {
-      const { data } = await supabase.auth.getUser();
-      setCurrentUserId(data.user?.id || null);
-      return data.user?.id;
-    } catch (error) {
-      console.error("Error getting user:", error);
-      return null;
-    }
-  }, []);
-
-  useEffect(() => {
-    getCurrentUser();
-  }, [getCurrentUser]);
 
   const handleAddToTop50 = useCallback(
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
-      if (!currentUserId) {
+      // Проверим пользователя еще раз перед добавлением
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id;
+
+      if (!userId) {
         toast.error('Please sign in to add to Top 50');
         return;
       }
@@ -51,7 +39,7 @@ const SeriesCard = ({ series }: { series: Series }) => {
         const { data: existingList, error: listError } = await supabase
           .from('top_lists')
           .select('id')
-          .eq('user_id', currentUserId)
+          .eq('user_id', userId)
           .eq('media_type', 'anime')
           .single();
 
@@ -60,7 +48,7 @@ const SeriesCard = ({ series }: { series: Series }) => {
         } else if (!listError || listError.code === 'PGRST116') {
           const { data: newList, error: createError } = await supabase
             .from('top_lists')
-            .insert({ user_id: currentUserId, title: 'Top 50 Anime', media_type: 'anime' })
+            .insert({ user_id: userId, title: 'Top 50 Anime', media_type: 'anime' })
             .select('id')
             .single();
 
@@ -108,7 +96,7 @@ const SeriesCard = ({ series }: { series: Series }) => {
         setLoading(false);
       }
     },
-    [currentUserId, series.id]
+    [series.id, series.title, series.poster]
   );
 
   const posterUrl = useMemo(() => {
