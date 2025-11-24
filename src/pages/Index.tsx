@@ -46,7 +46,7 @@ const GENRE_CATEGORIES: GenreCategory[] = [
   { 
     name: "Драммы", 
     englishName: "drama",
-    filter: (m: Movie) => m.description?.toLowerCase().includes("драма") || m.description?.toLowerCase().includes("drama"),
+    filter: (m: Movie) => m.description?.toLowerCase().includes("драма") || m.description?.toLowerCase().includes("drama") || m.release_details?.genres?.some(g => g?.toLowerCase().includes("драма")),
     bgImage: "https://images.unsplash.com/photo-1559833481-92f0a3d03c80?w=1200&h=400&fit=crop",
     bgColor: "from-blue-600/80 to-indigo-600/80"
   },

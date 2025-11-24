@@ -743,7 +743,7 @@
       "studio": null,
       "director": null,
       "cast": [],
-      "genres": []
+      "genres": ["драма"]
     },
     "alerts": {
       "hd_available": true,
@@ -1778,7 +1778,7 @@
       "studio": null,
       "director": null,
       "cast": [],
-      "genres": []
+      "genres": ["драма"]
     },
     "alerts": {
       "hd_available": true,
@@ -61976,51 +61976,6 @@
     },
     "ratings_stats": {
       "score": 7.1,
-      "votes": 0
-    },
-    "collections_info": {
-      "user_collections": 0,
-      "recommendations": []
-    }
-  },
-  {
-    "id": 9000012,
-    "title": "Drama",
-    "russian": "Драма",
-    "year": "2023",
-    "rating": 8.0,
-    "poster": "https://image.tmdb.org/t/p/w500/drama_poster.jpg",
-    "description": "Глубокая психологическая драма о человеческих отношениях и внутренних конфликтах.",
-    "status_stats": {
-      "watching": 0,
-      "planned": 0,
-      "completed": 0,
-      "dropped": 0,
-      "on_hold": 0
-    },
-    "release_details": {
-      "schedule": "еженедельно",
-      "source": "официальный",
-      "episodes": null,
-      "seasons": null,
-      "duration": null,
-      "studio": null,
-      "director": null,
-      "cast": [],
-      "genres": ["драма"]
-    },
-    "alerts": {
-      "hd_available": true,
-      "has_subtitles": true,
-      "release_note": "Доступно в HD"
-    },
-    "metadata": {
-      "setting": "Не указано",
-      "tags": [],
-      "related": []
-    },
-    "ratings_stats": {
-      "score": 8.0,
       "votes": 0
     },
     "collections_info": {
