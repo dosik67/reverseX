@@ -61846,52 +61846,6 @@
     }
   },
   {
-    "id": 9000007,
-    "title": "Golden Steppe",
-    "russian": "Золотая степь",
-    "year": "2023",
-    "rating": 7.3,
-    "poster": "https://example.com/posters/9000007.jpg",
-    "description": "Эпическая драма в степях.",
-    "country": "Kazakhstan",
-    "status_stats": {
-      "watching": 0,
-      "planned": 0,
-      "completed": 0,
-      "dropped": 0,
-      "on_hold": 0
-    },
-    "release_details": {
-      "schedule": "еженедельно",
-      "source": "официальный",
-      "episodes": null,
-      "seasons": null,
-      "duration": null,
-      "studio": null,
-      "director": null,
-      "cast": [],
-      "genres": []
-    },
-    "alerts": {
-      "hd_available": true,
-      "has_subtitles": true,
-      "release_note": "Серии выходят по понедельникам в HD"
-    },
-    "metadata": {
-      "setting": "Не указано",
-      "tags": [],
-      "related": []
-    },
-    "ratings_stats": {
-      "score": 7.3,
-      "votes": 0
-    },
-    "collections_info": {
-      "user_collections": 0,
-      "recommendations": []
-    }
-  },
-  {
     "id": 9000008,
     "title": "Mountain Echo",
     "russian": "Эхо гор",
@@ -62030,14 +61984,13 @@
     }
   },
   {
-    "id": 9000011,
-    "title": "Dnipro Shadows",
-    "russian": "Тени Днепра",
-    "year": "2022",
-    "rating": 7.2,
-    "poster": "https://example.com/posters/9000011.jpg",
-    "description": "Семейная драма на фоне конфликта.",
-    "country": "Ukraine",
+    "id": 9000012,
+    "title": "Drama",
+    "russian": "Драма",
+    "year": "2023",
+    "rating": 8.0,
+    "poster": "https://image.tmdb.org/t/p/w500/drama_poster.jpg",
+    "description": "Глубокая психологическая драма о человеческих отношениях и внутренних конфликтах.",
     "status_stats": {
       "watching": 0,
       "planned": 0,
@@ -62054,12 +62007,12 @@
       "studio": null,
       "director": null,
       "cast": [],
-      "genres": []
+      "genres": ["драма"]
     },
     "alerts": {
       "hd_available": true,
       "has_subtitles": true,
-      "release_note": "Серии выходят по понедельникам в HD"
+      "release_note": "Доступно в HD"
     },
     "metadata": {
       "setting": "Не указано",
@@ -62067,7 +62020,52 @@
       "related": []
     },
     "ratings_stats": {
-      "score": 7.2,
+      "score": 8.0,
+      "votes": 0
+    },
+    "collections_info": {
+      "user_collections": 0,
+      "recommendations": []
+    }
+  },
+  {
+    "id": 9000013,
+    "title": "The Green Mile",
+    "russian": "Зеленая миля",
+    "year": "1999",
+    "rating": 8.6,
+    "poster": "https://image.tmdb.org/t/p/w500/green_mile_poster.jpg",
+    "description": "История о смертельной палате в тюрьме, где встречаются необычные люди. Фильм о милосердии, надежде и магии человеческого сердца.",
+    "status_stats": {
+      "watching": 0,
+      "planned": 0,
+      "completed": 0,
+      "dropped": 0,
+      "on_hold": 0
+    },
+    "release_details": {
+      "schedule": "еженедельно",
+      "source": "официальный",
+      "episodes": null,
+      "seasons": null,
+      "duration": null,
+      "studio": null,
+      "director": null,
+      "cast": [],
+      "genres": ["драма"]
+    },
+    "alerts": {
+      "hd_available": true,
+      "has_subtitles": true,
+      "release_note": "Классический фильм"
+    },
+    "metadata": {
+      "setting": "Не указано",
+      "tags": [],
+      "related": []
+    },
+    "ratings_stats": {
+      "score": 8.6,
       "votes": 0
     },
     "collections_info": {
