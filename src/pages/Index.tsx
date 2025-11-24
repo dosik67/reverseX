@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, TrendingUp, Sparkles } from "lucide-react";
+import { Search, TrendingUp, Sparkles, ArrowRight } from "lucide-react";
 import MovieCard from "@/components/MovieCard";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -19,77 +19,79 @@ interface Movie {
 }
 
 const MOVIES_PER_PAGE = 20;
-const GENRE_CATEGORIES = [
-  { name: "Top Rated", filter: (m: Movie) => m.rating >= 8 },
-  { name: "Horror", filter: (m: Movie) => m.description?.toLowerCase().includes("horror") || m.description?.toLowerCase().includes("ужас") },
-  { name: "Drama", filter: (m: Movie) => m.description?.toLowerCase().includes("drama") || m.description?.toLowerCase().includes("драма") },
-  { name: "Action", filter: (m: Movie) => m.description?.toLowerCase().includes("action") || m.description?.toLowerCase().includes("экшн") },
-  { name: "Comedy", filter: (m: Movie) => m.description?.toLowerCase().includes("comedy") || m.description?.toLowerCase().includes("комед") },
+
+interface GenreCategory {
+  name: string;
+  englishName: string;
+  filter: (m: Movie) => boolean;
+  bgImage: string;
+  bgColor: string;
+}
+
+const GENRE_CATEGORIES: GenreCategory[] = [
+  { 
+    name: "Аниме", 
+    englishName: "anime",
+    filter: (m: Movie) => m.description?.toLowerCase().includes("анима") || m.russian?.toLowerCase().includes("анима"),
+    bgImage: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1200&h=400&fit=crop",
+    bgColor: "from-pink-600/80 to-purple-600/80"
+  },
+  { 
+    name: "Дорамы", 
+    englishName: "kdrama",
+    filter: (m: Movie) => m.description?.toLowerCase().includes("корейск") || m.russian?.toLowerCase().includes("корейск"),
+    bgImage: "https://images.unsplash.com/photo-1522869635100-ce306e08c5d0?w=1200&h=400&fit=crop",
+    bgColor: "from-red-600/80 to-orange-600/80"
+  },
+  { 
+    name: "Драммы", 
+    englishName: "drama",
+    filter: (m: Movie) => m.description?.toLowerCase().includes("драма") || m.description?.toLowerCase().includes("drama"),
+    bgImage: "https://images.unsplash.com/photo-1559833481-92f0a3d03c80?w=1200&h=400&fit=crop",
+    bgColor: "from-blue-600/80 to-indigo-600/80"
+  },
+  { 
+    name: "Боевик", 
+    englishName: "action",
+    filter: (m: Movie) => m.description?.toLowerCase().includes("экшн") || m.description?.toLowerCase().includes("боевик") || m.description?.toLowerCase().includes("action"),
+    bgImage: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1200&h=400&fit=crop",
+    bgColor: "from-red-700/80 to-orange-700/80"
+  },
+  { 
+    name: "Комедия", 
+    englishName: "comedy",
+    filter: (m: Movie) => m.description?.toLowerCase().includes("комед") || m.description?.toLowerCase().includes("comedy"),
+    bgImage: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200&h=400&fit=crop",
+    bgColor: "from-yellow-600/80 to-orange-600/80"
+  },
+  { 
+    name: "Фантастика", 
+    englishName: "scifi",
+    filter: (m: Movie) => m.description?.toLowerCase().includes("фантаст") || m.description?.toLowerCase().includes("sci-fi") || m.description?.toLowerCase().includes("science"),
+    bgImage: "https://images.unsplash.com/photo-1533890228405-fe22868d4d0f?w=1200&h=400&fit=crop",
+    bgColor: "from-cyan-600/80 to-blue-600/80"
+  },
 ];
 
 const Index = () => {
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
-  const [displayMovies, setDisplayMovies] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     fetchMovies();
   }, []);
-
-  useEffect(() => {
-    if (searchQuery) {
-      const filtered = allMovies.filter(
-        (movie) =>
-          movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          movie.russian?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          movie.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setDisplayMovies(filtered.slice(0, MOVIES_PER_PAGE));
-      setPage(1);
-      setHasMore(filtered.length > MOVIES_PER_PAGE);
-    } else {
-      setDisplayMovies(allMovies.slice(0, MOVIES_PER_PAGE));
-      setPage(1);
-      setHasMore(allMovies.length > MOVIES_PER_PAGE);
-    }
-  }, [searchQuery, allMovies]);
 
   const fetchMovies = async () => {
     try {
       const response = await fetch('/data/movies.json');
       const data = await response.json();
       setAllMovies(data);
-      setDisplayMovies(data.slice(0, MOVIES_PER_PAGE));
-      setHasMore(data.length > MOVIES_PER_PAGE);
     } catch (error) {
       console.error('Error fetching movies:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const loadMore = () => {
-    const nextPage = page + 1;
-    const start = page * MOVIES_PER_PAGE;
-    const end = start + MOVIES_PER_PAGE;
-    
-    const source = searchQuery ? 
-      allMovies.filter(m => 
-        m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.russian?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.description.toLowerCase().includes(searchQuery.toLowerCase())
-      ) : allMovies;
-    
-    setDisplayMovies(prev => [...prev, ...source.slice(start, end)]);
-    setPage(nextPage);
-    setHasMore(end < source.length);
-  };
-
-  const getCategoryMovies = (filterFn: (m: Movie) => boolean) => {
-    return allMovies.filter(filterFn).slice(0, 20);
   };
 
   return (
@@ -137,31 +139,74 @@ const Index = () => {
           </Button>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {[...Array(20)].map((_, i) => (
-              <div key={i} className="aspect-[2/3] bg-muted animate-pulse rounded-lg" />
-            ))}
-          </div>
-        ) : displayMovies.length > 0 ? (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {displayMovies.map((movie) => (
-                <MovieCard key={movie.id} movie={movie} />
-              ))}
-            </div>
+        {/* Genre Sections */}
+        {!loading && (
+          <div className="space-y-16">
+            {GENRE_CATEGORIES.map((category) => {
+              const categoryMovies = allMovies.filter(category.filter).slice(0, 12);
+              
+              return (
+                <div key={category.englishName} className="space-y-4">
+                  {/* Genre Header */}
+                  <div className="relative h-48 rounded-xl overflow-hidden group cursor-pointer">
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{
+                        backgroundImage: `url('${category.bgImage}')`,
+                        backgroundPosition: 'center'
+                      }}
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-r ${category.bgColor}`} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+                    
+                    {/* Content */}
+                    <div className="absolute inset-0 flex flex-col justify-end p-6 z-10">
+                      <h2 className="text-4xl font-bold text-white mb-2">{category.name}</h2>
+                      <p className="text-white/80">{categoryMovies.length} titles available</p>
+                    </div>
 
-            {hasMore && (
-              <div className="flex justify-center mt-12">
-                <Button onClick={loadMore} size="lg">
-                  Load More
-                </Button>
+                    {/* Hover overlay */}
+                    <Link 
+                      to="/movies" 
+                      className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-20"
+                    >
+                      <div className="text-white flex items-center gap-2">
+                        <span>View All</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </div>
+                    </Link>
+                  </div>
+
+                  {/* Movies Grid */}
+                  {categoryMovies.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                      {categoryMovies.map((movie) => (
+                        <MovieCard key={movie.id} movie={movie} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No movies in this category
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {loading && (
+          <div className="space-y-16">
+            {[...Array(3)].map((_, categoryIdx) => (
+              <div key={categoryIdx} className="space-y-4">
+                <div className="h-48 bg-muted animate-pulse rounded-xl" />
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="aspect-[2/3] bg-muted animate-pulse rounded-lg" />
+                  ))}
+                </div>
               </div>
-            )}
-          </>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No movies found</p>
+            ))}
           </div>
         )}
       </div>
