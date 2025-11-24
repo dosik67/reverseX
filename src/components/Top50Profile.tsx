@@ -36,7 +36,7 @@ interface Top50ProfileProps {
   isOwnProfile: boolean;
 }
 
-const SortableItem = ({ item, isOwnProfile, onRemove }: { item: TopListItem; isOwnProfile: boolean; onRemove: () => void }) => {
+const SortableItem = ({ item, isOwnProfile, onRemove, mediaType }: { item: TopListItem; isOwnProfile: boolean; onRemove: () => void; mediaType: 'movie' | 'anime' }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
 
   const style = {
@@ -58,7 +58,7 @@ const SortableItem = ({ item, isOwnProfile, onRemove }: { item: TopListItem; isO
       <span className="font-bold text-lg text-primary w-8">#{item.rank}</span>
       {item.poster_url && (
         <Link 
-          to={`/${activeCategory === 'movie' ? 'movie' : 'series'}/${item.item_id}`}
+          to={`/${mediaType === 'movie' ? 'movie' : 'series'}/${item.item_id}`}
           className="flex-shrink-0 hover:opacity-80 transition-opacity"
         >
           <img 
@@ -69,7 +69,7 @@ const SortableItem = ({ item, isOwnProfile, onRemove }: { item: TopListItem; isO
         </Link>
       )}
       <Link 
-        to={`/${activeCategory === 'movie' ? 'movie' : 'series'}/${item.item_id}`}
+        to={`/${mediaType === 'movie' ? 'movie' : 'series'}/${item.item_id}`}
         className="flex-1 min-w-0 hover:text-primary transition-colors"
       >
         <h4 className="font-semibold truncate cursor-pointer">{item.title}</h4>
@@ -312,6 +312,7 @@ const Top50Profile = ({ userId, isOwnProfile }: Top50ProfileProps) => {
                       key={item.id}
                       item={item}
                       isOwnProfile={isOwnProfile}
+                      mediaType={selectedList?.media_type || 'movie'}
                       onRemove={() => removeItemFromList(item.id)}
                     />
                   ))}
@@ -362,6 +363,7 @@ const Top50Profile = ({ userId, isOwnProfile }: Top50ProfileProps) => {
                       key={item.id}
                       item={item}
                       isOwnProfile={isOwnProfile}
+                      mediaType={selectedList?.media_type || 'movie'}
                       onRemove={() => {
                         removeItemFromList(item.id);
                       }}
