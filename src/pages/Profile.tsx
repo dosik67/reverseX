@@ -219,30 +219,45 @@ const Profile = () => {
     
     try {
       setLoading(true);
-      const { data, error: dbError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
       
-      if (dbError) {
-        console.error("Database error:", dbError);
-        throw dbError;
-      }
+      // Создаем таймаут для запроса (10 секунд)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
       
-      if (!data) {
-        setError("Профиль не найден");
-        setProfile(null);
-      } else {
-        setProfile(data);
-        setError(null);
+      try {
+        const { data, error: dbError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .single();
+        
+        clearTimeout(timeoutId);
+        
+        if (dbError) {
+          console.error("Database error:", dbError);
+          throw dbError;
+        }
+        
+        if (!data) {
+          setError("Профиль не найден");
+          setProfile(null);
+        } else {
+          setProfile(data);
+          setError(null);
+        }
+      } catch (err) {
+        clearTimeout(timeoutId);
+        throw err;
       }
     } catch (err) {
       console.error("Profile fetch error:", err);
-      const errorMessage = err instanceof Error ? err.message : "Ошибка загрузки профиля";
+      const errorMessage = err instanceof Error ? err.message : "Ошибка загрузки профиля. Проверьте подключение и попробуйте снова.";
       setError(errorMessage);
       setProfile(null);
-      toast.error(errorMessage);
+      // Не показываем toast на production, только логируем
+      if (process.env.NODE_ENV === 'development') {
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -252,34 +267,40 @@ const Profile = () => {
     if (!userId) return;
     
     try {
-      // Получаем статистику из базы
-      const { data: userMovies } = await supabase
-        .from('user_movies')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId);
+      // Выполняем все запросы параллельно для оптимизации
+      const [moviesRes, followersRes, followingRes, commentsRes] = await Promise.allSettled([
+        supabase
+          .from('user_movies')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId),
+        supabase
+          .from('friendships')
+          .select('id', { count: 'exact', head: true })
+          .eq('friend_id', userId)
+          .eq('status', 'accepted'),
+        supabase
+          .from('friendships')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('status', 'accepted'),
+        supabase
+          .from('profile_comments')
+          .select('id', { count: 'exact', head: true })
+          .eq('profile_id', userId)
+      ]);
 
-      const { data: followers } = await supabase
-        .from('friendships')
-        .select('id', { count: 'exact', head: true })
-        .eq('friend_id', userId)
-        .eq('status', 'accepted');
-
-      const { data: following } = await supabase
-        .from('friendships')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('status', 'accepted');
-
-      const { data: comments } = await supabase
-        .from('profile_comments')
-        .select('id', { count: 'exact', head: true })
-        .eq('profile_id', userId);
+      const getCount = (result: PromiseSettledResult<any>) => {
+        if (result.status === 'fulfilled' && result.value.data) {
+          return result.value.data.length || 0;
+        }
+        return 0;
+      };
 
       setStats({
-        movies: userMovies?.length || 0,
-        followers: followers?.length || 0,
-        following: following?.length || 0,
-        comments: comments?.length || 0
+        movies: getCount(moviesRes),
+        followers: getCount(followersRes),
+        following: getCount(followingRes),
+        comments: getCount(commentsRes)
       });
     } catch (err) {
       console.error('Error fetching stats:', err);
@@ -491,9 +512,14 @@ const Profile = () => {
               {error}
             </p>
           )}
-          <Button asChild>
-            <Link to="/">На главную</Link>
-          </Button>
+          <div className="flex gap-3 justify-center pt-4">
+            <Button onClick={fetchProfile} variant="default">
+              Попробовать снова
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/">На главную</Link>
+            </Button>
+          </div>
         </div>
       </div>
     );
