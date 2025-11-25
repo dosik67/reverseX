@@ -9,6 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   UserPlus,
@@ -32,6 +38,10 @@ import {
   MessageCircle,
   Share,
   MoreHorizontal,
+  Copy,
+  Facebook,
+  Twitter,
+  Linkedin,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProfileSidebar from "@/components/ProfileSidebar";
@@ -351,6 +361,40 @@ const Profile = () => {
     setFriendshipStatus(null); // Временная заглушка
   };
 
+  const handleShareProfile = async (platform?: string) => {
+    const profileUrl = `${window.location.origin}/profile/${userId}`;
+    const shareText = `Посмотри мой профиль на reverseX! ${profile?.display_name || profile?.username}`;
+    
+    try {
+      if (platform === 'copy') {
+        await navigator.clipboard.writeText(profileUrl);
+        toast.success("Ссылка скопирована в буфер обмена");
+      } else if (platform === 'whatsapp') {
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + profileUrl)}`, '_blank');
+      } else if (platform === 'telegram') {
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(profileUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+      } else if (platform === 'facebook') {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(profileUrl)}`, '_blank');
+      } else if (platform === 'twitter') {
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(profileUrl)}`, '_blank');
+      } else if (navigator.share) {
+        await navigator.share({
+          title: 'reverseX Профиль',
+          text: shareText,
+          url: profileUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(profileUrl);
+        toast.success("Ссылка скопирована в буфер обмена");
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
+        console.error('Share error:', err);
+        toast.error("Ошибка при поделении профилем");
+      }
+    }
+  };
+
   const handleFollow = async () => {
     try {
       if (isFollowing) {
@@ -478,15 +522,54 @@ const Profile = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 mb-4">
+            <div className="flex gap-3 mb-4 flex-wrap">
               {isOwnProfile ? (
-                <Button 
-                  onClick={() => setShowEditor(true)} 
-                  className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30"
-                  size="lg"
-                >
-                  Редактировать профиль
-                </Button>
+                <>
+                  <Button 
+                    onClick={() => setShowEditor(true)} 
+                    className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30"
+                    size="lg"
+                  >
+                    Редактировать профиль
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30"
+                        size="lg"
+                      >
+                        <Share className="w-4 h-4 mr-2" />
+                        Поделиться
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem onClick={() => handleShareProfile('copy')} className="cursor-pointer">
+                        <Copy className="w-4 h-4 mr-2" />
+                        <span>Копировать ссылку</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareProfile('whatsapp')} className="cursor-pointer">
+                        <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-5.031 1.378c-1.557.821-2.989 2.01-4.085 3.481A9.776 9.776 0 002.002 20.5c0 5.523 4.477 10 10 10s10-4.477 10-10S17.523 0 12 0zm0 18.52c-4.687 0-8.52-3.802-8.52-8.52 0-1.528.399-3.029 1.154-4.334l.834 1.441c-.728 1.127-1.147 2.458-1.147 3.893 0 4.105 3.292 7.456 7.355 7.456a7.41 7.41 0 003.512-.848l.868 1.495c-1.258.744-2.693 1.17-4.187 1.17z"/>
+                        </svg>
+                        <span>WhatsApp</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareProfile('telegram')} className="cursor-pointer">
+                        <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.02c.242-.213-.054-.33-.373-.117l-6.869 4.332-2.97-.924c-.644-.213-.658-.644.136-.954l11.566-4.461c.54-.213 1.009.131.832.941z"/>
+                        </svg>
+                        <span>Telegram</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareProfile('facebook')} className="cursor-pointer">
+                        <Facebook className="w-4 h-4 mr-2" />
+                        <span>Facebook</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareProfile('twitter')} className="cursor-pointer">
+                        <Twitter className="w-4 h-4 mr-2" />
+                        <span>Twitter/X</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
               ) : (
                 <>
                   <Button 
@@ -533,6 +616,44 @@ const Profile = () => {
                       </Button>
                     </>
                   )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="outline"
+                        className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
+                        size="lg"
+                      >
+                        <Share className="w-4 h-4 mr-2" />
+                        Поделиться
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem onClick={() => handleShareProfile('copy')} className="cursor-pointer">
+                        <Copy className="w-4 h-4 mr-2" />
+                        <span>Копировать ссылку</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareProfile('whatsapp')} className="cursor-pointer">
+                        <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-5.031 1.378c-1.557.821-2.989 2.01-4.085 3.481A9.776 9.776 0 002.002 20.5c0 5.523 4.477 10 10 10s10-4.477 10-10S17.523 0 12 0zm0 18.52c-4.687 0-8.52-3.802-8.52-8.52 0-1.528.399-3.029 1.154-4.334l.834 1.441c-.728 1.127-1.147 2.458-1.147 3.893 0 4.105 3.292 7.456 7.355 7.456a7.41 7.41 0 003.512-.848l.868 1.495c-1.258.744-2.693 1.17-4.187 1.17z"/>
+                        </svg>
+                        <span>WhatsApp</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareProfile('telegram')} className="cursor-pointer">
+                        <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.02c.242-.213-.054-.33-.373-.117l-6.869 4.332-2.97-.924c-.644-.213-.658-.644.136-.954l11.566-4.461c.54-.213 1.009.131.832.941z"/>
+                        </svg>
+                        <span>Telegram</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareProfile('facebook')} className="cursor-pointer">
+                        <Facebook className="w-4 h-4 mr-2" />
+                        <span>Facebook</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareProfile('twitter')} className="cursor-pointer">
+                        <Twitter className="w-4 h-4 mr-2" />
+                        <span>Twitter/X</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </>
               )}
             </div>
