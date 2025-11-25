@@ -582,7 +582,7 @@ const Profile = () => {
                   <Button 
                     onClick={() => setShowEditor(true)} 
                     className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30"
-                    size="lg"
+                    size="sm"
                   >
                     Редактировать профиль
                   </Button>
@@ -590,7 +590,7 @@ const Profile = () => {
                     <DropdownMenuTrigger asChild>
                       <Button 
                         className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30"
-                        size="lg"
+                        size="sm"
                       >
                         <Share className="w-4 h-4 mr-2" />
                         Поделиться
@@ -630,7 +630,7 @@ const Profile = () => {
                     onClick={handleFollow} 
                     variant={isFollowing ? "outline" : "default"}
                     className={isFollowing ? "bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20" : ""}
-                    size="lg"
+                    size="sm"
                   >
                     {isFollowing ? <UserCheck className="w-4 h-4 mr-2" /> : <UserPlus className="w-4 h-4 mr-2" />}
                     {isFollowing ? "Подписано" : "Подписаться"}
@@ -641,7 +641,7 @@ const Profile = () => {
                       onClick={handleFriendRequest} 
                       variant="outline"
                       className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
-                      size="lg"
+                      size="sm"
                     >
                       <Users className="w-4 h-4 mr-2" />
                       Добавить в друзья
@@ -675,7 +675,7 @@ const Profile = () => {
                       <Button 
                         variant="outline"
                         className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
-                        size="lg"
+                        size="sm"
                       >
                         <Share className="w-4 h-4 mr-2" />
                         Поделиться
@@ -720,6 +720,50 @@ const Profile = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
           {/* Left Column - Main Profile */}
           <div className="lg:col-span-6 space-y-6">
+            {/* Share Button */}
+            {!isOwnProfile && (
+              <div className="flex justify-center">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="default"
+                      className="bg-primary/90 hover:bg-primary"
+                      size="sm"
+                    >
+                      <Share className="w-4 h-4 mr-2" />
+                      Поделиться профилем
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center" className="w-56">
+                    <DropdownMenuItem onClick={() => handleShareProfile('copy')} className="cursor-pointer">
+                      <Copy className="w-4 h-4 mr-2" />
+                      <span>Копировать ссылку</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleShareProfile('whatsapp')} className="cursor-pointer">
+                      <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-5.031 1.378c-1.557.821-2.989 2.01-4.085 3.481A9.776 9.776 0 002.002 20.5c0 5.523 4.477 10 10 10s10-4.477 10-10S17.523 0 12 0zm0 18.52c-4.687 0-8.52-3.802-8.52-8.52 0-1.528.399-3.029 1.154-4.334l.834 1.441c-.728 1.127-1.147 2.458-1.147 3.893 0 4.105 3.292 7.456 7.355 7.456a7.41 7.41 0 003.512-.848l.868 1.495c-1.258.744-2.693 1.17-4.187 1.17z"/>
+                      </svg>
+                      <span>WhatsApp</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleShareProfile('telegram')} className="cursor-pointer">
+                      <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.02c.242-.213-.054-.33-.373-.117l-6.869 4.332-2.97-.924c-.644-.213-.658-.644.136-.954l11.566-4.461c.54-.213 1.009.131.832.941z"/>
+                      </svg>
+                      <span>Telegram</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleShareProfile('facebook')} className="cursor-pointer">
+                      <Facebook className="w-4 h-4 mr-2" />
+                      <span>Facebook</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleShareProfile('twitter')} className="cursor-pointer">
+                      <Twitter className="w-4 h-4 mr-2" />
+                      <span>Twitter/X</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
           <Card className="bg-card/50 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
