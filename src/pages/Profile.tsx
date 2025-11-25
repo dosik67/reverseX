@@ -179,6 +179,7 @@ const Profile = () => {
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
   const [activeTab, setActiveTab] = useState("favorites");
+  const [error, setError] = useState<string | null>(null);
 
   // Загрузка данных
   useEffect(() => {
@@ -187,6 +188,8 @@ const Profile = () => {
 
   useEffect(() => {
     if (userId) {
+      setLoading(true);
+      setError(null);
       fetchProfile();
       fetchStats();
       fetchComments();
@@ -208,20 +211,38 @@ const Profile = () => {
   };
 
   const fetchProfile = async () => {
-    if (!userId) return;
+    if (!userId) {
+      setError("User ID не найден");
+      setLoading(false);
+      return;
+    }
     
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      const { data, error: dbError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
       
-      if (error) throw error;
-      setProfile(data);
+      if (dbError) {
+        console.error("Database error:", dbError);
+        throw dbError;
+      }
+      
+      if (!data) {
+        setError("Профиль не найден");
+        setProfile(null);
+      } else {
+        setProfile(data);
+        setError(null);
+      }
     } catch (err) {
-      console.error(err);
-      toast.error("Ошибка загрузки профиля");
+      console.error("Profile fetch error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Ошибка загрузки профиля";
+      setError(errorMessage);
+      setProfile(null);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -454,15 +475,22 @@ const Profile = () => {
     );
   }
 
-  if (!profile) {
+  if (!profile && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/20">
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 max-w-md">
           <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto">
             <Users className="w-12 h-12 text-muted-foreground" />
           </div>
           <h2 className="text-2xl font-bold">Профиль не найден</h2>
-          <p className="text-muted-foreground">Пользователь с таким ID не существует</p>
+          <p className="text-muted-foreground">
+            {error || "Пользователь с таким ID не существует"}
+          </p>
+          {error && (
+            <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+              {error}
+            </p>
+          )}
           <Button asChild>
             <Link to="/">На главную</Link>
           </Button>
