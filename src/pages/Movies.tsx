@@ -4,18 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import MovieCard from "@/components/MovieCard";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
+import { getPopularMovies, searchMovies } from "@/utils/tmdbApi";
+import { useTranslation } from "react-i18next";
 
 interface Movie {
   id: number;
   title: string;
-  russian?: string;
   year: string;
   rating: number;
   poster: string;
   description: string;
 }
-
-import { useTranslation } from "react-i18next";
 
 const MOVIES_PER_PAGE = 20;
 
@@ -27,42 +26,82 @@ const Movies = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Restore scroll after content loads (50ms delay for DOM to render)
   useScrollRestore(!loading ? 0 : 50);
 
   useEffect(() => {
-    fetchMovies();
+    fetchPopularMovies();
   }, []);
 
   useEffect(() => {
-    const source = allMovies;
-    if (searchQuery) {
-      const filtered = source.filter(
-        (movie) =>
-          movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          movie.russian?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          movie.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setDisplayMovies(filtered.slice(0, MOVIES_PER_PAGE));
-      setPage(1);
-      setHasMore(filtered.length > MOVIES_PER_PAGE);
+    if (searchQuery.trim()) {
+      handleSearch(searchQuery);
     } else {
+      // Reset to popular movies
+      const source = allMovies;
       setDisplayMovies(source.slice(0, MOVIES_PER_PAGE));
       setPage(1);
       setHasMore(source.length > MOVIES_PER_PAGE);
+      setIsSearching(false);
     }
-  }, [searchQuery, allMovies]);
+  }, [searchQuery]);
 
-  const fetchMovies = async () => {
+  const fetchPopularMovies = async () => {
     try {
-      const response = await fetch('/data/movies.json');
-      const data = await response.json();
-      setAllMovies(data);
-      setDisplayMovies(data.slice(0, MOVIES_PER_PAGE));
-      setHasMore(data.length > MOVIES_PER_PAGE);
+      setLoading(true);
+      const { movies } = await getPopularMovies(1);
+      
+      const transformedMovies: Movie[] = movies
+        .filter(m => m.poster_path) // Only movies with posters
+        .map(m => ({
+          id: m.id,
+          title: m.title,
+          year: m.release_date?.split('-')[0] || 'Unknown',
+          rating: Math.round(m.vote_average * 10) / 10,
+          poster: `https://image.tmdb.org/t/p/w342${m.poster_path}`,
+          description: m.overview || ''
+        }));
+
+      setAllMovies(transformedMovies);
+      setDisplayMovies(transformedMovies.slice(0, MOVIES_PER_PAGE));
+      setHasMore(transformedMovies.length > MOVIES_PER_PAGE);
     } catch (error) {
       console.error('Error fetching movies:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) {
+      setIsSearching(false);
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+      setLoading(true);
+      const { movies } = await searchMovies(query, 1);
+      
+      const transformedMovies: Movie[] = movies
+        .filter(m => m.poster_path)
+        .map(m => ({
+          id: m.id,
+          title: m.title,
+          year: m.release_date?.split('-')[0] || 'Unknown',
+          rating: Math.round(m.vote_average * 10) / 10,
+          poster: `https://image.tmdb.org/t/p/w342${m.poster_path}`,
+          description: m.overview || ''
+        }));
+
+      setAllMovies(transformedMovies);
+      setDisplayMovies(transformedMovies.slice(0, MOVIES_PER_PAGE));
+      setPage(1);
+      setHasMore(transformedMovies.length > MOVIES_PER_PAGE);
+    } catch (error) {
+      console.error('Error searching movies:', error);
     } finally {
       setLoading(false);
     }
@@ -73,15 +112,7 @@ const Movies = () => {
     const start = page * MOVIES_PER_PAGE;
     const end = start + MOVIES_PER_PAGE;
 
-    const source = searchQuery
-      ? allMovies.filter(
-          (movie) =>
-            movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            movie.russian?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            movie.description.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      : allMovies;
-
+    const source = allMovies;
     setDisplayMovies((prev) => [...prev, ...source.slice(start, end)]);
     setPage(nextPage);
     setHasMore(end < source.length);

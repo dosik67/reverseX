@@ -4,18 +4,15 @@ import { Search, TrendingUp, Sparkles, ArrowRight } from "lucide-react";
 import MovieCard from "@/components/MovieCard";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { getPopularMovies, searchMovies } from "@/utils/tmdbApi";
 
 interface Movie {
   id: number;
   title: string;
-  russian: string;
   year: string;
   rating: number;
   poster: string;
   description: string;
-  release_details?: {
-    genres?: string[];
-  };
 }
 
 const MOVIES_PER_PAGE = 20;
@@ -26,50 +23,55 @@ interface GenreCategory {
   filter: (m: Movie) => boolean;
   bgImage: string;
   bgColor: string;
+  tmdbGenreId?: number;
 }
 
 const GENRE_CATEGORIES: GenreCategory[] = [
   { 
     name: "Аниме", 
     englishName: "anime",
-    filter: (m: Movie) => m.description?.toLowerCase().includes("анима") || m.russian?.toLowerCase().includes("анима"),
+    filter: (m: Movie) => m.description?.toLowerCase().includes("анима"),
     bgImage: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1200&h=400&fit=crop",
     bgColor: "from-pink-600/80 to-purple-600/80"
   },
   { 
     name: "Дорамы", 
     englishName: "kdrama",
-    filter: (m: Movie) => m.description?.toLowerCase().includes("корейск") || m.russian?.toLowerCase().includes("корейск"),
+    filter: (m: Movie) => m.description?.toLowerCase().includes("корейск"),
     bgImage: "https://images.unsplash.com/photo-1522869635100-ce306e08c5d0?w=1200&h=400&fit=crop",
     bgColor: "from-red-600/80 to-orange-600/80"
   },
   { 
     name: "Драммы", 
     englishName: "drama",
-    filter: (m: Movie) => m.description?.toLowerCase().includes("драма") || m.description?.toLowerCase().includes("drama") || m.release_details?.genres?.some(g => g?.toLowerCase().includes("драма")),
+    filter: (m: Movie) => m.description?.toLowerCase().includes("драма"),
     bgImage: "https://images.unsplash.com/photo-1559833481-92f0a3d03c80?w=1200&h=400&fit=crop",
-    bgColor: "from-blue-600/80 to-indigo-600/80"
+    bgColor: "from-blue-600/80 to-indigo-600/80",
+    tmdbGenreId: 18
   },
   { 
     name: "Боевик", 
     englishName: "action",
-    filter: (m: Movie) => m.description?.toLowerCase().includes("экшн") || m.description?.toLowerCase().includes("боевик") || m.description?.toLowerCase().includes("action"),
+    filter: (m: Movie) => m.description?.toLowerCase().includes("боевик"),
     bgImage: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1200&h=400&fit=crop",
-    bgColor: "from-red-700/80 to-orange-700/80"
+    bgColor: "from-red-700/80 to-orange-700/80",
+    tmdbGenreId: 28
   },
   { 
     name: "Комедия", 
     englishName: "comedy",
-    filter: (m: Movie) => m.description?.toLowerCase().includes("комед") || m.description?.toLowerCase().includes("comedy"),
+    filter: (m: Movie) => m.description?.toLowerCase().includes("комед"),
     bgImage: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200&h=400&fit=crop",
-    bgColor: "from-yellow-600/80 to-orange-600/80"
+    bgColor: "from-yellow-600/80 to-orange-600/80",
+    tmdbGenreId: 35
   },
   { 
     name: "Фантастика", 
     englishName: "scifi",
-    filter: (m: Movie) => m.description?.toLowerCase().includes("фантаст") || m.description?.toLowerCase().includes("sci-fi") || m.description?.toLowerCase().includes("science"),
+    filter: (m: Movie) => m.description?.toLowerCase().includes("фантаст"),
     bgImage: "https://images.unsplash.com/photo-1533890228405-fe22868d4d0f?w=1200&h=400&fit=crop",
-    bgColor: "from-cyan-600/80 to-blue-600/80"
+    bgColor: "from-cyan-600/80 to-blue-600/80",
+    tmdbGenreId: 878
   },
 ];
 
@@ -84,9 +86,21 @@ const Index = () => {
 
   const fetchMovies = async () => {
     try {
-      const response = await fetch('/data/movies.json');
-      const data = await response.json();
-      setAllMovies(data);
+      setLoading(true);
+      const { movies } = await getPopularMovies(1);
+      
+      const transformedMovies: Movie[] = movies
+        .filter(m => m.poster_path)
+        .map(m => ({
+          id: m.id,
+          title: m.title,
+          year: m.release_date?.split('-')[0] || 'Unknown',
+          rating: Math.round(m.vote_average * 10) / 10,
+          poster: `https://image.tmdb.org/t/p/w342${m.poster_path}`,
+          description: m.overview || ''
+        }));
+
+      setAllMovies(transformedMovies);
     } catch (error) {
       console.error('Error fetching movies:', error);
     } finally {
