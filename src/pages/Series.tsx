@@ -3,13 +3,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import SeriesCard from "@/components/SeriesCard";
+import { getPopularSeries, searchSeries, getMoviePosterUrl } from "@/utils/tmdbApi";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useTranslation } from "react-i18next";
 
 interface Series {
   id: number;
   title: string;
-  russian?: string;
   year: string;
   rating: number;
   poster: string;
@@ -18,72 +18,96 @@ interface Series {
 
 const SERIES_PER_PAGE = 20;
 
-const Series = () => {
+const SeriesPage = () => {
   const { t } = useTranslation();
   const [allSeries, setAllSeries] = useState<Series[]>([]);
   const [displaySeries, setDisplaySeries] = useState<Series[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [searchResultsTotal, setSearchResultsTotal] = useState(0);
 
   // Restore scroll after content loads (50ms delay for DOM to render)
-  useScrollRestore(!loading ? 0 : 50);
+  useScrollRestore(!loading && !isSearching ? 0 : 50);
 
   useEffect(() => {
     fetchSeries();
   }, []);
 
   useEffect(() => {
-    const source = allSeries;
-    if (searchQuery) {
-      const filtered = source.filter(
-        (series) =>
-          series.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          series.russian?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          series.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setDisplaySeries(filtered.slice(0, SERIES_PER_PAGE));
-      setPage(1);
-      setHasMore(filtered.length > SERIES_PER_PAGE);
-    } else {
-      setDisplaySeries(source.slice(0, SERIES_PER_PAGE));
-      setPage(1);
-      setHasMore(source.length > SERIES_PER_PAGE);
-    }
-  }, [searchQuery, allSeries]);
+    const handleSearch = async () => {
+      if (searchQuery.trim()) {
+        setIsSearching(true);
+        try {
+          const results = await searchSeries(searchQuery);
+          const transformed = results.results.map((series: any) => ({
+            id: series.id,
+            title: series.name || series.original_name,
+            year: series.first_air_date ? new Date(series.first_air_date).getFullYear().toString() : '',
+            rating: series.vote_average,
+            poster: getMoviePosterUrl(series.poster_path, 'w342'),
+            description: series.overview
+          }));
+          setAllSeries(transformed);
+          setDisplaySeries(transformed.slice(0, SERIES_PER_PAGE));
+          setSearchResultsTotal(results.total_results);
+          setHasMore(transformed.length > SERIES_PER_PAGE);
+          setPage(1);
+        } catch (error) {
+          console.error('Error searching series:', error);
+          setAllSeries([]);
+          setDisplaySeries([]);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setAllSeries([]);
+        setDisplaySeries([]);
+        setPage(1);
+        setHasMore(false);
+        setIsSearching(false);
+      }
+    };
 
-  const fetchSeries = async () => {
-    try {
-      const response = await fetch('/data/tmdb_series.json');
-      const data = await response.json();
-      setAllSeries(data);
-      setDisplaySeries(data.slice(0, SERIES_PER_PAGE));
-      setHasMore(data.length > SERIES_PER_PAGE);
-    } catch (error) {
-      console.error('Error fetching series:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const timeoutId = setTimeout(handleSearch, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
-  const loadMore = () => {
+  const loadMore = async () => {
+    if (isSearching) return;
+    
     const nextPage = page + 1;
     const start = page * SERIES_PER_PAGE;
     const end = start + SERIES_PER_PAGE;
 
-    const source = searchQuery
-      ? allSeries.filter(
-          (series) =>
-            series.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            series.russian?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            series.description.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      : allSeries;
-
-    setDisplaySeries((prev) => [...prev, ...source.slice(start, end)]);
-    setPage(nextPage);
-    setHasMore(end < source.length);
+    if (searchQuery.trim()) {
+      // For search results, fetch next page from TMDB
+      try {
+        const results = await searchSeries(searchQuery, nextPage);
+        const transformed = results.results.map((series: any) => ({
+          id: series.id,
+          title: series.name || series.original_name,
+          year: series.first_air_date ? new Date(series.first_air_date).getFullYear().toString() : '',
+          rating: series.vote_average,
+          poster: getMoviePosterUrl(series.poster_path, 'w342'),
+          description: series.overview
+        }));
+        
+        setDisplaySeries((prev) => [...prev, ...transformed]);
+        setPage(nextPage);
+        setHasMore(end < results.total_results);
+      } catch (error) {
+        console.error('Error loading more series:', error);
+      }
+    } else {
+      // For popular series, use local pagination
+      const source = allSeries;
+      setDisplaySeries((prev) => [...prev, ...source.slice(start, end)]);
+      setPage(nextPage);
+      setHasMore(end < source.length);
+    }
   };
 
   return (
@@ -138,4 +162,4 @@ const Series = () => {
   );
 };
 
-export default Series;
+export default SeriesPage;

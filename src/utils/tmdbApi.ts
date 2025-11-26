@@ -286,3 +286,163 @@ export const getSimilarMovies = async (movieId: number): Promise<{ movies: TMDBM
     return { movies: [] };
   }
 };
+
+/**
+ * Get popular TV series
+ */
+export const getPopularSeries = async (page: number = 1): Promise<TMDBMovieResponse> => {
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/tv/popular?language=ru-RU&page=${page}`,
+      { headers }
+    );
+
+    if (!response.ok) {
+      throw new Error(`TMDB API error: ${response.status}`);
+    }
+
+    const data: TMDBMovieResponse = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching popular series:', error);
+    return { results: [], total_pages: 0, total_results: 0, page };
+  }
+};
+
+/**
+ * Search TV series
+ */
+export const searchSeries = async (query: string, page: number = 1): Promise<TMDBMovieResponse> => {
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/search/tv?query=${encodeURIComponent(query)}&language=ru-RU&page=${page}`,
+      { headers }
+    );
+
+    if (!response.ok) {
+      throw new Error(`TMDB API error: ${response.status}`);
+    }
+
+    const data: TMDBMovieResponse = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error searching series:', error);
+    return { results: [], total_pages: 0, total_results: 0, page };
+  }
+};
+
+/**
+ * Get TV series details
+ */
+export const getSeriesDetails = async (seriesId: number): Promise<TMDBMovie> => {
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/tv/${seriesId}?language=ru-RU`,
+      { headers }
+    );
+
+    if (!response.ok) {
+      throw new Error(`TMDB API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // Transform TV series data to match movie interface
+    return {
+      id: data.id,
+      title: data.name || data.original_name,
+      original_title: data.original_name,
+      release_date: data.first_air_date,
+      poster_path: data.poster_path,
+      backdrop_path: data.backdrop_path,
+      overview: data.overview,
+      vote_average: data.vote_average,
+      vote_count: data.vote_count,
+      runtime: data.episode_run_time?.[0] || 0,
+      budget: 0,
+      revenue: 0,
+      genres: data.genres || []
+    };
+  } catch (error) {
+    console.error('Error fetching series details:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get TV series videos/trailers
+ */
+export const getSeriesVideos = async (seriesId: number): Promise<Array<{
+  id: string;
+  key: string;
+  name: string;
+  site: string;
+  type: string;
+}>> => {
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/tv/${seriesId}/videos?language=ru-RU`,
+      { headers }
+    );
+
+    if (!response.ok) {
+      throw new Error(`TMDB API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.results || [];
+  } catch (error) {
+    console.error('Error fetching series videos:', error);
+    return [];
+  }
+};
+
+/**
+ * Get TV series cast
+ */
+export const getSeriesCredits = async (seriesId: number): Promise<{
+  cast: Array<{ id: number; name: string; character: string; profile_path: string | null; }>;
+}> => {
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/tv/${seriesId}/credits?language=ru-RU`,
+      { headers }
+    );
+
+    if (!response.ok) {
+      throw new Error(`TMDB API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return {
+      cast: (data.cast || []).slice(0, 20)
+    };
+  } catch (error) {
+    console.error('Error fetching series credits:', error);
+    return { cast: [] };
+  }
+};
+
+/**
+ * Get similar TV series
+ */
+export const getSimilarSeries = async (seriesId: number): Promise<{ series: TMDBMovieResponse['results']; }> => {
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/tv/${seriesId}/similar?language=ru-RU`,
+      { headers }
+    );
+
+    if (!response.ok) {
+      throw new Error(`TMDB API error: ${response.status}`);
+    }
+
+    const data: TMDBMovieResponse = await response.json();
+    return {
+      series: data.results
+    };
+  } catch (error) {
+    console.error('Error fetching similar series:', error);
+    return { series: [] };
+  }
+};

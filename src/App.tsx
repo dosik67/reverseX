@@ -10,7 +10,7 @@ import Auth from "./pages/Auth";
 import Layout from "./components/Layout";
 import Movies from "./pages/Movies";
 import MovieDetail from "./pages/MovieDetail";
-import Series from "./pages/Series";
+import SeriesPage from "./pages/Series";
 import SeriesDetail from "./pages/SeriesDetail";
 import Profile from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
@@ -75,7 +75,7 @@ const App = () => {
                   <Route path="/" element={<Index />} />
                   <Route path="/movies" element={<Movies />} />
                   <Route path="/movie/:id" element={<MovieDetail />} />
-                  <Route path="/series" element={<Series />} />
+                  <Route path="/series" element={<SeriesPage />} />
                   <Route path="/series/:id" element={<SeriesDetail />} />
                   <Route path="/profile/:userId" element={<Profile />} />
                   <Route path="/profile/:userId/edit" element={<ProfileEdit />} />
