@@ -73,7 +73,7 @@ const MovieDetail = () => {
         setMovie(movieData);
         setVideos(videosData.filter(v => v.site === 'YouTube'));
         setCast(creditsData.cast.slice(0, 10));
-        setSimilarMovies(similarData.results.filter((m: any) => m.poster_path).slice(0, 6));
+        setSimilarMovies(similarData.movies.filter((m: any) => m.poster_path).slice(0, 6));
       } catch (err) {
         console.error('Error fetching movie details:', err);
         setError('Failed to load movie details');

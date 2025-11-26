@@ -206,3 +206,83 @@ export const getGenres = async (): Promise<Array<{ id: number; name: string }>> 
     return [];
   }
 };
+
+/**
+ * Get movie videos (trailers, teasers, etc.)
+ */
+export const getMovieVideos = async (movieId: number): Promise<Array<{
+  id: string;
+  key: string;
+  name: string;
+  site: string;
+  type: string;
+}>> => {
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/movie/${movieId}/videos?language=ru-RU`,
+      { headers }
+    );
+
+    if (!response.ok) {
+      throw new Error(`TMDB API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.results || [];
+  } catch (error) {
+    console.error('Error fetching movie videos:', error);
+    return [];
+  }
+};
+
+/**
+ * Get movie credits (cast and crew)
+ */
+export const getMovieCredits = async (movieId: number): Promise<{
+  cast: Array<{ id: number; name: string; character: string; profile_path: string | null }>;
+  crew: Array<{ id: number; name: string; job: string; profile_path: string | null }>;
+}> => {
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/movie/${movieId}/credits`,
+      { headers }
+    );
+
+    if (!response.ok) {
+      throw new Error(`TMDB API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return {
+      cast: data.cast || [],
+      crew: data.crew || []
+    };
+  } catch (error) {
+    console.error('Error fetching movie credits:', error);
+    return { cast: [], crew: [] };
+  }
+};
+
+/**
+ * Get similar movies
+ */
+export const getSimilarMovies = async (movieId: number): Promise<{ movies: TMDBMovieResponse['results']; }> => {
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/movie/${movieId}/similar?language=ru-RU`,
+      { headers }
+    );
+
+    if (!response.ok) {
+      throw new Error(`TMDB API error: ${response.status}`);
+    }
+
+    const data: TMDBMovieResponse = await response.json();
+    return {
+      movies: data.results
+    };
+  } catch (error) {
+    console.error('Error fetching similar movies:', error);
+    return { movies: [] };
+  }
+};
