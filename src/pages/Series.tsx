@@ -75,6 +75,28 @@ const SeriesPage = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
+  const fetchSeries = async () => {
+    try {
+      setLoading(true);
+      const results = await getPopularSeries(1);
+      const transformed = results.results.map((series: any) => ({
+        id: series.id,
+        title: series.name || series.original_name,
+        year: series.first_air_date ? new Date(series.first_air_date).getFullYear().toString() : '',
+        rating: series.vote_average,
+        poster: getMoviePosterUrl(series.poster_path, 'w342'),
+        description: series.overview
+      }));
+      setAllSeries(transformed);
+      setDisplaySeries(transformed.slice(0, SERIES_PER_PAGE));
+      setHasMore(transformed.length > SERIES_PER_PAGE);
+    } catch (error) {
+      console.error('Error fetching series:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loadMore = async () => {
     if (isSearching) return;
     
