@@ -1,5 +1,3 @@
-import translatte from 'translatte';
-
 const translationCache = new Map<string, string>();
 
 export const translateText = async (text: string, targetLanguage: string = 'ru'): Promise<string> => {
@@ -22,6 +20,8 @@ export const translateText = async (text: string, targetLanguage: string = 'ru')
 
     console.log(`Translating text (first 100 chars): ${text.substring(0, 100)}`);
     
+    // Use dynamic import for ES module
+    const translatte = (await import('translatte')).default;
     const result = await translatte(text, {
       from: 'en',
       to: targetLanguage,
@@ -63,6 +63,8 @@ export const translateHtml = async (html: string, targetLanguage: string = 'ru')
 
     console.log(`Translating HTML (first 100 chars): ${textContent.substring(0, 100)}`);
     
+    // Use dynamic import for ES module
+    const translatte = (await import('translatte')).default;
     const result = await translatte(textContent, {
       from: 'en',
       to: targetLanguage,
