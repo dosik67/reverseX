@@ -13,6 +13,7 @@ import MovieDetail from "./pages/MovieDetail";
 import SeriesPage from "./pages/Series";
 import SeriesDetail from "./pages/SeriesDetail";
 import Games from "./pages/Games";
+import GameDetail from "./pages/GameDetail";
 import Profile from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import PlaceholderPage from "./pages/PlaceholderPage";
@@ -82,6 +83,7 @@ const App = () => {
                   <Route path="/profile/:userId/edit" element={<ProfileEdit />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/games" element={<Games />} />
+                  <Route path="/game/:id" element={<GameDetail />} />
                   <Route path="/music" element={<PlaceholderPage title="Music" icon={Music} />} />
                   <Route path="/books" element={<PlaceholderPage title="Books" icon={Book} />} />
                 </Route>

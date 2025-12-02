@@ -119,7 +119,7 @@ const GameCard = ({ game }: { game: Game }) => {
   }, [getCurrentUser]);
 
   return (
-    <div>
+    <Link to={`/game/${game.id}`}>
       <Card className="overflow-hidden hover-lift cursor-pointer group relative">
         <div className="aspect-[2/3] relative overflow-hidden bg-muted">
           <img
@@ -150,7 +150,7 @@ const GameCard = ({ game }: { game: Game }) => {
           </div>
         </div>
       </Card>
-    </div>
+    </Link>
   );
 };
 
