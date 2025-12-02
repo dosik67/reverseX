@@ -6,6 +6,7 @@ import { Star, Plus, ArrowLeft } from "lucide-react";
 import supabase from "@/utils/supabase";
 import { toast } from "sonner";
 import { translateText } from "@/lib/translate";
+import { getGameDescription } from "@/lib/steamApi";
 
 interface GameDetails {
   id: number;
@@ -70,10 +71,19 @@ const GameDetail = () => {
     const translateGameDescription = async () => {
       if (game) {
         try {
-          const translatedDescription = await translateText(game.description, 'ru');
+          // Try to get Steam description first, fallback to translated RAWG description
+          const description = await getGameDescription(
+            game.id,
+            game.name,
+            game.description || ''
+          );
+          const finalDesc = description && description.length > 0 
+            ? description 
+            : (game.description ? await translateText(game.description, 'ru') : '');
+          
           setTranslatedGame({
             ...game,
-            description: translatedDescription
+            description: finalDesc
           });
         } catch (error) {
           console.error('Error translating game:', error);

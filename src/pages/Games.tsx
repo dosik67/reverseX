@@ -6,6 +6,7 @@ import GameCard from "@/components/GameCard";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useTranslation } from "react-i18next";
 import { translateText } from "@/lib/translate";
+import { getGameDescription } from "@/lib/steamApi";
 
 interface Game {
   id: number;
@@ -71,14 +72,23 @@ const Games = () => {
         data.results
           .filter((g: any) => g.background_image)
           .map(async (g: any) => {
-            const translatedDesc = g.description ? await translateText(g.description, 'ru') : '';
+            // Try to get Steam description first, fallback to translated RAWG description
+            const description = await getGameDescription(
+              g.id,
+              g.name,
+              g.description || ''
+            );
+            const finalDesc = description && description.length > 0 
+              ? description 
+              : (g.description ? await translateText(g.description, 'ru') : '');
+            
             return {
               id: g.id,
               title: g.name,
               year: g.released?.split('-')[0] || 'Unknown',
               rating: Math.round((g.rating || 0) * 10) / 10,
               poster: g.background_image,
-              description: translatedDesc,
+              description: finalDesc,
               genres: g.genres?.map((genre: any) => genre.name) || []
             };
           })
@@ -133,14 +143,23 @@ const Games = () => {
         data.results
           .filter((g: any) => g.background_image)
           .map(async (g: any) => {
-            const translatedDesc = g.description ? await translateText(g.description, 'ru') : '';
+            // Try to get Steam description first, fallback to translated RAWG description
+            const description = await getGameDescription(
+              g.id,
+              g.name,
+              g.description || ''
+            );
+            const finalDesc = description && description.length > 0 
+              ? description 
+              : (g.description ? await translateText(g.description, 'ru') : '');
+            
             return {
               id: g.id,
               title: g.name,
               year: g.released?.split('-')[0] || 'Unknown',
               rating: Math.round((g.rating || 0) * 10) / 10,
               poster: g.background_image,
-              description: translatedDesc,
+              description: finalDesc,
               genres: g.genres?.map((genre: any) => genre.name) || []
             };
           })
