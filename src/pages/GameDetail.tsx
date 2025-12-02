@@ -234,22 +234,23 @@ const GameDetail = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Описание</CardTitle>
-              {rusDescription && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsTranslated(!isTranslated)}
-                  className="ml-4"
-                >
-                  {isTranslated ? '🇬🇧 English' : '🇷🇺 Русский'}
-                </Button>
-              )}
+              <Button
+                variant={isTranslated ? "default" : "outline"}
+                size="sm"
+                onClick={() => setIsTranslated(!isTranslated)}
+                className="ml-4"
+              >
+                {isTranslated ? '🇷🇺 Русский' : '🇬🇧 English'}
+              </Button>
             </CardHeader>
             <CardContent>
               <div
                 className="prose dark:prose-invert max-w-none"
                 dangerouslySetInnerHTML={{ __html: isTranslated && rusDescription ? rusDescription : (game?.description || 'Описание недоступно') }}
               />
+              {isTranslated && !rusDescription && (
+                <p className="text-muted-foreground italic">Русский перевод загружается...</p>
+              )}
             </CardContent>
           </Card>
 
