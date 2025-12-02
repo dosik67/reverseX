@@ -5,7 +5,6 @@ import { Search, X } from "lucide-react";
 import GameCard from "@/components/GameCard";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useTranslation } from "react-i18next";
-import { getGameDescriptionFromSteam } from "@/lib/steamApi";
 
 interface Game {
   id: number;
@@ -67,25 +66,17 @@ const Games = () => {
       );
       const data = await response.json();
 
-      const transformedGames: Game[] = await Promise.all(
-        data.results
-          .filter((g: any) => g.background_image)
-          .map(async (g: any) => {
-            // Try to get Steam description (in Russian) first
-            const steamDesc = await getGameDescriptionFromSteam(g.id);
-            const finalDesc = steamDesc || g.description || '';
-            
-            return {
-              id: g.id,
-              title: g.name,
-              year: g.released?.split('-')[0] || 'Unknown',
-              rating: Math.round((g.rating || 0) * 10) / 10,
-              poster: g.background_image,
-              description: finalDesc,
-              genres: g.genres?.map((genre: any) => genre.name) || []
-            };
-          })
-      );
+      const transformedGames: Game[] = data.results
+        .filter((g: any) => g.background_image)
+        .map((g: any) => ({
+          id: g.id,
+          title: g.name,
+          year: g.released?.split('-')[0] || 'Unknown',
+          rating: Math.round((g.rating || 0) * 10) / 10,
+          poster: g.background_image,
+          description: g.description || '',
+          genres: g.genres?.map((genre: any) => genre.name) || []
+        }));
 
       setAllGames(transformedGames);
       setDisplayGames(transformedGames.slice(0, GAMES_PER_PAGE));
@@ -132,25 +123,17 @@ const Games = () => {
       const response = await fetch(url);
       const data = await response.json();
 
-      const transformedGames: Game[] = await Promise.all(
-        data.results
-          .filter((g: any) => g.background_image)
-          .map(async (g: any) => {
-            // Try to get Steam description (in Russian) first
-            const steamDesc = await getGameDescriptionFromSteam(g.id);
-            const finalDesc = steamDesc || g.description || '';
-            
-            return {
-              id: g.id,
-              title: g.name,
-              year: g.released?.split('-')[0] || 'Unknown',
-              rating: Math.round((g.rating || 0) * 10) / 10,
-              poster: g.background_image,
-              description: finalDesc,
-              genres: g.genres?.map((genre: any) => genre.name) || []
-            };
-          })
-      );
+      const transformedGames: Game[] = data.results
+        .filter((g: any) => g.background_image)
+        .map((g: any) => ({
+          id: g.id,
+          title: g.name,
+          year: g.released?.split('-')[0] || 'Unknown',
+          rating: Math.round((g.rating || 0) * 10) / 10,
+          poster: g.background_image,
+          description: g.description || '',
+          genres: g.genres?.map((genre: any) => genre.name) || []
+        }));
 
       setAllGames(transformedGames);
       setDisplayGames(transformedGames.slice(0, GAMES_PER_PAGE));

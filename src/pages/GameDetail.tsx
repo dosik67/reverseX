@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star, Plus, ArrowLeft } from "lucide-react";
 import supabase from "@/utils/supabase";
 import { toast } from "sonner";
-import { translateText } from "@/lib/translate";
-import { getGameDescriptionFromSteam } from "@/lib/steamApi";
+import { getGameDescriptionFromSteam } from "@/lib/translationToggle";
 
 interface GameDetails {
   id: number;
@@ -27,7 +26,8 @@ interface GameDetails {
 const GameDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [game, setGame] = useState<GameDetails | null>(null);
-  const [translatedGame, setTranslatedGame] = useState<GameDetails | null>(null);
+  const [rusDescription, setRusDescription] = useState<string | null>(null);
+  const [isTranslated, setIsTranslated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [addingToTop50, setAddingToTop50] = useState(false);
@@ -66,28 +66,21 @@ const GameDetail = () => {
     getCurrentUser();
   }, [id]);
 
-  // Translate game description when game is loaded
+  // Fetch Russian description on component mount
   useEffect(() => {
-    const translateGameDescription = async () => {
-      if (game) {
+    const fetchRussianDescription = async () => {
+      if (game?.id) {
         try {
-          // Try to get Steam description (in Russian) first
-          const steamDesc = await getGameDescriptionFromSteam(game.id);
-          const finalDesc = steamDesc || game.description || '';
-          
-          setTranslatedGame({
-            ...game,
-            description: finalDesc
-          });
+          const desc = await getGameDescriptionFromSteam(game.id);
+          setRusDescription(desc);
         } catch (error) {
-          console.error('Error getting game description:', error);
-          setTranslatedGame(game);
+          console.error('Error fetching Russian description:', error);
         }
       }
     };
 
-    translateGameDescription();
-  }, [game]);
+    fetchRussianDescription();
+  }, [game?.id]);
 
   const handleAddToTop50 = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -237,13 +230,23 @@ const GameDetail = () => {
         <div className="lg:col-span-2 space-y-8">
           {/* Description */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Описание</CardTitle>
+              {rusDescription && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsTranslated(!isTranslated)}
+                  className="ml-4"
+                >
+                  {isTranslated ? 'Показать на английском' : 'Перевести на русский'}
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               <div
                 className="prose dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: translatedGame?.description || 'Описание недоступно' }}
+                dangerouslySetInnerHTML={{ __html: isTranslated && rusDescription ? rusDescription : (game?.description || 'Описание недоступно') }}
               />
             </CardContent>
           </Card>
