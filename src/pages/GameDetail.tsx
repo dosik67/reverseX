@@ -67,7 +67,7 @@ const GameDetail = () => {
     e.preventDefault();
 
     if (!currentUserId) {
-      toast.error('Please sign in to add to Top 50');
+      toast.error('Войдите в аккаунт чтобы добавить в Top 50');
       return;
     }
 
@@ -107,7 +107,7 @@ const GameDetail = () => {
         .single();
 
       if (existingItem) {
-        toast.info('Already in Top 50');
+        toast.info('Уже в Top 50');
         return;
       }
 
@@ -129,10 +129,10 @@ const GameDetail = () => {
       });
 
       if (insertError) throw insertError;
-      toast.success('Added to Top 50');
+      toast.success('Добавлено в Top 50');
     } catch (error) {
       console.error(error);
-      toast.error('Failed to add to Top 50');
+      toast.error('Ошибка при добавлении в Top 50');
     } finally {
       setAddingToTop50(false);
     }
@@ -145,7 +145,7 @@ const GameDetail = () => {
           <div className="inline-block">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
-          <p className="mt-4 text-muted-foreground">Loading game...</p>
+          <p className="mt-4 text-muted-foreground">Загружаем игру...</p>
         </div>
       </div>
     );
@@ -155,11 +155,11 @@ const GameDetail = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <p className="text-red-500 mb-4">{error || 'Game not found'}</p>
+          <p className="text-red-500 mb-4">{error || 'Игра не найдена'}</p>
           <Link to="/games">
             <Button variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Games
+              Вернуться к играм
             </Button>
           </Link>
         </div>
@@ -173,7 +173,7 @@ const GameDetail = () => {
       <Link to="/games" className="mb-6 inline-block">
         <Button variant="outline" size="sm">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Games
+          Вернуться к играм
         </Button>
       </Link>
 
@@ -199,7 +199,7 @@ const GameDetail = () => {
                 className="bg-primary hover:bg-primary/90 text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add to Top 50
+                Добавить в Top 50
               </Button>
             </div>
           </div>
@@ -212,12 +212,12 @@ const GameDetail = () => {
           {/* Description */}
           <Card>
             <CardHeader>
-              <CardTitle>About</CardTitle>
+              <CardTitle>Описание</CardTitle>
             </CardHeader>
             <CardContent>
               <div
                 className="prose dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: game.description || 'No description available' }}
+                dangerouslySetInnerHTML={{ __html: game.description || 'Описание недоступно' }}
               />
             </CardContent>
           </Card>
@@ -226,7 +226,7 @@ const GameDetail = () => {
           {game.genres && game.genres.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Genres</CardTitle>
+                <CardTitle>Жанры</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
@@ -247,7 +247,7 @@ const GameDetail = () => {
           {game.platforms && game.platforms.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Platforms</CardTitle>
+                <CardTitle>Платформы</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
@@ -270,13 +270,13 @@ const GameDetail = () => {
           {/* Info Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Information</CardTitle>
+              <CardTitle>Информация</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {game.released && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Release Date</p>
-                  <p className="font-semibold">{new Date(game.released).toLocaleDateString()}</p>
+                  <p className="text-sm text-muted-foreground">Дата выпуска</p>
+                  <p className="font-semibold">{new Date(game.released).toLocaleDateString('ru-RU')}</p>
                 </div>
               )}
 
@@ -289,21 +289,21 @@ const GameDetail = () => {
 
               {game.playtime && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Average Playtime</p>
-                  <p className="font-semibold">{game.playtime} hours</p>
+                  <p className="text-sm text-muted-foreground">Среднее время прохождения</p>
+                  <p className="font-semibold">{game.playtime} часов</p>
                 </div>
               )}
 
               {game.website && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Official Website</p>
+                  <p className="text-sm text-muted-foreground">Официальный сайт</p>
                   <a
                     href={game.website}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline break-all text-sm"
                   >
-                    Visit Website
+                    Посетить сайт
                   </a>
                 </div>
               )}
@@ -314,10 +314,10 @@ const GameDetail = () => {
           {game.developers && game.developers.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Developer</CardTitle>
+                <CardTitle className="text-lg">Разработчик</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="font-semibold">{game.developers[0]?.name || 'Unknown'}</p>
+                <p className="font-semibold">{game.developers[0]?.name || 'Неизвестно'}</p>
               </CardContent>
             </Card>
           )}
@@ -326,10 +326,10 @@ const GameDetail = () => {
           {game.publishers && game.publishers.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Publisher</CardTitle>
+                <CardTitle className="text-lg">Издатель</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="font-semibold">{game.publishers[0]?.name || 'Unknown'}</p>
+                <p className="font-semibold">{game.publishers[0]?.name || 'Неизвестно'}</p>
               </CardContent>
             </Card>
           )}

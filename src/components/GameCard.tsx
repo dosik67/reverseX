@@ -37,7 +37,7 @@ const GameCard = ({ game }: { game: Game }) => {
       e.stopPropagation();
 
       if (!currentUserId) {
-        toast.error('Please sign in to add to Top 50');
+        toast.error('Войдите в аккаунт чтобы добавить в Top 50');
         return;
       }
 
@@ -75,7 +75,7 @@ const GameCard = ({ game }: { game: Game }) => {
           .single();
 
         if (existingItem) {
-          toast.info('Already in Top 50');
+          toast.info('Уже в Top 50');
           return;
         }
 
@@ -97,10 +97,10 @@ const GameCard = ({ game }: { game: Game }) => {
         });
 
         if (insertError) throw insertError;
-        toast.success('Added to Top 50');
+        toast.success('Добавлено в Top 50');
       } catch (error) {
         console.error(error);
-        toast.error('Failed to add to Top 50');
+        toast.error('Ошибка при добавлении в Top 50');
       } finally {
         setLoading(false);
       }
@@ -135,7 +135,7 @@ const GameCard = ({ game }: { game: Game }) => {
             onClick={handleAddToTop50}
             disabled={loading}
             className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 disabled:opacity-50"
-            title="Add to Top 50"
+            title="Добавить в Top 50"
           >
             <Plus className="w-5 h-5 transition-colors text-white" />
           </button>

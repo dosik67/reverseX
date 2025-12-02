@@ -171,14 +171,14 @@ const Games = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-6 gradient-text">Games</h1>
+        <h1 className="text-4xl font-bold mb-6 gradient-text">Игры</h1>
 
         {/* Search Bar */}
         <div className="relative max-w-md mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <Input
             type="text"
-            placeholder="Search games..."
+            placeholder="Поиск игр..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -188,11 +188,11 @@ const Games = () => {
         {/* Genre Filters */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold">Genres</h2>
+            <h2 className="text-lg font-semibold">Жанры</h2>
             {(searchQuery || selectedGenres.length > 0) && (
               <Button variant="ghost" size="sm" onClick={clearFilters} className="flex items-center gap-2">
                 <X className="w-4 h-4" />
-                Clear Filters
+                Очистить фильтры
               </Button>
             )}
           </div>
@@ -228,14 +228,14 @@ const Games = () => {
           {hasMore && (
             <div className="flex justify-center mt-12">
               <Button onClick={loadMore} size="lg">
-                Load More
+                Загрузить ещё
               </Button>
             </div>
           )}
         </>
       ) : (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No games found</p>
+          <p className="text-muted-foreground">Игры не найдены</p>
         </div>
       )}
     </div>
