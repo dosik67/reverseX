@@ -72,9 +72,11 @@ const GameDetail = () => {
       if (game?.id) {
         try {
           const desc = await getGameDescriptionFromSteam(game.id);
-          setRusDescription(desc);
+          console.log('Fetched Russian description:', desc ? 'Found' : 'Not found');
+          setRusDescription(desc || '');
         } catch (error) {
           console.error('Error fetching Russian description:', error);
+          setRusDescription('');
         }
       }
     };
@@ -239,7 +241,7 @@ const GameDetail = () => {
                   onClick={() => setIsTranslated(!isTranslated)}
                   className="ml-4"
                 >
-                  {isTranslated ? 'Показать на английском' : 'Перевести на русский'}
+                  {isTranslated ? '🇬🇧 English' : '🇷🇺 Русский'}
                 </Button>
               )}
             </CardHeader>
