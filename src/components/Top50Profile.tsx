@@ -14,7 +14,7 @@ import { CSS } from "@dnd-kit/utilities";
 interface TopList {
   id: string;
   title: string;
-  media_type: 'movie' | 'anime';
+  media_type: 'movie' | 'anime' | 'game';
   items?: TopListItem[];
 }
 
@@ -29,6 +29,7 @@ interface TopListItem {
 const CATEGORIES = [
   { id: 'movie', label: 'Movies', icon: '🎬' },
   { id: 'anime', label: 'Series', icon: '📺' },
+  { id: 'game', label: 'Games', icon: '🎮' },
 ];
 
 interface Top50ProfileProps {
@@ -36,7 +37,7 @@ interface Top50ProfileProps {
   isOwnProfile: boolean;
 }
 
-const SortableItem = ({ item, isOwnProfile, onRemove, mediaType }: { item: TopListItem; isOwnProfile: boolean; onRemove: () => void; mediaType: 'movie' | 'anime' }) => {
+const SortableItem = ({ item, isOwnProfile, onRemove, mediaType }: { item: TopListItem; isOwnProfile: boolean; onRemove: () => void; mediaType: 'movie' | 'anime' | 'game' }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
 
   const style = {
@@ -58,7 +59,7 @@ const SortableItem = ({ item, isOwnProfile, onRemove, mediaType }: { item: TopLi
       <span className="font-bold text-lg text-primary w-8">#{item.rank}</span>
       {item.poster_url && (
         <Link 
-          to={`/${mediaType === 'movie' ? 'movie' : 'series'}/${item.item_id}`}
+          to={`/${mediaType === 'movie' ? 'movie' : mediaType === 'anime' ? 'series' : 'game'}/${item.item_id}`}
           className="flex-shrink-0 hover:opacity-80 transition-opacity"
         >
           <img 
