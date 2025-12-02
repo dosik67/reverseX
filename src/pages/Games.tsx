@@ -6,7 +6,6 @@ import GameCard from "@/components/GameCard";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useTranslation } from "react-i18next";
 import { translateText } from "@/lib/translate";
-import { getGameDescription } from "@/lib/steamApi";
 
 interface Game {
   id: number;
@@ -72,15 +71,8 @@ const Games = () => {
         data.results
           .filter((g: any) => g.background_image)
           .map(async (g: any) => {
-            // Try to get Steam description first, fallback to translated RAWG description
-            const description = await getGameDescription(
-              g.id,
-              g.name,
-              g.description || ''
-            );
-            const finalDesc = description && description.length > 0 
-              ? description 
-              : (g.description ? await translateText(g.description, 'ru') : '');
+            // Translate description to Russian
+            const finalDesc = g.description ? await translateText(g.description, 'ru') : '';
             
             return {
               id: g.id,
@@ -143,15 +135,8 @@ const Games = () => {
         data.results
           .filter((g: any) => g.background_image)
           .map(async (g: any) => {
-            // Try to get Steam description first, fallback to translated RAWG description
-            const description = await getGameDescription(
-              g.id,
-              g.name,
-              g.description || ''
-            );
-            const finalDesc = description && description.length > 0 
-              ? description 
-              : (g.description ? await translateText(g.description, 'ru') : '');
+            // Translate description to Russian
+            const finalDesc = g.description ? await translateText(g.description, 'ru') : '';
             
             return {
               id: g.id,

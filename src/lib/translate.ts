@@ -8,7 +8,7 @@ export const translateText = async (text: string, targetLanguage: string = 'ru')
   }
 
   // Check cache first
-  const cacheKey = `${text}:${targetLanguage}`;
+  const cacheKey = `${text.substring(0, 100)}:${targetLanguage}`;
   if (translationCache.has(cacheKey)) {
     return translationCache.get(cacheKey) || text;
   }
@@ -20,11 +20,19 @@ export const translateText = async (text: string, targetLanguage: string = 'ru')
       return text;
     }
 
+    console.log(`Translating text (first 100 chars): ${text.substring(0, 100)}`);
+    
     const result = await translate(text, { to: targetLanguage });
-    const translatedText = result.text || text;
+    const translatedText = (result?.text || result) as string;
+    
+    if (!translatedText) {
+      console.warn('Translation returned empty result');
+      return text;
+    }
     
     // Cache the translation
     translationCache.set(cacheKey, translatedText);
+    console.log(`Translation successful: ${translatedText.substring(0, 100)}`);
     
     return translatedText;
   } catch (error) {
@@ -40,17 +48,25 @@ export const translateHtml = async (html: string, targetLanguage: string = 'ru')
   }
 
   try {
-    // Extract text content from HTML
+    // Strip HTML tags and translate
     const temp = document.createElement('div');
     temp.innerHTML = html;
-    const textContent = temp.textContent || '';
+    const textContent = temp.textContent || temp.innerText || '';
 
     if (textContent.length < 3) {
       return html;
     }
 
+    console.log(`Translating HTML (first 100 chars): ${textContent.substring(0, 100)}`);
+    
     const result = await translate(textContent, { to: targetLanguage });
-    const translatedText = result.text || textContent;
+    const translatedText = (result?.text || result) as string;
+    
+    if (!translatedText) {
+      return html;
+    }
+    
+    console.log(`HTML translation successful: ${translatedText.substring(0, 100)}`);
     
     // Return HTML with translated text
     return `<p>${translatedText}</p>`;
