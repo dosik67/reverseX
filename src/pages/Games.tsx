@@ -5,7 +5,7 @@ import { Search, X } from "lucide-react";
 import GameCard from "@/components/GameCard";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useTranslation } from "react-i18next";
-import { translateText } from "@/lib/translate";
+import { getGameDescriptionFromSteam } from "@/lib/steamApi";
 
 interface Game {
   id: number;
@@ -71,8 +71,9 @@ const Games = () => {
         data.results
           .filter((g: any) => g.background_image)
           .map(async (g: any) => {
-            // Translate description to Russian
-            const finalDesc = g.description ? await translateText(g.description, 'ru') : '';
+            // Try to get Steam description (in Russian) first
+            const steamDesc = await getGameDescriptionFromSteam(g.id);
+            const finalDesc = steamDesc || g.description || '';
             
             return {
               id: g.id,
@@ -135,8 +136,9 @@ const Games = () => {
         data.results
           .filter((g: any) => g.background_image)
           .map(async (g: any) => {
-            // Translate description to Russian
-            const finalDesc = g.description ? await translateText(g.description, 'ru') : '';
+            // Try to get Steam description (in Russian) first
+            const steamDesc = await getGameDescriptionFromSteam(g.id);
+            const finalDesc = steamDesc || g.description || '';
             
             return {
               id: g.id,

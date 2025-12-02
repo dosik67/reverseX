@@ -6,6 +6,7 @@ import { Star, Plus, ArrowLeft } from "lucide-react";
 import supabase from "@/utils/supabase";
 import { toast } from "sonner";
 import { translateText } from "@/lib/translate";
+import { getGameDescriptionFromSteam } from "@/lib/steamApi";
 
 interface GameDetails {
   id: number;
@@ -70,15 +71,16 @@ const GameDetail = () => {
     const translateGameDescription = async () => {
       if (game) {
         try {
-          // Translate description to Russian
-          const finalDesc = game.description ? await translateText(game.description, 'ru') : '';
+          // Try to get Steam description (in Russian) first
+          const steamDesc = await getGameDescriptionFromSteam(game.id);
+          const finalDesc = steamDesc || game.description || '';
           
           setTranslatedGame({
             ...game,
             description: finalDesc
           });
         } catch (error) {
-          console.error('Error translating game:', error);
+          console.error('Error getting game description:', error);
           setTranslatedGame(game);
         }
       }
