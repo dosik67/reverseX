@@ -47,21 +47,22 @@ const Games = () => {
   useScrollRestore(!loading ? 0 : 50);
 
   useEffect(() => {
-    fetchGames();
+    fetchPopularGames();
   }, []);
 
   useEffect(() => {
-    applyFilters();
-  }, [searchQuery, selectedGenres, allGames]);
+    if (searchQuery.trim() || selectedGenres.length > 0) {
+      performSearch();
+    }
+  }, [searchQuery, selectedGenres]);
 
-  const fetchGames = async () => {
+  const fetchPopularGames = async () => {
     try {
       setLoading(true);
       const apiKey = "c33c648c0d8f45c494af8da025d7b862";
       
-      // Fetch popular games from RAWG API
       const response = await fetch(
-        `https://api.rawg.io/api/games?key=${apiKey}&page_size=100&ordering=-rating&platforms=1,2,3`
+        `https://api.rawg.io/api/games?key=${apiKey}&page_size=100&ordering=-rating`
       );
       const data = await response.json();
 
@@ -87,34 +88,62 @@ const Games = () => {
     }
   };
 
-  const applyFilters = () => {
-    let filtered = allGames;
+  const performSearch = async () => {
+    try {
+      setLoading(true);
+      const apiKey = "c33c648c0d8f45c494af8da025d7b862";
+      
+      let url = `https://api.rawg.io/api/games?key=${apiKey}&page_size=40`;
+      
+      if (searchQuery.trim()) {
+        url += `&search=${encodeURIComponent(searchQuery)}`;
+      }
+      
+      if (selectedGenres.length > 0) {
+        const genreIds = selectedGenres.map(genre => {
+          const genreMap: { [key: string]: string } = {
+            "Action": "action",
+            "Adventure": "adventure",
+            "RPG": "roleplaying",
+            "Strategy": "strategy",
+            "Simulation": "simulation",
+            "Sports": "sports",
+            "Racing": "racing",
+            "Puzzle": "puzzle",
+            "Shooter": "shooter",
+            "Fighting": "fighting",
+            "Indie": "indie",
+            "Horror": "horror",
+          };
+          return genreMap[genre] || genre.toLowerCase();
+        }).join(',');
+        url += `&genres=${genreIds}`;
+      }
 
-    // Apply search filter
-    if (searchQuery.trim()) {
-      filtered = filtered.filter(
-        (game) =>
-          game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          game.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const response = await fetch(url);
+      const data = await response.json();
+
+      const transformedGames: Game[] = data.results
+        .filter((g: any) => g.background_image)
+        .map((g: any) => ({
+          id: g.id,
+          title: g.name,
+          year: g.released?.split('-')[0] || 'Unknown',
+          rating: Math.round((g.rating || 0) * 10) / 10,
+          poster: g.background_image,
+          description: g.description || '',
+          genres: g.genres?.map((genre: any) => genre.name) || []
+        }));
+
+      setAllGames(transformedGames);
+      setDisplayGames(transformedGames.slice(0, GAMES_PER_PAGE));
+      setPage(1);
+      setHasMore(transformedGames.length > GAMES_PER_PAGE);
+    } catch (error) {
+      console.error('Error searching games:', error);
+    } finally {
+      setLoading(false);
     }
-
-    // Apply genre filter
-    if (selectedGenres.length > 0) {
-      filtered = filtered.filter((game) =>
-        selectedGenres.some(
-          (selectedGenre) =>
-            game.genres?.some(
-              (gameGenre) =>
-                gameGenre.toLowerCase().includes(selectedGenre.toLowerCase())
-            )
-        )
-      );
-    }
-
-    setDisplayGames(filtered.slice(0, GAMES_PER_PAGE));
-    setPage(1);
-    setHasMore(filtered.length > GAMES_PER_PAGE);
   };
 
   const loadMore = () => {
@@ -122,31 +151,9 @@ const Games = () => {
     const start = page * GAMES_PER_PAGE;
     const end = start + GAMES_PER_PAGE;
 
-    let filtered = allGames;
-
-    if (searchQuery.trim()) {
-      filtered = filtered.filter(
-        (game) =>
-          game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          game.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (selectedGenres.length > 0) {
-      filtered = filtered.filter((game) =>
-        selectedGenres.some(
-          (selectedGenre) =>
-            game.genres?.some(
-              (gameGenre) =>
-                gameGenre.toLowerCase().includes(selectedGenre.toLowerCase())
-            )
-        )
-      );
-    }
-
-    setDisplayGames((prev) => [...prev, ...filtered.slice(start, end)]);
+    setDisplayGames((prev) => [...prev, ...allGames.slice(start, end)]);
     setPage(nextPage);
-    setHasMore(end < filtered.length);
+    setHasMore(end < allGames.length);
   };
 
   const toggleGenre = (genre: string) => {
@@ -158,6 +165,7 @@ const Games = () => {
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedGenres([]);
+    fetchPopularGames();
   };
 
   return (
