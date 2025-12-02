@@ -1,4 +1,4 @@
-import translate from 'google-translate-api-x';
+import translatte from 'translatte';
 
 const translationCache = new Map<string, string>();
 
@@ -22,8 +22,12 @@ export const translateText = async (text: string, targetLanguage: string = 'ru')
 
     console.log(`Translating text (first 100 chars): ${text.substring(0, 100)}`);
     
-    const result = await translate(text, { to: targetLanguage });
-    const translatedText = (result?.text || result) as string;
+    const result = await translatte(text, {
+      from: 'en',
+      to: targetLanguage,
+    });
+    
+    const translatedText = result?.text || text;
     
     if (!translatedText) {
       console.warn('Translation returned empty result');
@@ -59,8 +63,12 @@ export const translateHtml = async (html: string, targetLanguage: string = 'ru')
 
     console.log(`Translating HTML (first 100 chars): ${textContent.substring(0, 100)}`);
     
-    const result = await translate(textContent, { to: targetLanguage });
-    const translatedText = (result?.text || result) as string;
+    const result = await translatte(textContent, {
+      from: 'en',
+      to: targetLanguage,
+    });
+    
+    const translatedText = result?.text || textContent;
     
     if (!translatedText) {
       return html;
