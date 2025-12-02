@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star, Plus, ArrowLeft } from "lucide-react";
 import supabase from "@/utils/supabase";
 import { toast } from "sonner";
+import { translateText } from "@/lib/translate";
 
 interface GameDetails {
   id: number;
@@ -25,6 +26,7 @@ interface GameDetails {
 const GameDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [game, setGame] = useState<GameDetails | null>(null);
+  const [translatedGame, setTranslatedGame] = useState<GameDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [addingToTop50, setAddingToTop50] = useState(false);
@@ -62,6 +64,26 @@ const GameDetail = () => {
     fetchGame();
     getCurrentUser();
   }, [id]);
+
+  // Translate game description when game is loaded
+  useEffect(() => {
+    const translateGameDescription = async () => {
+      if (game) {
+        try {
+          const translatedDescription = await translateText(game.description, 'ru');
+          setTranslatedGame({
+            ...game,
+            description: translatedDescription
+          });
+        } catch (error) {
+          console.error('Error translating game:', error);
+          setTranslatedGame(game);
+        }
+      }
+    };
+
+    translateGameDescription();
+  }, [game]);
 
   const handleAddToTop50 = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -217,7 +239,7 @@ const GameDetail = () => {
             <CardContent>
               <div
                 className="prose dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: game.description || 'Описание недоступно' }}
+                dangerouslySetInnerHTML={{ __html: translatedGame?.description || 'Описание недоступно' }}
               />
             </CardContent>
           </Card>
