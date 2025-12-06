@@ -1,6 +1,6 @@
 // OMDb API configuration for IMDb ratings
-// Using Vercel API proxy to bypass CORS
-const OMDB_PROXY_URL = '/api/omdb-proxy';
+const OMDB_API_KEY = '1e8fe39e';
+const OMDB_BASE_URL = 'https://www.omdbapi.com';
 
 export interface OMDbRating {
   imdbId: string;
@@ -36,13 +36,15 @@ export const getIMDbRating = async (imdbId: string): Promise<OMDbRating | null> 
   }
 
   try {
-    const response = await fetch(OMDB_PROXY_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ imdbId })
-    });
+    const response = await fetch(
+      `${OMDB_BASE_URL}/?i=${imdbId}&apikey=${OMDB_API_KEY}`,
+      { 
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
 
     if (!response.ok) {
       console.error(`OMDb API error: ${response.status}`);
