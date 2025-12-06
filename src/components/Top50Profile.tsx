@@ -137,20 +137,15 @@ const TopRankItem = ({ item, rank, isOwnProfile, onRemove, mediaType }: { item: 
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
         </Link>
 
-        {/* Rank Badge - Large & Taking Space */}
+        {/* Rank Badge - Serious Numbers in Center */}
         <div className={`absolute ${
-          rank === 1 ? '-top-4 -right-4' :
-          rank === 2 ? '-top-4 -right-4' :
-          rank === 3 ? '-top-4 -right-4' :
-          'top-3 right-3 md:top-4 md:right-4'
-        } ${
           rank === 1 ? 'rank-badge-1' :
           rank === 2 ? 'rank-badge-2' :
           rank === 3 ? 'rank-badge-3' :
           'rank-badge-regular'
         } font-bold flex items-center justify-center z-30 shadow-xl`}>
           <span className="relative z-10 drop-shadow-lg">
-            {rank === 1 ? '👑' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`}
+            {rank}
           </span>
         </div>
 
@@ -468,12 +463,9 @@ const Top50Profile = ({ userId, isOwnProfile }: Top50ProfileProps) => {
                     items={selectedList.items.map(item => item.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    {/* Top 3 - Premium Display */}
-                    <div className="mb-8 md:mb-12">
-                      <h3 className="text-lg md:text-xl font-bold text-primary mb-3 md:mb-4 flex items-center gap-2">
-                        <span className="text-2xl">🏆</span> Top 3
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 px-4 md:px-6 py-2">
+                    {/* Top 3 - Premium Display - LARGE */}
+                    <div className="mb-12 md:mb-16">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 px-4 md:px-8 py-4">
                         {selectedList.items.slice(0, 3).map((item) => (
                           <TopRankItem
                             key={item.id}
@@ -489,11 +481,10 @@ const Top50Profile = ({ userId, isOwnProfile }: Top50ProfileProps) => {
                       </div>
                     </div>
 
-                    {/* Rest of Items - Grid */}
+                    {/* Rest of Items - Smaller Grid */}
                     {selectedList.items.length > 3 && (
-                      <div>
-                        <h3 className="text-base md:text-lg font-bold text-muted-foreground mb-3 md:mb-4">More Titles</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+                      <div className="px-4 md:px-8">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5">
                           {selectedList.items.slice(3).map((item) => (
                             <TopRankItem
                               key={item.id}
