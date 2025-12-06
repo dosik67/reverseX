@@ -89,12 +89,6 @@ const Layout = () => {
                 </Link>
               </Button>
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/top-movies" className="flex items-center gap-2">
-                  <Film className="w-4 h-4" />
-                  Top 1000
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
                 <Link to="/series" className="flex items-center gap-2">
                   <Tv className="w-4 h-4" />
                   Series
