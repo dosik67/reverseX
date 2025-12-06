@@ -36,20 +36,23 @@ const Auth = () => {
     }
   };
 
-  const handleQRAuthSuccess = async (token: string) => {
+  const handleQRAuthSuccess = async (userId: string) => {
     try {
-      // Token should be in format: userId|sessionToken
-      const [userId, sessionToken] = token.split('|');
+      // userId comes from QRAuthPage (the account ID)
+      // Retrieve the stored account info
+      const accountKey = `qr_account_${userId}`;
+      const accountData = localStorage.getItem(accountKey);
       
-      // Set the session
-      const { error } = await supabase.auth.setSession({
-        access_token: sessionToken,
-        refresh_token: ''
-      });
+      if (!accountData) {
+        throw new Error('Account data not found');
+      }
       
-      if (error) throw error;
+      const account = JSON.parse(accountData);
       
-      toast.success('Вы успешно вошли!');
+      // Store the authenticated user ID for reference
+      localStorage.setItem('qr_auth_user', userId);
+      
+      toast.success(`Вы вошли как ${account.email}!`);
       navigate('/');
     } catch (error: any) {
       toast.error('Ошибка при входе: ' + error.message);
@@ -65,7 +68,7 @@ const Auth = () => {
 
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -76,6 +79,18 @@ const Auth = () => {
         },
       });
       if (error) throw error;
+      
+      // Save account for QR auth
+      if (data.user) {
+        const accountKey = `qr_account_${data.user.id}`;
+        localStorage.setItem(accountKey, JSON.stringify({
+          id: data.user.id,
+          email: data.user.email,
+          username: username,
+          lastLogin: new Date().toISOString()
+        }));
+      }
+      
       toast.success('Account created successfully!');
       navigate('/');
     } catch (error: any) {
@@ -93,11 +108,30 @@ const Auth = () => {
 
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
+      
+      // Save account for QR auth
+      if (data.user) {
+        const accountKey = `qr_account_${data.user.id}`;
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', data.user.id)
+          .single();
+        
+        localStorage.setItem(accountKey, JSON.stringify({
+          id: data.user.id,
+          email: data.user.email,
+          username: profile?.username || email.split('@')[0],
+          lastLogin: new Date().toISOString()
+        }));
+      }
+      
+      toast.success('Вы успешно вошли!');
       navigate('/');
     } catch (error: any) {
       toast.error(error.message);

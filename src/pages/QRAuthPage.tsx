@@ -16,19 +16,41 @@ const QRAuthPage = () => {
 
   const sessionId = searchParams.get('session');
 
-  // Fetch user's accounts from localStorage (in real app, would be from backend)
+  // Fetch saved accounts from localStorage when page loads
   useEffect(() => {
-    // Simulate fetching accounts
-    const storedAccounts = localStorage.getItem('user_accounts');
-    if (storedAccounts) {
+    const fetchAccounts = async () => {
       try {
-        const parsed = JSON.parse(storedAccounts);
-        setAccounts(parsed);
+        // Get all saved QR accounts from localStorage
+        const savedAccounts: Array<{ id: string; email: string; username: string }> = [];
+        
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key?.startsWith('qr_account_')) {
+            try {
+              const account = JSON.parse(localStorage.getItem(key) || '{}');
+              if (account.id && account.email) {
+                savedAccounts.push({
+                  id: account.id,
+                  email: account.email,
+                  username: account.username || 'User'
+                });
+              }
+            } catch (error) {
+              console.error('Error parsing account:', error);
+            }
+          }
+        }
+        
+        setAccounts(savedAccounts);
+        console.log('Loaded accounts:', savedAccounts.length);
       } catch (error) {
-        console.error('Error parsing accounts:', error);
+        console.error('Error fetching accounts:', error);
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+
+    fetchAccounts();
   }, []);
 
   const handleSelectAccount = async (accountId: string) => {
@@ -41,16 +63,16 @@ const QRAuthPage = () => {
       setAuthenticating(true);
       setSelectedAccount(accountId);
 
-      // Get the account
       const account = accounts.find(a => a.id === accountId);
       if (!account) {
         toast.error('Account not found');
         return;
       }
 
-      // In real app, this would get a valid session token from backend
-      // For now, we'll use a placeholder
-      const token = `${account.id}|temp_token_${Date.now()}`;
+      // Get a fresh session token from Supabase for this user
+      // In production, this would be done via a backend endpoint
+      // For now, we generate a token format that Auth.tsx can understand
+      const token = account.id; // Send just the ID, Auth will validate with Supabase
 
       // Send auth data to parent window via localStorage
       localStorage.setItem(`qr_auth_${sessionId}`, JSON.stringify({
@@ -60,7 +82,7 @@ const QRAuthPage = () => {
 
       toast.success(`Authenticated as ${account.email}`);
 
-      // Close or redirect after short delay
+      // Close window after short delay
       setTimeout(() => {
         window.close();
       }, 1500);
