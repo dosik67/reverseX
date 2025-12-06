@@ -14,6 +14,7 @@ interface Movie {
   rating: number;
   poster: string;
   description: string;
+  rank?: number;
 }
 
 const MOVIES_PER_PAGE = 20;
@@ -36,7 +37,7 @@ const Movies = () => {
     if (tab === 'trending') {
       fetchPopularMovies();
     } else {
-      fetchTop1000Movies();
+      fetchAllTop1000Movies();
     }
     setSearchQuery("");
   }, [tab]);
@@ -80,26 +81,46 @@ const Movies = () => {
     }
   };
 
-  const fetchTop1000Movies = async () => {
+  const fetchAllTop1000Movies = async () => {
     try {
       setLoading(true);
-      // Fetch top rated movies (TMDB considers this closest to "best of all time")
-      const { movies } = await getTopRatedMovies(1);
+      let allTopMovies: Movie[] = [];
       
-      const transformedMovies: Movie[] = movies
-        .filter(m => m.poster_path && m.vote_count > 1000) // Only well-voted movies
-        .map(m => ({
-          id: m.id,
-          title: m.title,
-          year: m.release_date?.split('-')[0] || 'Unknown',
-          rating: Math.round(m.vote_average * 10) / 10,
-          poster: `https://image.tmdb.org/t/p/w342${m.poster_path}`,
-          description: m.overview || ''
-        }));
+      // Fetch multiple pages to get ~1000 top-rated movies
+      for (let pageNum = 1; pageNum <= 50; pageNum++) {
+        try {
+          const { movies } = await getTopRatedMovies(pageNum);
+          
+          const transformedMovies: Movie[] = movies
+            .filter(m => m.poster_path && m.vote_count > 500)
+            .map((m, idx) => ({
+              id: m.id,
+              title: m.title,
+              year: m.release_date?.split('-')[0] || 'Unknown',
+              rating: Math.round(m.vote_average * 10) / 10,
+              poster: `https://image.tmdb.org/t/p/w342${m.poster_path}`,
+              description: m.overview || '',
+              rank: allTopMovies.length + idx + 1
+            }));
 
-      setAllMovies(transformedMovies);
-      setDisplayMovies(transformedMovies.slice(0, MOVIES_PER_PAGE));
-      setHasMore(transformedMovies.length > MOVIES_PER_PAGE);
+          allTopMovies = [...allTopMovies, ...transformedMovies];
+          
+          // Stop if we have enough movies or reached the end
+          if (allTopMovies.length >= 1000 || movies.length === 0) {
+            break;
+          }
+        } catch (error) {
+          console.error(`Error fetching page ${pageNum}:`, error);
+          break;
+        }
+      }
+
+      // Trim to exactly 1000 or less
+      allTopMovies = allTopMovies.slice(0, 1000);
+
+      setAllMovies(allTopMovies);
+      setDisplayMovies(allTopMovies.slice(0, MOVIES_PER_PAGE));
+      setHasMore(allTopMovies.length > MOVIES_PER_PAGE);
     } catch (error) {
       console.error('Error fetching top movies:', error);
     } finally {
@@ -163,7 +184,7 @@ const Movies = () => {
               : 'text-gray-400 hover:text-gray-200'
           }`}
         >
-          Trending Now
+          Популярное Сейчас
         </button>
         <button
           onClick={() => setTab('top1000')}
@@ -173,19 +194,19 @@ const Movies = () => {
               : 'text-gray-400 hover:text-gray-200'
           }`}
         >
-          Top 1000 All Time
+          Топ 1000 Всех Времён
         </button>
       </div>
 
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4 gradient-text">
-          {tab === 'trending' ? t('movies.explore') : 'Greatest Movies of All Time'}
+          {tab === 'trending' ? t('movies.explore') : 'Величайшие Фильмы Всех Времён'}
         </h1>
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <Input
             type="text"
-            placeholder={tab === 'trending' ? t('movies.searchPlaceholder') || 'Search...' : 'Search top 1000...'}
+            placeholder={tab === 'trending' ? t('movies.searchPlaceholder') || 'Поиск...' : 'Поиск в топ 1000...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -203,12 +224,20 @@ const Movies = () => {
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {displayMovies.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
+              <div key={movie.id} className="relative group">
+                {/* Rank Badge */}
+                {movie.rank && (
+                  <div className="absolute top-2 left-2 z-10 bg-yellow-500 text-black rounded-full w-10 h-10 flex items-center justify-center font-bold text-sm shadow-lg group-hover:scale-110 transition-transform">
+                    #{movie.rank}
+                  </div>
+                )}
+                <MovieCard movie={movie} />
+              </div>
             ))}
           </div>
           {hasMore && (
             <div className="flex justify-center mt-8">
-              <Button onClick={loadMore}>{t('movies.loadMore')}</Button>
+              <Button onClick={loadMore}>{t('movies.loadMore') || 'Загрузить ещё'}</Button>
             </div>
           )}
         </>
