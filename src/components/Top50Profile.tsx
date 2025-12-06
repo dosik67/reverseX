@@ -118,7 +118,7 @@ const TopRankItem = ({ item, rank, isOwnProfile, onRemove, mediaType }: { item: 
       className={`relative group ${rank <= 3 ? 'col-span-1' : ''}`}
     >
       {/* Main Card */}
-      <div className={`relative group ${getFrameClass()} overflow-hidden transition-all duration-300 cursor-pointer`}>
+      <div className={`relative group ${getFrameClass()} overflow-visible transition-all duration-300 cursor-pointer`}>
         {/* Link Wrapper */}
         <Link 
           to={`/${mediaType === 'movie' ? 'movie' : mediaType === 'anime' ? 'series' : 'game'}/${item.item_id}`}
@@ -137,14 +137,19 @@ const TopRankItem = ({ item, rank, isOwnProfile, onRemove, mediaType }: { item: 
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
         </Link>
 
-        {/* Rank Badge */}
-        <div className={`absolute top-2 right-2 md:top-3 md:right-3 ${
+        {/* Rank Badge - Large & Taking Space */}
+        <div className={`absolute ${
+          rank === 1 ? '-top-4 -right-4' :
+          rank === 2 ? '-top-4 -right-4' :
+          rank === 3 ? '-top-4 -right-4' :
+          'top-3 right-3 md:top-4 md:right-4'
+        } ${
           rank === 1 ? 'rank-badge-1' :
           rank === 2 ? 'rank-badge-2' :
           rank === 3 ? 'rank-badge-3' :
           'rank-badge-regular'
-        } rounded-full font-bold shadow-lg flex items-center justify-center z-20`}>
-          <span className="relative z-10">
+        } font-bold flex items-center justify-center z-30 shadow-xl`}>
+          <span className="relative z-10 drop-shadow-lg">
             {rank === 1 ? '👑' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`}
           </span>
         </div>
@@ -468,7 +473,7 @@ const Top50Profile = ({ userId, isOwnProfile }: Top50ProfileProps) => {
                       <h3 className="text-lg md:text-xl font-bold text-primary mb-3 md:mb-4 flex items-center gap-2">
                         <span className="text-2xl">🏆</span> Top 3
                       </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 px-4 md:px-6 py-2">
                         {selectedList.items.slice(0, 3).map((item) => (
                           <TopRankItem
                             key={item.id}
