@@ -98,7 +98,6 @@ const TopRankItem = ({ item, rank, isOwnProfile, onRemove, mediaType }: { item: 
     transition,
   };
 
-  // Different styles for top 3
   const getFrameClass = () => {
     switch (rank) {
       case 1:
@@ -118,70 +117,45 @@ const TopRankItem = ({ item, rank, isOwnProfile, onRemove, mediaType }: { item: 
       style={style}
       className={`relative group ${rank <= 3 ? 'col-span-1' : ''}`}
     >
-      {/* Shine/Glow Effect для Top 3 */}
-      {rank <= 3 && (
-        <>
-          <div className={`absolute -inset-1 rounded-xl blur-xl opacity-75 -z-10 animate-pulse ${
-            rank === 1 ? 'bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-500' :
-            rank === 2 ? 'bg-gradient-to-r from-gray-400 via-gray-300 to-gray-400' :
-            'bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500'
-          }`} />
-          <div className={`absolute -inset-0.5 rounded-xl blur-2xl opacity-50 -z-10 ${
-            rank === 1 ? 'bg-yellow-500/30' :
-            rank === 2 ? 'bg-gray-400/30' :
-            'bg-orange-500/30'
-          }`} />
-        </>
-      )}
-
       {/* Main Card */}
-      <div className={`relative group ${getFrameClass()} overflow-hidden rounded-xl transition-all duration-300 hover:scale-110 cursor-pointer`}>
+      <div className={`relative group ${getFrameClass()} overflow-hidden transition-all duration-300 cursor-pointer`}>
         {/* Link Wrapper */}
         <Link 
           to={`/${mediaType === 'movie' ? 'movie' : mediaType === 'anime' ? 'series' : 'game'}/${item.item_id}`}
-          className="relative block overflow-hidden"
+          className="relative block overflow-hidden h-full"
         >
           {/* Poster */}
           {item.poster_url && (
             <img 
               src={item.poster_url} 
               alt={item.title}
-              className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-125"
+              className="w-full h-auto object-cover"
             />
           )}
           
           {/* Overlay Gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
-          
-          {/* Sparkle Effect for Top 3 */}
-          {rank <= 3 && (
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="absolute top-2 right-2 w-2 h-2 bg-white rounded-full animate-pulse" />
-              <div className="absolute top-4 left-4 w-1.5 h-1.5 bg-white rounded-full animate-pulse delay-100" />
-              <div className="absolute bottom-4 right-6 w-1 h-1 bg-white rounded-full animate-pulse delay-200" />
-            </div>
-          )}
         </Link>
 
-        {/* Rank Badge - Пафосный */}
-        <div className={`absolute top-2 right-2 ${
+        {/* Rank Badge */}
+        <div className={`absolute top-2 right-2 md:top-3 md:right-3 ${
           rank === 1 ? 'rank-badge-1' :
           rank === 2 ? 'rank-badge-2' :
           rank === 3 ? 'rank-badge-3' :
           'rank-badge-regular'
-        } rounded-full font-bold text-lg shadow-2xl flex items-center justify-center`}>
+        } rounded-full font-bold shadow-lg flex items-center justify-center z-20`}>
           <span className="relative z-10">
             {rank === 1 ? '👑' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`}
           </span>
         </div>
 
         {/* Title Section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/95 via-black/50 to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 bg-gradient-to-t from-black/95 via-black/50 to-transparent">
           <Link 
             to={`/${mediaType === 'movie' ? 'movie' : 'series'}/${item.item_id}`}
             className="block hover:text-primary transition-colors"
           >
-            <h4 className="font-bold text-white text-base md:text-lg line-clamp-2 drop-shadow-lg">{item.title}</h4>
+            <h4 className="font-bold text-white text-sm md:text-base line-clamp-2 drop-shadow-lg">{item.title}</h4>
           </Link>
         </div>
 
@@ -191,7 +165,7 @@ const TopRankItem = ({ item, rank, isOwnProfile, onRemove, mediaType }: { item: 
             variant="ghost" 
             size="icon"
             onClick={onRemove}
-            className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 hover:bg-red-500/90 text-white rounded-full shadow-lg"
+            className="absolute top-2 left-2 md:top-3 md:left-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 hover:bg-red-500/80 text-white rounded-full shadow-lg z-20"
           >
             <Trash2 className="w-4 h-4" />
           </Button>
@@ -202,16 +176,9 @@ const TopRankItem = ({ item, rank, isOwnProfile, onRemove, mediaType }: { item: 
           <div 
             {...attributes} 
             {...listeners} 
-            className="absolute bottom-2 left-2 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 p-2 rounded-full shadow-lg"
+            className="absolute bottom-2 left-2 md:bottom-3 md:left-3 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 p-1.5 md:p-2 rounded-full shadow-lg z-20"
           >
             <GripVertical className="w-4 h-4 text-white" />
-          </div>
-        )}
-
-        {/* Number overlay for non-top-3 */}
-        {rank > 3 && (
-          <div className="absolute top-2 right-2 bg-black/70 px-3 py-1 rounded-full text-xs font-bold text-white">
-            #{rank}
           </div>
         )}
       </div>
@@ -473,19 +440,19 @@ const Top50Profile = ({ userId, isOwnProfile }: Top50ProfileProps) => {
       <Dialog open={showExpanded} onOpenChange={setShowExpanded}>
         <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden flex flex-col p-0 bg-gradient-to-br from-background via-background to-background/80">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-b border-primary/20 p-6">
-            <DialogTitle className="text-4xl font-bold gradient-text flex items-center gap-3">
-              <span className="text-5xl">⭐</span>
-              {selectedList?.title} - All {selectedList?.items?.length} Items
+          <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-b border-primary/20 p-4 md:p-6">
+            <DialogTitle className="text-2xl md:text-4xl font-bold gradient-text flex items-center gap-2 md:gap-3">
+              <span className="text-4xl md:text-5xl">⭐</span>
+              <span className="line-clamp-1">{selectedList?.title}</span>
             </DialogTitle>
-            <p className="text-muted-foreground mt-2 text-sm">
+            <p className="text-muted-foreground mt-1 md:mt-2 text-xs md:text-sm">
               {selectedList?.items?.length === 0 ? 'Empty list' : `Showing ${selectedList?.items?.length} items`}
             </p>
           </div>
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto">
-            <div className="p-6">
+            <div className="p-4 md:p-6">
               {selectedList?.items && selectedList.items.length > 0 ? (
                 <DndContext
                   sensors={sensors}
@@ -496,12 +463,12 @@ const Top50Profile = ({ userId, isOwnProfile }: Top50ProfileProps) => {
                     items={selectedList.items.map(item => item.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    {/* Top 3 - Large Grid */}
-                    <div className="mb-12">
-                      <h3 className="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+                    {/* Top 3 - Premium Display */}
+                    <div className="mb-8 md:mb-12">
+                      <h3 className="text-lg md:text-xl font-bold text-primary mb-3 md:mb-4 flex items-center gap-2">
                         <span className="text-2xl">🏆</span> Top 3
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                         {selectedList.items.slice(0, 3).map((item) => (
                           <TopRankItem
                             key={item.id}
@@ -517,11 +484,11 @@ const Top50Profile = ({ userId, isOwnProfile }: Top50ProfileProps) => {
                       </div>
                     </div>
 
-                    {/* Rest of Items - Smaller Grid */}
+                    {/* Rest of Items - Grid */}
                     {selectedList.items.length > 3 && (
                       <div>
-                        <h3 className="text-lg font-bold text-muted-foreground mb-4">Rest of the List</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        <h3 className="text-base md:text-lg font-bold text-muted-foreground mb-3 md:mb-4">More Titles</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
                           {selectedList.items.slice(3).map((item) => (
                             <TopRankItem
                               key={item.id}
@@ -541,7 +508,7 @@ const Top50Profile = ({ userId, isOwnProfile }: Top50ProfileProps) => {
                 </DndContext>
               ) : (
                 <div className="flex items-center justify-center h-96">
-                  <p className="text-muted-foreground text-lg">
+                  <p className="text-muted-foreground text-base md:text-lg">
                     {isOwnProfile ? 'Empty list. Add items by clicking the heart button!' : 'No items yet'}
                   </p>
                 </div>
