@@ -66,22 +66,21 @@ const GameDetail = () => {
     getCurrentUser();
   }, [id]);
 
-  // Fetch Russian description on component mount
+  // Fetch Russian description in background (non-blocking)
   useEffect(() => {
-    const fetchRussianDescription = async () => {
-      if (game?.id) {
-        try {
-          const desc = await getGameDescriptionFromSteam(game.id);
-          console.log('Fetched Russian description:', desc ? 'Found' : 'Not found');
-          setRusDescription(desc || '');
-        } catch (error) {
-          console.error('Error fetching Russian description:', error);
-          setRusDescription('');
-        }
-      }
-    };
-
-    fetchRussianDescription();
+    if (game?.id) {
+      // Don't await - let it load in background
+      getGameDescriptionFromSteam(game.id)
+        .then(desc => {
+          if (desc) {
+            setRusDescription(desc);
+            console.log(`[GameDetail] Loaded Russian description for game ${game.id}`);
+          }
+        })
+        .catch(error => {
+          console.warn('[GameDetail] Error loading translation:', error);
+        });
+    }
   }, [game?.id]);
 
   const handleAddToTop50 = async (e: React.MouseEvent) => {

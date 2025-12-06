@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Gamepad, Music, Book } from "lucide-react";
 
 import Auth from "./pages/Auth";
+import QRAuthPage from "./pages/QRAuthPage";
 import Layout from "./components/Layout";
 import Movies from "./pages/Movies";
 import MovieDetail from "./pages/MovieDetail";
@@ -72,6 +73,7 @@ const App = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/qr-auth" element={<QRAuthPage />} />
 
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />

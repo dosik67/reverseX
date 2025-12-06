@@ -7,11 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Film } from "lucide-react";
+import { Film, QrCode } from "lucide-react";
+import QRAuthModal from "@/components/QRAuthModal";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showQRAuth, setShowQRAuth] = useState(false);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -31,6 +33,26 @@ const Auth = () => {
       toast.error('Google authentication is not configured yet. Enable it in backend settings.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleQRAuthSuccess = async (token: string) => {
+    try {
+      // Token should be in format: userId|sessionToken
+      const [userId, sessionToken] = token.split('|');
+      
+      // Set the session
+      const { error } = await supabase.auth.setSession({
+        access_token: sessionToken,
+        refresh_token: ''
+      });
+      
+      if (error) throw error;
+      
+      toast.success('Вы успешно вошли!');
+      navigate('/');
+    } catch (error: any) {
+      toast.error('Ошибка при входе: ' + error.message);
     }
   };
 
@@ -85,7 +107,8 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <>
+      <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -104,10 +127,20 @@ const Auth = () => {
             <Button
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full mb-6"
+              className="w-full mb-3"
               variant="outline"
             >
               Continue with Google
+            </Button>
+
+            <Button
+              onClick={() => setShowQRAuth(true)}
+              disabled={loading}
+              className="w-full mb-6"
+              variant="outline"
+            >
+              <QrCode className="w-4 h-4 mr-2" />
+              Сканировать QR-код
             </Button>
 
             <div className="relative mb-6">
@@ -193,6 +226,13 @@ const Auth = () => {
         </Card>
       </div>
     </div>
+
+    <QRAuthModal 
+      open={showQRAuth}
+      onClose={() => setShowQRAuth(false)}
+      onSuccess={handleQRAuthSuccess}
+    />
+    </>
   );
 };
 
