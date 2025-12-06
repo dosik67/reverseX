@@ -134,12 +134,12 @@ const MovieCardComponent = ({ movie, onAction }: MovieCardComponentProps) => {
             >
               ★ {movie.rating}
             </Badge>
-            {imdbRating && !imdbLoading && (
+            {imdbRating && imdbRating.imdbRating !== null && !imdbLoading && (
               <Badge className="gap-1 bg-yellow-600 text-black hover:bg-yellow-700">
-                IMDb {imdbRating.imdbRating?.toFixed(1) || 'N/A'}
+                IMDb {imdbRating.imdbRating.toFixed(1)}
               </Badge>
             )}
-            {imdbLoading && (
+            {imdbLoading && !imdbRating && (
               <Badge className="opacity-50">
                 IMDb...
               </Badge>

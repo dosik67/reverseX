@@ -47,27 +47,56 @@ export const saveIMDbRating = async (
   mediaType: 'movie' | 'tv'
 ): Promise<IMDbRatingRecord | null> => {
   try {
-    const { data, error } = await supabase
+    if (!rating) {
+      return null;
+    }
+
+    const payload = {
+      tmdb_id: tmdbId,
+      imdb_id: imdbId,
+      imdb_rating: rating.imdbRating || null,
+      imdb_votes: rating.imdbVotes || null,
+      media_type: mediaType,
+      last_updated: new Date().toISOString()
+    };
+
+    // First try to update
+    const { data: existing, error: checkError } = await supabase
       .from('movies_imdb_ratings')
-      .upsert({
-        tmdb_id: tmdbId,
-        imdb_id: imdbId,
-        imdb_rating: rating?.imdbRating || null,
-        imdb_votes: rating?.imdbVotes || null,
-        media_type: mediaType,
-        last_updated: new Date().toISOString()
-      }, {
-        onConflict: 'tmdb_id'
-      })
-      .select()
+      .select('id')
+      .eq('tmdb_id', tmdbId)
       .single();
+
+    let result;
+    let error;
+
+    if (existing && !checkError) {
+      // Update existing
+      const res = await supabase
+        .from('movies_imdb_ratings')
+        .update(payload)
+        .eq('tmdb_id', tmdbId)
+        .select()
+        .single();
+      result = res.data;
+      error = res.error;
+    } else {
+      // Insert new
+      const res = await supabase
+        .from('movies_imdb_ratings')
+        .insert([payload])
+        .select()
+        .single();
+      result = res.data;
+      error = res.error;
+    }
 
     if (error) {
       console.error('Error saving IMDb rating:', error);
       return null;
     }
 
-    return data;
+    return result;
   } catch (error) {
     console.error('Error saving IMDb rating:', error);
     return null;

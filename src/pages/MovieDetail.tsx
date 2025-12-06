@@ -160,15 +160,15 @@ const MovieDetail = () => {
                   <span className="text-sm text-muted-foreground">/10</span>
                 </div>
 
-                {imdbRating && !imdbLoading && (
+                {imdbRating && imdbRating.imdbRating !== null && !imdbLoading && (
                   <div className="flex items-center gap-2 bg-yellow-600/80 px-4 py-2 rounded-lg text-black font-bold">
                     <span className="text-sm">IMDb</span>
-                    <span className="text-2xl">{imdbRating.imdbRating?.toFixed(1) || 'N/A'}</span>
+                    <span className="text-2xl">{imdbRating.imdbRating.toFixed(1)}</span>
                     <span className="text-sm">/10</span>
                   </div>
                 )}
 
-                {imdbLoading && (
+                {imdbLoading && !imdbRating && (
                   <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg animate-pulse">
                     <span className="text-sm">IMDb...</span>
                   </div>

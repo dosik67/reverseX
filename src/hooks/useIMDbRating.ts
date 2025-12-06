@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getIMDbRating, OMDbRating } from '@/utils/omdbApi';
 import { getImdbIdFromTMDB, getImdbIdFromTMDBSeries } from '@/utils/ratingService';
 import { getCachedIMDbRating, saveIMDbRating } from '@/utils/imdbCache';
@@ -13,10 +13,18 @@ export const useIMDbRating = (options: UseIMDbRatingOptions) => {
   const [rating, setRating] = useState<OMDbRating | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const fetchRating = async () => {
       if (!options.imdbId && !options.tmdbId) {
+        setRating(null);
         return;
       }
 
@@ -25,21 +33,26 @@ export const useIMDbRating = (options: UseIMDbRatingOptions) => {
 
       try {
         let imdbId = options.imdbId;
-        let tmdbId = options.tmdbId;
+        const tmdbId = options.tmdbId;
 
         // Try to get from cache first if we have TMDB ID
         if (tmdbId && !imdbId) {
           const cached = await getCachedIMDbRating(tmdbId);
-          if (cached) {
-            imdbId = cached.imdb_id || undefined;
-            setRating(cached.imdb_rating ? {
+          if (cached && cached.imdb_rating && isMountedRef.current) {
+            const ratingObj: OMDbRating = {
               imdbId: cached.imdb_id || '',
               imdbRating: cached.imdb_rating,
               imdbVotes: cached.imdb_votes,
               imdbType: options.mediaType === 'tv' ? 'series' : 'movie'
-            } : null);
+            };
+            setRating(ratingObj);
             setLoading(false);
             return;
+          }
+          
+          // If no cache but we have imdb_id, use it
+          if (cached && cached.imdb_id) {
+            imdbId = cached.imdb_id;
           }
         }
 
@@ -53,30 +66,37 @@ export const useIMDbRating = (options: UseIMDbRatingOptions) => {
         }
 
         // Now fetch the rating from OMDb
-        if (imdbId) {
+        if (imdbId && isMountedRef.current) {
           const fetchedRating = await getIMDbRating(imdbId);
-          setRating(fetchedRating);
+          
+          if (isMountedRef.current) {
+            setRating(fetchedRating);
 
-          // Cache the result if we have TMDB ID
-          if (tmdbId) {
-            await saveIMDbRating(
-              tmdbId,
-              imdbId,
-              fetchedRating,
-              options.mediaType || 'movie'
-            );
+            // Cache the result if we have TMDB ID
+            if (tmdbId && fetchedRating) {
+              await saveIMDbRating(
+                tmdbId,
+                imdbId,
+                fetchedRating,
+                options.mediaType || 'movie'
+              );
+            }
           }
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch rating');
-        console.error('Error fetching IMDb rating:', err);
+        if (isMountedRef.current) {
+          setError(err instanceof Error ? err.message : 'Failed to fetch rating');
+          console.error('Error fetching IMDb rating:', err);
+        }
       } finally {
-        setLoading(false);
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
       }
     };
 
     fetchRating();
-  }, [options.imdbId, options.tmdbId, options.mediaType]);
+  }, [options.tmdbId, options.imdbId, options.mediaType]);
 
   return { rating, loading, error };
 };

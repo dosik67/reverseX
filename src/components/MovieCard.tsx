@@ -138,13 +138,13 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
               <Star className="w-4 h-4 fill-current" />
               <span className="text-sm font-semibold">{Number(movie.rating).toFixed(1)}</span>
             </div>
-            {imdbRating && (
+            {imdbRating && imdbRating.imdbRating !== null && (
               <div className="flex items-center gap-1 mb-2 text-yellow-300">
                 <span className="text-xs font-bold bg-yellow-600 text-black px-1.5 py-0.5 rounded">IMDb</span>
-                <span className="text-sm font-semibold">{imdbRating.imdbRating?.toFixed(1) || 'N/A'}</span>
+                <span className="text-sm font-semibold">{imdbRating.imdbRating.toFixed(1)}</span>
               </div>
             )}
-            {imdbLoading && (
+            {imdbLoading && !imdbRating && (
               <div className="h-6 bg-muted/50 rounded animate-pulse mb-2"></div>
             )}
             <h3 className="text-sm font-semibold text-white line-clamp-2">{movie.title}</h3>
