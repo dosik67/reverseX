@@ -21,6 +21,7 @@ import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
+import TopMovies from "./pages/TopMovies";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AppProvider } from "@/context/AppContext";
 
@@ -78,6 +79,7 @@ const App = () => {
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />
                   <Route path="/movies" element={<Movies />} />
+                  <Route path="/top-movies" element={<TopMovies />} />
                   <Route path="/movie/:id" element={<MovieDetail />} />
                   <Route path="/series" element={<SeriesPage />} />
                   <Route path="/series/:id" element={<SeriesDetail />} />
