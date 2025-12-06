@@ -89,6 +89,106 @@ const SortableItem = ({ item, isOwnProfile, onRemove, mediaType }: { item: TopLi
   );
 };
 
+const TopRankItem = ({ item, rank, isOwnProfile, onRemove, mediaType }: { item: TopListItem; rank: number; isOwnProfile: boolean; onRemove: () => void; mediaType: 'movie' | 'anime' | 'game' }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  // Different styles for top 3
+  const getFrameStyle = () => {
+    switch (rank) {
+      case 1:
+        return 'ring-2 ring-yellow-500/50 shadow-lg shadow-yellow-500/20';
+      case 2:
+        return 'ring-2 ring-gray-400/50 shadow-lg shadow-gray-400/20';
+      case 3:
+        return 'ring-2 ring-orange-500/50 shadow-lg shadow-orange-500/20';
+      default:
+        return 'ring-1 ring-primary/20';
+    }
+  };
+
+  const getRankBadgeStyle = () => {
+    switch (rank) {
+      case 1:
+        return 'bg-gradient-to-br from-yellow-500 to-yellow-600 text-white';
+      case 2:
+        return 'bg-gradient-to-br from-gray-400 to-gray-500 text-white';
+      case 3:
+        return 'bg-gradient-to-br from-orange-500 to-orange-600 text-white';
+      default:
+        return 'bg-primary/30 text-primary';
+    }
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative group ${rank <= 3 ? 'col-span-1' : ''}`}
+    >
+      {/* Main Card */}
+      <div className={`bg-gradient-to-br from-card to-card/50 rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 ${getFrameStyle()} cursor-pointer`}>
+        {/* Poster */}
+        <Link 
+          to={`/${mediaType === 'movie' ? 'movie' : mediaType === 'anime' ? 'series' : 'game'}/${item.item_id}`}
+          className="relative block overflow-hidden"
+        >
+          {item.poster_url && (
+            <img 
+              src={item.poster_url} 
+              alt={item.title}
+              className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-110"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        </Link>
+
+        {/* Rank Badge */}
+        <div className={`absolute top-3 right-3 ${getRankBadgeStyle()} rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg shadow-lg`}>
+          #{rank}
+        </div>
+
+        {/* Title Section */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
+          <Link 
+            to={`/${mediaType === 'movie' ? 'movie' : 'series'}/${item.item_id}`}
+            className="block hover:text-primary transition-colors"
+          >
+            <h4 className="font-bold text-white text-lg line-clamp-2">{item.title}</h4>
+          </Link>
+        </div>
+
+        {/* Delete Button */}
+        {isOwnProfile && (
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={onRemove}
+            className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 hover:bg-red-500/80 text-white"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        )}
+
+        {/* Drag Handle */}
+        {isOwnProfile && (
+          <div 
+            {...attributes} 
+            {...listeners} 
+            className="absolute bottom-3 left-3 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 p-2 rounded"
+          >
+            <GripVertical className="w-4 h-4 text-white" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const Top50Profile = ({ userId, isOwnProfile }: Top50ProfileProps) => {
   const [activeCategory, setActiveCategory] = useState<'movie' | 'anime'>('movie');
   const [lists, setLists] = useState<TopList[]>([]);
@@ -341,38 +441,82 @@ const Top50Profile = ({ userId, isOwnProfile }: Top50ProfileProps) => {
 
       {/* Expanded View Modal */}
       <Dialog open={showExpanded} onOpenChange={setShowExpanded}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="text-3xl gradient-text">
-              ⭐ {selectedList?.title} - All {selectedList?.items?.length} Items
+        <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden flex flex-col p-0 bg-gradient-to-br from-background via-background to-background/80">
+          {/* Header */}
+          <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-b border-primary/20 p-6">
+            <DialogTitle className="text-4xl font-bold gradient-text flex items-center gap-3">
+              <span className="text-5xl">⭐</span>
+              {selectedList?.title} - All {selectedList?.items?.length} Items
             </DialogTitle>
-          </DialogHeader>
+            <p className="text-muted-foreground mt-2 text-sm">
+              {selectedList?.items?.length === 0 ? 'Empty list' : `Showing ${selectedList?.items?.length} items`}
+            </p>
+          </div>
 
+          {/* Content */}
           <div className="flex-1 overflow-y-auto">
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={selectedList?.items?.map(item => item.id) || []}
-                strategy={verticalListSortingStrategy}
-              >
-                <div className="space-y-2 p-4">
-                  {selectedList?.items?.map((item) => (
-                    <SortableItem
-                      key={item.id}
-                      item={item}
-                      isOwnProfile={isOwnProfile}
-                      mediaType={selectedList?.media_type || 'movie'}
-                      onRemove={() => {
-                        removeItemFromList(item.id);
-                      }}
-                    />
-                  ))}
+            <div className="p-6">
+              {selectedList?.items && selectedList.items.length > 0 ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={selectedList.items.map(item => item.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {/* Top 3 - Large Grid */}
+                    <div className="mb-12">
+                      <h3 className="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+                        <span className="text-2xl">🏆</span> Top 3
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        {selectedList.items.slice(0, 3).map((item) => (
+                          <TopRankItem
+                            key={item.id}
+                            item={item}
+                            rank={item.rank}
+                            isOwnProfile={isOwnProfile}
+                            mediaType={selectedList?.media_type || 'movie'}
+                            onRemove={() => {
+                              removeItemFromList(item.id);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Rest of Items - Smaller Grid */}
+                    {selectedList.items.length > 3 && (
+                      <div>
+                        <h3 className="text-lg font-bold text-muted-foreground mb-4">Rest of the List</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                          {selectedList.items.slice(3).map((item) => (
+                            <TopRankItem
+                              key={item.id}
+                              item={item}
+                              rank={item.rank}
+                              isOwnProfile={isOwnProfile}
+                              mediaType={selectedList?.media_type || 'movie'}
+                              onRemove={() => {
+                                removeItemFromList(item.id);
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </SortableContext>
+                </DndContext>
+              ) : (
+                <div className="flex items-center justify-center h-96">
+                  <p className="text-muted-foreground text-lg">
+                    {isOwnProfile ? 'Empty list. Add items by clicking the heart button!' : 'No items yet'}
+                  </p>
                 </div>
-              </SortableContext>
-            </DndContext>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
