@@ -39,8 +39,9 @@ export const getImdbIdFromTMDB = async (tmdbId: number): Promise<string | null> 
  */
 export const getImdbIdFromTMDBSeries = async (tmdbId: number): Promise<string | null> => {
   try {
+    // First try getting external_ids directly
     const response = await fetch(
-      `${TMDB_BASE_URL}/tv/${tmdbId}?api_key=${TMDB_API_KEY}&language=en-US`,
+      `${TMDB_BASE_URL}/tv/${tmdbId}/external_ids?api_key=${TMDB_API_KEY}`,
       { method: 'GET' }
     );
 
@@ -50,9 +51,9 @@ export const getImdbIdFromTMDBSeries = async (tmdbId: number): Promise<string | 
     }
 
     const data = await response.json();
-    return data.external_ids?.imdb_id || null;
+    return data.imdb_id || null;
   } catch (error) {
-    console.error('Error fetching IMDb ID from TMDB:', error);
+    console.error('Error fetching IMDb ID from TMDB series:', error);
     return null;
   }
 };

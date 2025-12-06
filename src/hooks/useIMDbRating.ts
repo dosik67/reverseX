@@ -14,6 +14,7 @@ export const useIMDbRating = (options: UseIMDbRatingOptions) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -22,6 +23,11 @@ export const useIMDbRating = (options: UseIMDbRatingOptions) => {
   }, []);
 
   useEffect(() => {
+    // Don't fetch again if we already have it
+    if (fetchedRef.current) {
+      return;
+    }
+
     const fetchRating = async () => {
       if (!options.imdbId && !options.tmdbId) {
         setRating(null);
@@ -35,53 +41,74 @@ export const useIMDbRating = (options: UseIMDbRatingOptions) => {
         let imdbId = options.imdbId;
         const tmdbId = options.tmdbId;
 
-        // Try to get from cache first if we have TMDB ID
+        // Step 1: Try to get from database cache first
         if (tmdbId && !imdbId) {
-          const cached = await getCachedIMDbRating(tmdbId);
-          if (cached && cached.imdb_rating && isMountedRef.current) {
-            const ratingObj: OMDbRating = {
-              imdbId: cached.imdb_id || '',
-              imdbRating: cached.imdb_rating,
-              imdbVotes: cached.imdb_votes,
-              imdbType: options.mediaType === 'tv' ? 'series' : 'movie'
-            };
-            setRating(ratingObj);
-            setLoading(false);
-            return;
-          }
-          
-          // If no cache but we have imdb_id, use it
-          if (cached && cached.imdb_id) {
-            imdbId = cached.imdb_id;
+          try {
+            const cached = await getCachedIMDbRating(tmdbId);
+            if (cached && cached.imdb_rating && isMountedRef.current) {
+              const ratingObj: OMDbRating = {
+                imdbId: cached.imdb_id || '',
+                imdbRating: cached.imdb_rating,
+                imdbVotes: cached.imdb_votes,
+                imdbType: options.mediaType === 'tv' ? 'series' : 'movie'
+              };
+              setRating(ratingObj);
+              setLoading(false);
+              fetchedRef.current = true;
+              return;
+            }
+            
+            // Get imdbId from cache if available
+            if (cached && cached.imdb_id) {
+              imdbId = cached.imdb_id;
+            }
+          } catch (cacheErr) {
+            console.warn('Cache error:', cacheErr);
           }
         }
 
-        // If we don't have IMDb ID, fetch it from TMDB
+        // Step 2: If we still don't have IMDb ID, fetch it from TMDB
         if (!imdbId && tmdbId) {
-          if (options.mediaType === 'tv') {
-            imdbId = await getImdbIdFromTMDBSeries(tmdbId);
-          } else {
-            imdbId = await getImdbIdFromTMDB(tmdbId);
+          try {
+            if (options.mediaType === 'tv') {
+              imdbId = await getImdbIdFromTMDBSeries(tmdbId);
+            } else {
+              imdbId = await getImdbIdFromTMDB(tmdbId);
+            }
+            console.log(`Got IMDb ID for TMDB ${tmdbId}: ${imdbId}`);
+          } catch (tmdbErr) {
+            console.error('TMDB error:', tmdbErr);
+            setError('Failed to get IMDb ID');
           }
         }
 
-        // Now fetch the rating from OMDb
+        // Step 3: Now fetch the rating from OMDb
         if (imdbId && isMountedRef.current) {
+          console.log(`Fetching OMDb rating for ${imdbId}`);
           const fetchedRating = await getIMDbRating(imdbId);
           
           if (isMountedRef.current) {
             setRating(fetchedRating);
+            console.log(`Got rating: ${fetchedRating?.imdbRating}`);
 
-            // Cache the result if we have TMDB ID
+            // Step 4: Save to cache
             if (tmdbId && fetchedRating) {
-              await saveIMDbRating(
-                tmdbId,
-                imdbId,
-                fetchedRating,
-                options.mediaType || 'movie'
-              );
+              try {
+                await saveIMDbRating(
+                  tmdbId,
+                  imdbId,
+                  fetchedRating,
+                  options.mediaType || 'movie'
+                );
+                console.log(`Saved to cache for TMDB ${tmdbId}`);
+              } catch (saveErr) {
+                console.warn('Save error:', saveErr);
+              }
             }
           }
+        } else if (!imdbId && isMountedRef.current) {
+          console.warn('Could not get IMDb ID');
+          setError('IMDb ID not found');
         }
       } catch (err) {
         if (isMountedRef.current) {
@@ -91,6 +118,7 @@ export const useIMDbRating = (options: UseIMDbRatingOptions) => {
       } finally {
         if (isMountedRef.current) {
           setLoading(false);
+          fetchedRef.current = true;
         }
       }
     };
