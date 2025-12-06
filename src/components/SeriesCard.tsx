@@ -122,6 +122,17 @@ const SeriesCard = ({ series }: { series: Series }) => {
               e.currentTarget.src = FALLBACK_IMAGE;
             }}
           />
+          {/* IMDb Rating Badge - Always Visible */}
+          {imdbRating && imdbRating.imdbRating !== null && (
+            <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-yellow-600 text-black px-2 py-1 rounded font-bold text-sm shadow-lg">
+              <span>★</span>
+              <span>{imdbRating.imdbRating.toFixed(1)}</span>
+            </div>
+          )}
+          {/* Loading Skeleton - Always Visible */}
+          {imdbLoading && !imdbRating && (
+            <div className="absolute top-2 left-2 z-20 h-6 w-16 bg-yellow-600/50 rounded animate-pulse"></div>
+          )}
           <button
             onClick={handleAddToTop50}
             disabled={loading}
@@ -136,15 +147,6 @@ const SeriesCard = ({ series }: { series: Series }) => {
               <Star className="w-4 h-4 fill-current" />
               <span className="text-sm font-semibold">{Number(series.rating).toFixed(1)}</span>
             </div>
-            {imdbRating && imdbRating.imdbRating !== null && (
-              <div className="flex items-center gap-1 mb-2 text-yellow-300">
-                <span className="text-xs font-bold bg-yellow-600 text-black px-1.5 py-0.5 rounded">IMDb</span>
-                <span className="text-sm font-semibold">{imdbRating.imdbRating.toFixed(1)}</span>
-              </div>
-            )}
-            {imdbLoading && !imdbRating && (
-              <div className="h-6 bg-muted/50 rounded animate-pulse mb-2"></div>
-            )}
             <h3 className="text-sm font-semibold text-white line-clamp-2">{series.title}</h3>
             <p className="text-xs text-white/70">{series.year}</p>
           </div>
