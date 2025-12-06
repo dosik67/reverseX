@@ -1,0 +1,268 @@
+/* Top 50 Ranking Styles - PAFOS Edition */
+
+/* ===== TOP 1 - GOLD ===== */
+.top-rank-1 {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+  
+  /* Multi-layer border effect */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 
+    inset 0 0 20px rgba(250, 204, 21, 0.2),
+    0 0 30px rgba(250, 204, 21, 0.4),
+    0 0 60px rgba(250, 204, 21, 0.2),
+    0 20px 40px rgba(0, 0, 0, 0.8);
+}
+
+.top-rank-1::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(250, 204, 21, 0.3) 0%,
+    rgba(250, 204, 21, 0.1) 25%,
+    rgba(250, 204, 21, 0.1) 75%,
+    rgba(250, 204, 21, 0.3) 100%);
+  pointer-events: none;
+  border-radius: 9px;
+  animation: shine-gold 3s infinite;
+}
+
+@keyframes shine-gold {
+  0%, 100% {
+    box-shadow: inset 0 0 10px rgba(250, 204, 21, 0.1);
+  }
+  50% {
+    box-shadow: inset 0 0 25px rgba(250, 204, 21, 0.3);
+  }
+}
+
+/* ===== TOP 2 - SILVER ===== */
+.top-rank-2 {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+  
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 
+    inset 0 0 20px rgba(192, 192, 192, 0.2),
+    0 0 30px rgba(192, 192, 192, 0.35),
+    0 0 60px rgba(192, 192, 192, 0.15),
+    0 20px 40px rgba(0, 0, 0, 0.8);
+}
+
+.top-rank-2::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(192, 192, 192, 0.3) 0%,
+    rgba(192, 192, 192, 0.1) 25%,
+    rgba(192, 192, 192, 0.1) 75%,
+    rgba(192, 192, 192, 0.3) 100%);
+  pointer-events: none;
+  border-radius: 9px;
+  animation: shine-silver 3s infinite;
+}
+
+@keyframes shine-silver {
+  0%, 100% {
+    box-shadow: inset 0 0 10px rgba(192, 192, 192, 0.1);
+  }
+  50% {
+    box-shadow: inset 0 0 25px rgba(192, 192, 192, 0.3);
+  }
+}
+
+/* ===== TOP 3 - BRONZE ===== */
+.top-rank-3 {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+  
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 
+    inset 0 0 20px rgba(249, 115, 22, 0.2),
+    0 0 30px rgba(249, 115, 22, 0.4),
+    0 0 60px rgba(249, 115, 22, 0.2),
+    0 20px 40px rgba(0, 0, 0, 0.8);
+}
+
+.top-rank-3::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(249, 115, 22, 0.3) 0%,
+    rgba(249, 115, 22, 0.1) 25%,
+    rgba(249, 115, 22, 0.1) 75%,
+    rgba(249, 115, 22, 0.3) 100%);
+  pointer-events: none;
+  border-radius: 9px;
+  animation: shine-bronze 3s infinite;
+}
+
+@keyframes shine-bronze {
+  0%, 100% {
+    box-shadow: inset 0 0 10px rgba(249, 115, 22, 0.1);
+  }
+  50% {
+    box-shadow: inset 0 0 25px rgba(249, 115, 22, 0.3);
+  }
+}
+
+/* ===== REGULAR ITEMS ===== */
+.top-rank-regular {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+  
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 
+    inset 0 0 10px rgba(168, 85, 247, 0.1),
+    0 0 15px rgba(168, 85, 247, 0.2),
+    0 10px 25px rgba(0, 0, 0, 0.6);
+}
+
+/* ===== RANK BADGES ===== */
+.rank-badge-1 {
+  display: flex;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+  box-shadow: 
+    0 0 20px rgba(250, 204, 21, 0.6),
+    0 0 40px rgba(250, 204, 21, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  animation: badge-pulse-gold 2s infinite;
+}
+
+.rank-badge-2 {
+  display: flex;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #E5E7EB 0%, #D1D5DB 100%);
+  box-shadow: 
+    0 0 20px rgba(192, 192, 192, 0.5),
+    0 0 40px rgba(192, 192, 192, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  animation: badge-pulse-silver 2s infinite;
+}
+
+.rank-badge-3 {
+  display: flex;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #FDBA74 0%, #FB923C 100%);
+  box-shadow: 
+    0 0 20px rgba(249, 115, 22, 0.6),
+    0 0 40px rgba(249, 115, 22, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  animation: badge-pulse-bronze 2s infinite;
+}
+
+.rank-badge-regular {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  background: rgba(168, 85, 247, 0.3);
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  font-size: 0.75rem;
+}
+
+/* Badge Pulse Animations */
+@keyframes badge-pulse-gold {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(250, 204, 21, 0.6),
+      0 0 40px rgba(250, 204, 21, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(250, 204, 21, 0.8),
+      0 0 60px rgba(250, 204, 21, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes badge-pulse-silver {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(192, 192, 192, 0.5),
+      0 0 40px rgba(192, 192, 192, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(192, 192, 192, 0.7),
+      0 0 60px rgba(192, 192, 192, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes badge-pulse-bronze {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(249, 115, 22, 0.6),
+      0 0 40px rgba(249, 115, 22, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(249, 115, 22, 0.8),
+      0 0 60px rgba(249, 115, 22, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+  }
+}
+
+/* Delay animations for multiple items */
+.delay-100 {
+  animation-delay: 0.1s !important;
+}
+
+.delay-200 {
+  animation-delay: 0.2s !important;
+}
+
+/* Hover scale for top 3 should be bigger */
+.top-rank-1:hover,
+.top-rank-2:hover,
+.top-rank-3:hover {
+  transform: scale(1.08);
+}
+
+/* Smooth transitions */
+.top-rank-1,
+.top-rank-2,
+.top-rank-3,
+.top-rank-regular {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

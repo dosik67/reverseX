@@ -3,13 +3,14 @@ import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Expand, Trash2, GripVertical } from "lucide-react";
+import { ChevronLeft, ChevronRight, Expand, Trash2, GripVertical, Crown, Award } from "lucide-react";
 import supabase from "@/utils/supabase";
 import { toast } from "sonner";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import "@/styles/top50.css";
 
 interface TopList {
   id: string;
@@ -98,29 +99,16 @@ const TopRankItem = ({ item, rank, isOwnProfile, onRemove, mediaType }: { item: 
   };
 
   // Different styles for top 3
-  const getFrameStyle = () => {
+  const getFrameClass = () => {
     switch (rank) {
       case 1:
-        return 'ring-2 ring-yellow-500/50 shadow-lg shadow-yellow-500/20';
+        return 'top-rank-1';
       case 2:
-        return 'ring-2 ring-gray-400/50 shadow-lg shadow-gray-400/20';
+        return 'top-rank-2';
       case 3:
-        return 'ring-2 ring-orange-500/50 shadow-lg shadow-orange-500/20';
+        return 'top-rank-3';
       default:
-        return 'ring-1 ring-primary/20';
-    }
-  };
-
-  const getRankBadgeStyle = () => {
-    switch (rank) {
-      case 1:
-        return 'bg-gradient-to-br from-yellow-500 to-yellow-600 text-white';
-      case 2:
-        return 'bg-gradient-to-br from-gray-400 to-gray-500 text-white';
-      case 3:
-        return 'bg-gradient-to-br from-orange-500 to-orange-600 text-white';
-      default:
-        return 'bg-primary/30 text-primary';
+        return 'top-rank-regular';
     }
   };
 
@@ -130,35 +118,70 @@ const TopRankItem = ({ item, rank, isOwnProfile, onRemove, mediaType }: { item: 
       style={style}
       className={`relative group ${rank <= 3 ? 'col-span-1' : ''}`}
     >
+      {/* Shine/Glow Effect для Top 3 */}
+      {rank <= 3 && (
+        <>
+          <div className={`absolute -inset-1 rounded-xl blur-xl opacity-75 -z-10 animate-pulse ${
+            rank === 1 ? 'bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-500' :
+            rank === 2 ? 'bg-gradient-to-r from-gray-400 via-gray-300 to-gray-400' :
+            'bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500'
+          }`} />
+          <div className={`absolute -inset-0.5 rounded-xl blur-2xl opacity-50 -z-10 ${
+            rank === 1 ? 'bg-yellow-500/30' :
+            rank === 2 ? 'bg-gray-400/30' :
+            'bg-orange-500/30'
+          }`} />
+        </>
+      )}
+
       {/* Main Card */}
-      <div className={`bg-gradient-to-br from-card to-card/50 rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 ${getFrameStyle()} cursor-pointer`}>
-        {/* Poster */}
+      <div className={`relative group ${getFrameClass()} overflow-hidden rounded-xl transition-all duration-300 hover:scale-110 cursor-pointer`}>
+        {/* Link Wrapper */}
         <Link 
           to={`/${mediaType === 'movie' ? 'movie' : mediaType === 'anime' ? 'series' : 'game'}/${item.item_id}`}
           className="relative block overflow-hidden"
         >
+          {/* Poster */}
           {item.poster_url && (
             <img 
               src={item.poster_url} 
               alt={item.title}
-              className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-110"
+              className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-125"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          
+          {/* Overlay Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
+          
+          {/* Sparkle Effect for Top 3 */}
+          {rank <= 3 && (
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-2 right-2 w-2 h-2 bg-white rounded-full animate-pulse" />
+              <div className="absolute top-4 left-4 w-1.5 h-1.5 bg-white rounded-full animate-pulse delay-100" />
+              <div className="absolute bottom-4 right-6 w-1 h-1 bg-white rounded-full animate-pulse delay-200" />
+            </div>
+          )}
         </Link>
 
-        {/* Rank Badge */}
-        <div className={`absolute top-3 right-3 ${getRankBadgeStyle()} rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg shadow-lg`}>
-          #{rank}
+        {/* Rank Badge - Пафосный */}
+        <div className={`absolute top-2 right-2 ${
+          rank === 1 ? 'rank-badge-1' :
+          rank === 2 ? 'rank-badge-2' :
+          rank === 3 ? 'rank-badge-3' :
+          'rank-badge-regular'
+        } rounded-full font-bold text-lg shadow-2xl flex items-center justify-center`}>
+          <span className="relative z-10">
+            {rank === 1 ? '👑' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`}
+          </span>
         </div>
 
         {/* Title Section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/95 via-black/50 to-transparent">
           <Link 
             to={`/${mediaType === 'movie' ? 'movie' : 'series'}/${item.item_id}`}
             className="block hover:text-primary transition-colors"
           >
-            <h4 className="font-bold text-white text-lg line-clamp-2">{item.title}</h4>
+            <h4 className="font-bold text-white text-base md:text-lg line-clamp-2 drop-shadow-lg">{item.title}</h4>
           </Link>
         </div>
 
@@ -168,7 +191,7 @@ const TopRankItem = ({ item, rank, isOwnProfile, onRemove, mediaType }: { item: 
             variant="ghost" 
             size="icon"
             onClick={onRemove}
-            className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 hover:bg-red-500/80 text-white"
+            className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 hover:bg-red-500/90 text-white rounded-full shadow-lg"
           >
             <Trash2 className="w-4 h-4" />
           </Button>
@@ -179,9 +202,16 @@ const TopRankItem = ({ item, rank, isOwnProfile, onRemove, mediaType }: { item: 
           <div 
             {...attributes} 
             {...listeners} 
-            className="absolute bottom-3 left-3 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 p-2 rounded"
+            className="absolute bottom-2 left-2 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 p-2 rounded-full shadow-lg"
           >
             <GripVertical className="w-4 h-4 text-white" />
+          </div>
+        )}
+
+        {/* Number overlay for non-top-3 */}
+        {rank > 3 && (
+          <div className="absolute top-2 right-2 bg-black/70 px-3 py-1 rounded-full text-xs font-bold text-white">
+            #{rank}
           </div>
         )}
       </div>
