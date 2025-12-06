@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import supabase from "@/utils/supabase";
 import { Link } from "react-router-dom";
+import { useIMDbRating } from "@/hooks/useIMDbRating";
 
 interface MovieCardComponentProps {
   movie: {
@@ -25,6 +26,10 @@ const MovieCardComponent = ({ movie, onAction }: MovieCardComponentProps) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [likes, setLikes] = useState(0);
   const [loading, setLoading] = useState(false);
+  const { rating: imdbRating, loading: imdbLoading } = useIMDbRating({
+    tmdbId: movie.id,
+    mediaType: 'movie'
+  });
 
   useEffect(() => {
     checkUserActions();
@@ -122,13 +127,23 @@ const MovieCardComponent = ({ movie, onAction }: MovieCardComponentProps) => {
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300" />
 
           {/* Rating Badge */}
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-2 right-2 flex flex-col gap-1">
             <Badge
               variant={movie.rating >= 7 ? "default" : "secondary"}
               className="gap-1"
             >
               ★ {movie.rating}
             </Badge>
+            {imdbRating && !imdbLoading && (
+              <Badge className="gap-1 bg-yellow-600 text-black hover:bg-yellow-700">
+                IMDb {imdbRating.imdbRating?.toFixed(1) || 'N/A'}
+              </Badge>
+            )}
+            {imdbLoading && (
+              <Badge className="opacity-50">
+                IMDb...
+              </Badge>
+            )}
           </div>
 
           {/* Year Badge */}

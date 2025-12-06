@@ -4,6 +4,7 @@ import { Star, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import supabase from "@/utils/supabase";
 import { toast } from "sonner";
+import { useIMDbRating } from "@/hooks/useIMDbRating";
 
 interface Series {
   id: number;
@@ -17,6 +18,10 @@ const FALLBACK_IMAGE = 'https://placehold.co/342x513/1a1a2e/ffffff?text=No+Image
 
 const SeriesCard = ({ series }: { series: Series }) => {
   const [loading, setLoading] = useState(false);
+  const { rating: imdbRating, loading: imdbLoading } = useIMDbRating({
+    tmdbId: series.id,
+    mediaType: 'tv'
+  });
 
   const handleAddToTop50 = useCallback(
     async (e: React.MouseEvent) => {
@@ -131,6 +136,15 @@ const SeriesCard = ({ series }: { series: Series }) => {
               <Star className="w-4 h-4 fill-current" />
               <span className="text-sm font-semibold">{Number(series.rating).toFixed(1)}</span>
             </div>
+            {imdbRating && (
+              <div className="flex items-center gap-1 mb-2 text-yellow-300">
+                <span className="text-xs font-bold bg-yellow-600 text-black px-1.5 py-0.5 rounded">IMDb</span>
+                <span className="text-sm font-semibold">{imdbRating.imdbRating?.toFixed(1) || 'N/A'}</span>
+              </div>
+            )}
+            {imdbLoading && (
+              <div className="h-6 bg-muted/50 rounded animate-pulse mb-2"></div>
+            )}
             <h3 className="text-sm font-semibold text-white line-clamp-2">{series.title}</h3>
             <p className="text-xs text-white/70">{series.year}</p>
           </div>

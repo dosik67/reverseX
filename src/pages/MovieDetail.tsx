@@ -4,6 +4,7 @@ import { getMovieDetails, getMovieVideos, getMovieCredits, getSimilarMovies, get
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star, Play } from "lucide-react";
+import { useIMDbRating } from "@/hooks/useIMDbRating";
 
 interface MovieDetails {
   id: number;
@@ -53,6 +54,12 @@ const MovieDetail = () => {
   const [similarMovies, setSimilarMovies] = useState<SimilarMovie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const movieId = id ? parseInt(id) : undefined;
+  const { rating: imdbRating, loading: imdbLoading } = useIMDbRating({
+    tmdbId: movieId,
+    mediaType: 'movie'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -152,6 +159,20 @@ const MovieDetail = () => {
                   <span className="text-2xl font-bold">{movie.vote_average.toFixed(1)}</span>
                   <span className="text-sm text-muted-foreground">/10</span>
                 </div>
+
+                {imdbRating && !imdbLoading && (
+                  <div className="flex items-center gap-2 bg-yellow-600/80 px-4 py-2 rounded-lg text-black font-bold">
+                    <span className="text-sm">IMDb</span>
+                    <span className="text-2xl">{imdbRating.imdbRating?.toFixed(1) || 'N/A'}</span>
+                    <span className="text-sm">/10</span>
+                  </div>
+                )}
+
+                {imdbLoading && (
+                  <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg animate-pulse">
+                    <span className="text-sm">IMDb...</span>
+                  </div>
+                )}
 
                 {movie.runtime && (
                   <div className="bg-card/80 px-4 py-2 rounded-lg text-sm">
