@@ -1,7 +1,7 @@
 // TMDB API configuration
-const TMDB_API_KEY = 'a981b3ba0b345f578fb917ee74a90bf3';
+export const TMDB_API_KEY = 'a981b3ba0b345f578fb917ee74a90bf3';
 const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhOTgxYjNiYTBiMzQ1ZjU3OGZiOTE3ZWU3NGE5MGJmMyIsIm5iZiI6MTc1MjUyMjUxMy40MjcsInN1YiI6IjY4NzU1ZjExNzUzYjVjNTYwM2Y5MWJkMyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.Trm6p4NqL6VPKlvUkGkRMKVjeH2KAklTAllVbnolV8w';
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+export const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
 export interface TMDBMovie {
   id: number;
