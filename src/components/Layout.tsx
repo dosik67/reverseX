@@ -71,7 +71,7 @@ const Layout = () => {
               <img 
                 src="/logo.png"
                 alt="ReverseX"
-                className="h-10 w-auto"
+                className="h-16 w-auto"
               />
             </Link>
 

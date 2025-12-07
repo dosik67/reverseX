@@ -148,7 +148,7 @@ const Auth = () => {
           <img 
             src="/logo.png"
             alt="ReverseX"
-            className="h-16 w-auto mx-auto mb-4"
+            className="h-24 w-auto mx-auto mb-4"
           />
           <p className="text-muted-foreground">Track movies, games, music, books and more</p>
         </div>

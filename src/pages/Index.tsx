@@ -117,7 +117,7 @@ const Index = () => {
           <img 
             src="/logo.png"
             alt="ReverseX"
-            className="h-32 w-auto mb-6"
+            className="h-48 w-auto mb-6"
           />
           <p className="text-xl text-muted-foreground mb-8 text-center max-w-2xl">
             Персональный трекер и рекомендации
