@@ -69,8 +69,8 @@ const Layout = () => {
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <img 
-                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 80'%3E%3Ctext x='50' y='60' font-size='48' font-weight='bold' fill='%23d946ef' font-family='Arial'%3Ereverse%3C/text%3E%3C/svg%3E"
-                alt="Reverse"
+                src="/logo.png"
+                alt="ReverseX"
                 className="h-10 w-auto"
               />
             </Link>

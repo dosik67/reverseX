@@ -145,10 +145,11 @@ const Auth = () => {
       <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Film className="w-10 h-10 text-primary" />
-            <h1 className="text-4xl font-bold gradient-text">Reverse</h1>
-          </div>
+          <img 
+            src="/logo.png"
+            alt="ReverseX"
+            className="h-16 w-auto mx-auto mb-4"
+          />
           <p className="text-muted-foreground">Track movies, games, music, books and more</p>
         </div>
 

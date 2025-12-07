@@ -114,7 +114,11 @@ const Index = () => {
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1920')] bg-cover bg-center opacity-10" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         <div className="container mx-auto px-4 h-full flex flex-col justify-center items-center relative z-10">
-          <h1 className="text-6xl font-display font-bold mb-6 gradient-text text-center">Reverse</h1>
+          <img 
+            src="/logo.png"
+            alt="ReverseX"
+            className="h-32 w-auto mb-6"
+          />
           <p className="text-xl text-muted-foreground mb-8 text-center max-w-2xl">
             Персональный трекер и рекомендации
           </p>

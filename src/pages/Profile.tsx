@@ -405,7 +405,7 @@ const Profile = () => {
 
   const handleShareProfile = async (platform?: string) => {
     const profileUrl = `${window.location.origin}/profile/${userId}`;
-    const shareText = `Посмотри мой профиль на reverseX! ${profile?.display_name || profile?.username}`;
+    const shareText = `Посмотри мой профиль на ReverseX! ${profile?.display_name || profile?.username}`;
     
     try {
       if (platform === 'copy') {
@@ -421,7 +421,7 @@ const Profile = () => {
         window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(profileUrl)}`, '_blank');
       } else if (navigator.share) {
         await navigator.share({
-          title: 'reverseX Профиль',
+          title: 'ReverseX Профиль',
           text: shareText,
           url: profileUrl,
         });

@@ -94,7 +94,7 @@ const MovieCardComponent = ({ movie, onAction }: MovieCardComponentProps) => {
   const shareMovie = async () => {
     try {
       const movieUrl = `${window.location.origin}/movie/${movie.id}`;
-      const shareText = `Check out "${movie.title}" on Reverse!`;
+      const shareText = `Check out "${movie.title}" on ReverseX!`;
 
       if (navigator.share) {
         await navigator.share({
