@@ -28,6 +28,7 @@ import {
 } from '@/utils/tierListService';
 import TierListSearch from '@/components/TierListSearch';
 import TierListDisplay from '@/components/TierListDisplay';
+import PopularContent from '@/components/PopularContent';
 import { useToast } from '@/hooks/use-toast';
 
 interface SearchResult {
@@ -452,6 +453,10 @@ const TierListsPage = () => {
                         <TierListSearch onAddItem={handleAddItem} />
                       </CardContent>
                     </Card>
+
+                    <div className="mt-6">
+                      <PopularContent onAddItem={handleAddItem} />
+                    </div>
                   </TabsContent>
                 </Tabs>
               </div>
