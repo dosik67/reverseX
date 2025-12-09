@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Film, Home, Tv, Gamepad, Music, Book, Bell, MessageSquare, User, LogOut, Settings } from "lucide-react";
+import { Film, Home, Tv, Gamepad, Music, Book, Bell, MessageSquare, User, LogOut, Settings, Crown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -101,6 +101,12 @@ const Layout = () => {
                 </Link>
               </Button>
               <Button variant="ghost" size="sm" asChild>
+                <Link to="/tier-lists" className="flex items-center gap-2">
+                  <Crown className="w-4 h-4" />
+                  Tier Lists
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
                 <Link to="/music" className="flex items-center gap-2">
                   <Music className="w-4 h-4" />
                   Music
@@ -155,6 +161,12 @@ const Layout = () => {
                         <Link to={`/profile/${session.user.id}`} className="flex items-center gap-2">
                           <User className="w-4 h-4" />
                           Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/tier-lists" className="flex items-center gap-2">
+                          <Crown className="w-4 h-4" />
+                          Tier Lists
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>

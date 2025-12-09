@@ -21,6 +21,7 @@ import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
+import TierLists from "./pages/TierLists";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AppProvider } from "@/context/AppContext";
 
@@ -84,6 +85,7 @@ const App = () => {
                   <Route path="/profile/:userId" element={<Profile />} />
                   <Route path="/profile/:userId/edit" element={<ProfileEdit />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/tier-lists" element={<TierLists />} />
                   <Route path="/games" element={<Games />} />
                   <Route path="/game/:id" element={<GameDetail />} />
                   <Route path="/music" element={<PlaceholderPage title="Music" icon={Music} />} />
