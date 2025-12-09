@@ -36,6 +36,13 @@ export const getIMDbRating = async (imdbId: string): Promise<OMDbRating | null> 
   }
 
   try {
+    // CORS Issue: OMDb API blocks requests from browser due to CORS policy
+    // We would need a backend proxy to fetch these ratings
+    // For now, returning null to prevent CORS errors
+    console.warn(`OMDb API rating fetching disabled due to CORS policy. IMDb ID: ${imdbId}`);
+    return null;
+
+    /* Original code (disabled due to CORS):
     const response = await fetch(
       `${OMDB_BASE_URL}/?i=${imdbId}&apikey=${OMDB_API_KEY}`,
       { 
@@ -69,6 +76,7 @@ export const getIMDbRating = async (imdbId: string): Promise<OMDbRating | null> 
     ratingCache.set(imdbId, rating);
 
     return rating;
+    */
   } catch (error) {
     console.error('Error fetching IMDb rating:', error);
     return null;
