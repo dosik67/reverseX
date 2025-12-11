@@ -181,15 +181,17 @@ const Workspace = () => {
             </motion.div>
           ) : (
             <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {projects.map((project) => (
                 <motion.div
                   key={project.id}
-                  variants={itemVariants}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
                   whileHover={{ y: -4 }}
                   onClick={() => handleProjectClick(project.id)}
                   className="p-6 border border-gray-200 rounded-lg cursor-pointer hover:border-black hover:shadow-xl transition-all group"

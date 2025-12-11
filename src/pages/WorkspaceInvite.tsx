@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import supabase from "@/utils/supabase";
 
 const WorkspaceInvite = () => {
@@ -93,11 +92,7 @@ const WorkspaceInvite = () => {
 
   return (
     <div className="min-h-screen bg-white text-black flex items-center justify-center">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center"
-      >
+      <div className="text-center">
         {loading && (
           <>
             <div className="w-12 h-12 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -116,7 +111,7 @@ const WorkspaceInvite = () => {
             </button>
           </>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 };
