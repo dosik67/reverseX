@@ -25,6 +25,12 @@ import TierLists from "./pages/TierLists";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AppProvider } from "@/context/AppContext";
 
+// Workspace imports
+import Workspace from "./pages/Workspace";
+import WorkspaceAuth from "./pages/WorkspaceAuth";
+import WorkspaceProject from "./pages/WorkspaceProject";
+import WorkspaceSettings from "./pages/WorkspaceSettings";
+
 import supabase from "@/utils/supabase";
 import "./App.css";
 
@@ -75,6 +81,12 @@ const App = () => {
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/qr-auth" element={<QRAuthPage />} />
+
+                {/* Workspace Routes - Hidden/Secret */}
+                <Route path="/workspace-auth" element={<WorkspaceAuth />} />
+                <Route path="/workspace" element={<Workspace />} />
+                <Route path="/workspace/project/:projectId" element={<WorkspaceProject />} />
+                <Route path="/workspace/settings" element={<WorkspaceSettings />} />
 
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />
