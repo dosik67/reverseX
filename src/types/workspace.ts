@@ -39,6 +39,7 @@ export interface Task {
   title: string;
   description?: string;
   assigned_to?: string;
+  assigned_user_email?: string;
   created_by?: string;
   due_date?: string;
   completed: boolean;
@@ -54,6 +55,7 @@ export interface Board {
   project_id: string;
   name: string;
   description?: string;
+  work_date?: string;
   created_at: string;
   updated_at: string;
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, Clock, User } from "lucide-react";
+import { Plus, X, Clock, User, Filter } from "lucide-react";
 import supabase from "@/utils/supabase";
 import { useTheme } from "@/context/ThemeContext";
 import { Task, BoardColumn, TaskStatus } from "@/types/workspace";
@@ -34,6 +34,8 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   
   // Инициализируем состояние формы из localStorage
   const [formState, setFormState] = useState(() => {
@@ -166,6 +168,16 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
         setColumns(columnsData);
       }
 
+      // Load team members
+      const { data: membersData, error: membersError } = await supabase
+        .from("team_members")
+        .select("*")
+        .eq("project_id", projectId);
+
+      if (!membersError && membersData) {
+        setTeamMembers(membersData);
+      }
+
       // Load tasks - без joins для избежания RLS ошибок
       const { data: tasksData, error: tasksError } = await supabase
         .from("tasks")
@@ -256,6 +268,25 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
     }
   };
 
+  const updateTaskAssignee = async (taskId: string, memberId: string | null) => {
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ assigned_to: memberId })
+        .eq("id", taskId);
+
+      if (error) throw error;
+
+      setTasks(
+        tasks.map((t) =>
+          t.id === taskId ? { ...t, assigned_to: memberId } : t
+        )
+      );
+    } catch (error) {
+      console.error("Error updating task assignee:", error);
+    }
+  };
+
   const toggleTaskComplete = async (task: Task) => {
     try {
       const { error } = await supabase
@@ -307,11 +338,49 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
 
   console.log("KanbanBoard render:", { sortedColumns, tasks, loading });
 
+  // Фильтруем задачи по выбранному члену команды
+  const filteredTasks = selectedMemberId
+    ? tasks.filter(t => t.assigned_to === selectedMemberId)
+    : tasks;
+
   return (
-    <div className="flex gap-6 overflow-x-auto pb-6 pt-4 w-full">
+    <div className="space-y-6">
+      {/* Filter by team member */}
+      <div className="flex items-center gap-2 pb-4 border-b">
+        <Filter size={18} />
+        <span className="text-sm font-medium">Назначено:</span>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          onClick={() => setSelectedMemberId(null)}
+          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+            !selectedMemberId
+              ? isDark ? "bg-white text-black" : "bg-black text-white"
+              : isDark ? "border border-gray-700 text-white hover:bg-gray-900" : "border border-gray-300 hover:bg-gray-100"
+          }`}
+        >
+          Все
+        </motion.button>
+        {teamMembers.map((member) => (
+          <motion.button
+            key={member.id}
+            whileHover={{ scale: 1.05 }}
+            onClick={() => setSelectedMemberId(member.user_id)}
+            className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              selectedMemberId === member.user_id
+                ? isDark ? "bg-white text-black" : "bg-black text-white"
+                : isDark ? "border border-gray-700 text-white hover:bg-gray-900" : "border border-gray-300 hover:bg-gray-100"
+            }`}
+          >
+            <User size={14} className="inline mr-1" />
+            {member.role}
+          </motion.button>
+        ))}
+      </div>
+
+      <div className="flex gap-6 overflow-x-auto pb-6 pt-4 w-full">
       <AnimatePresence mode="popLayout">
         {sortedColumns.map((column) => {
-          const columnTasks = tasks.filter((t) => t.column_id === column.id);
+          const columnTasks = filteredTasks.filter((t) => t.column_id === column.id);
           const columnConfig_item =
             columnConfig[column.status as TaskStatus];
 
@@ -424,7 +493,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                       </div>
 
                       {/* Task Meta */}
-                      <div className="space-y-2 text-xs text-gray-500">
+                      <div className="space-y-2 text-xs text-gray-500 mt-3 mb-2">
                         {/* Creator info скрыта на время из-за RLS ограничений */}
                         {task.due_date && (
                           <div className="flex items-center gap-2">
@@ -434,12 +503,43 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                             </span>
                           </div>
                         )}
-                        {task.assigned_to && (
-                          <div className="flex items-center gap-2">
-                            <User size={14} />
-                            <span>Назначен: {task.assigned_to}</span>
-                          </div>
-                        )}
+                      </div>
+
+                      {/* Assign to member */}
+                      <div className="relative group">
+                        <button
+                          className={`w-full text-left px-2 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-2 ${
+                            task.assigned_to
+                              ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                              : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          <User size={12} />
+                          {task.assigned_to ? "Назначен" : "Назначить"}
+                        </button>
+
+                        {/* Dropdown menu */}
+                        <div className="absolute left-0 top-full mt-1 min-w-max bg-white border border-gray-200 rounded-lg shadow-lg hidden group-hover:block z-20">
+                          <button
+                            onClick={() => updateTaskAssignee(task.id, null)}
+                            className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 first:rounded-t-lg"
+                          >
+                            Без назначения
+                          </button>
+                          {teamMembers.map((member) => (
+                            <button
+                              key={member.id}
+                              onClick={() => updateTaskAssignee(task.id, member.user_id)}
+                              className={`block w-full text-left px-3 py-2 text-xs transition-colors ${
+                                task.assigned_to === member.user_id
+                                  ? "bg-blue-50 text-blue-700"
+                                  : "hover:bg-gray-50"
+                              }`}
+                            >
+                              {member.role}
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
                       {/* Description */}
@@ -522,6 +622,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
           );
         })}
       </AnimatePresence>
+      </div>
     </div>
   );
 };
