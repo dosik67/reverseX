@@ -11,9 +11,11 @@ import {
   Search,
   Moon,
   Sun,
+  Globe,
 } from "lucide-react";
 import supabase from "@/utils/supabase";
 import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import type { Board, TeamMember } from "@/types/workspace";
 import type { WorkspaceProject as WorkspaceProjectType } from "@/types/workspace";
 import KanbanBoard from "@/components/KanbanBoard";
@@ -22,6 +24,7 @@ const WorkspaceProject = () => {
   const navigate = useNavigate();
   const { projectId } = useParams();
   const { isDark, toggleTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
   const [project, setProject] = useState<WorkspaceProjectType | null>(null);
   const [boards, setBoards] = useState<Board[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -281,6 +284,37 @@ const WorkspaceProject = () => {
               >
                 {isDark ? <Sun size={20} /> : <Moon size={20} />}
               </button>
+              <div className="relative group">
+                <button
+                  className={`p-2 rounded-lg transition-colors flex items-center gap-2 ${isDark ? "bg-white hover:bg-gray-100 text-black" : "bg-black hover:bg-gray-900 text-white"}`}
+                  title="Change language"
+                >
+                  <Globe size={20} />
+                  <span className="text-sm font-medium">{language.toUpperCase()}</span>
+                </button>
+                <div className={`absolute right-0 mt-1 rounded-lg shadow-lg hidden group-hover:block z-10 ${isDark ? "bg-black border border-white" : "bg-white border border-black"}`}>
+                  <button
+                    onClick={() => setLanguage("ru")}
+                    className={`block w-full px-4 py-2 text-left text-sm transition-colors ${
+                      language === "ru"
+                        ? isDark ? "bg-white text-black" : "bg-black text-white"
+                        : isDark ? "text-white hover:bg-gray-900" : "text-black hover:bg-gray-100"
+                    } rounded-t-lg`}
+                  >
+                    🇷🇺 Русский
+                  </button>
+                  <button
+                    onClick={() => setLanguage("kk")}
+                    className={`block w-full px-4 py-2 text-left text-sm transition-colors ${
+                      language === "kk"
+                        ? isDark ? "bg-white text-black" : "bg-black text-white"
+                        : isDark ? "text-white hover:bg-gray-900" : "text-black hover:bg-gray-100"
+                    } rounded-b-lg`}
+                  >
+                    🇰🇿 Қазақша
+                  </button>
+                </div>
+              </div>
               <button
                 onClick={copyInviteLink}
                 disabled={!project?.invite_code}

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Gamepad, Music, Book } from "lucide-react";
 
 import { ThemeProvider } from "@/context/ThemeContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 import Auth from "./pages/Auth";
 import QRAuthPage from "./pages/QRAuthPage";
@@ -77,10 +78,11 @@ const App = () => {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <AppProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
+          <LanguageProvider>
+            <AppProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
               <BrowserRouter>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
@@ -113,7 +115,8 @@ const App = () => {
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
-        </AppProvider>
+            </AppProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>

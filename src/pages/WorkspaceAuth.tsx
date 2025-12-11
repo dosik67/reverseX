@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Globe } from "lucide-react";
 import supabase from "@/utils/supabase";
 import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 const WorkspaceAuth = () => {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,7 +51,7 @@ const WorkspaceAuth = () => {
       {/* Theme Toggle Button */}
       <button
         onClick={toggleTheme}
-        className={`absolute top-6 right-6 p-3 rounded-lg transition-all ${
+        className={`absolute top-6 right-24 p-3 rounded-lg transition-all ${
           isDark
             ? "bg-white hover:bg-gray-100 text-black"
             : "bg-black hover:bg-gray-900 text-white"
@@ -57,6 +59,43 @@ const WorkspaceAuth = () => {
       >
         {isDark ? <Sun size={20} /> : <Moon size={20} />}
       </button>
+
+      {/* Language Switcher */}
+      <div className="absolute top-6 right-6 relative group">
+        <button
+          className={`p-3 rounded-lg transition-all flex items-center gap-2 ${
+            isDark
+              ? "bg-white hover:bg-gray-100 text-black"
+              : "bg-black hover:bg-gray-900 text-white"
+          }`}
+          title="Change language"
+        >
+          <Globe size={20} />
+          <span className="text-sm font-medium">{language.toUpperCase()}</span>
+        </button>
+        <div className={`absolute right-0 mt-10 rounded-lg shadow-lg hidden group-hover:block z-10 ${isDark ? "bg-black border border-white" : "bg-white border border-black"}`}>
+          <button
+            onClick={() => setLanguage("ru")}
+            className={`block w-full px-4 py-2 text-left text-sm transition-colors whitespace-nowrap ${
+              language === "ru"
+                ? isDark ? "bg-white text-black" : "bg-black text-white"
+                : isDark ? "text-white hover:bg-gray-900" : "text-black hover:bg-gray-100"
+            } rounded-t-lg`}
+          >
+            🇷🇺 Русский
+          </button>
+          <button
+            onClick={() => setLanguage("kk")}
+            className={`block w-full px-4 py-2 text-left text-sm transition-colors whitespace-nowrap ${
+              language === "kk"
+                ? isDark ? "bg-white text-black" : "bg-black text-white"
+                : isDark ? "text-white hover:bg-gray-900" : "text-black hover:bg-gray-100"
+            } rounded-b-lg`}
+          >
+            🇰🇿 Қазақша
+          </button>
+        </div>
+      </div>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
