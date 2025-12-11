@@ -112,7 +112,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
           event: "*",
           schema: "public",
           table: "board_columns",
-          filter: `board_id=eq.${boardId}`,
+          filter: `project_id=eq.${projectId}`,
         },
         () => {
           console.log("Columns updated");
@@ -126,18 +126,19 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [boardId, projectId, isUserTyping, showNewTaskModal, editingTaskId]);
+  }, [projectId, isUserTyping, showNewTaskModal, editingTaskId]);
 
   const loadData = async () => {
     try {
       const statuses: TaskStatus[] = ["planned", "in_progress", "done", "abandoned"];
 
-      // Create or get columns for THIS board
+      // Load columns for project (not filtering by board_id as old data might not have it)
       const { data: columnsData, error: columnsError } = await supabase
         .from("board_columns")
         .select("*")
-        .eq("board_id", boardId)
-        .in("status", statuses);
+        .eq("project_id", projectId)
+        .in("status", statuses)
+        .order("order", { ascending: true });
 
       if (columnsError) {
         console.error("Columns error:", columnsError);
