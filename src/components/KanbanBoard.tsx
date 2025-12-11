@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, Clock, User } from "lucide-react";
 import supabase from "@/utils/supabase";
+import { useTheme } from "@/context/ThemeContext";
 import { Task, BoardColumn, TaskStatus } from "@/types/workspace";
 
 interface KanbanBoardProps {
@@ -28,6 +29,7 @@ const columnConfig: Record<
 };
 
 const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
+  const { isDark } = useTheme();
   const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -355,7 +357,11 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                                   setEditingTaskId(null);
                                 }
                               }}
-                              className="flex-1 px-2 py-1 border border-black rounded font-medium text-sm"
+                              className={`flex-1 px-2 py-1 rounded font-medium text-sm focus:outline-none focus:ring-1 ${
+                                isDark
+                                  ? "bg-gray-800 text-white border border-gray-700 focus:border-white focus:ring-white"
+                                  : "bg-white text-black border border-black focus:border-black focus:ring-black"
+                              }`}
                             />
                           ) : (
                             <span
@@ -428,7 +434,11 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                       placeholder="Task title"
                       value={newTaskTitle}
                       onChange={(e) => setNewTaskTitle(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
+                      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 transition-colors ${
+                        isDark
+                          ? "bg-gray-900 text-white border-gray-700 focus:border-white focus:ring-white placeholder-gray-400"
+                          : "bg-white text-black border-gray-300 focus:border-black focus:ring-black placeholder-gray-600"
+                      }`}
                       onKeyPress={(e) => {
                         if (e.key === "Enter") createTask(column.status as TaskStatus);
                       }}
@@ -438,7 +448,11 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                         onClick={() =>
                           createTask(column.status as TaskStatus)
                         }
-                        className="flex-1 px-3 py-2 bg-black text-white text-sm rounded-lg hover:bg-gray-800 transition-colors"
+                        className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors font-medium ${
+                          isDark
+                            ? "bg-white text-black hover:bg-gray-100"
+                            : "bg-black text-white hover:bg-gray-900"
+                        }`}
                       >
                         Add
                       </button>
@@ -447,7 +461,11 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                           setShowNewTaskModal(null);
                           setNewTaskTitle("");
                         }}
-                        className="flex-1 px-3 py-2 border border-gray-300 text-sm rounded-lg hover:bg-gray-100 transition-colors"
+                        className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors font-medium ${
+                          isDark
+                            ? "border border-gray-700 text-white hover:bg-gray-900"
+                            : "border border-gray-300 text-black hover:bg-gray-100"
+                        }`}
                       >
                         Cancel
                       </button>

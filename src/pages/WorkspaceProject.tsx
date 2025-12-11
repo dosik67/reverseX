@@ -403,7 +403,11 @@ const WorkspaceProject = () => {
               animate={{ scale: 1 }}
               exit={{ scale: 0.95 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl"
+              className={`rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl ${
+                isDark
+                  ? "bg-black border border-white text-white"
+                  : "bg-white text-black"
+              }`}
             >
               <h3 className="text-xl font-medium mb-6">Create New Board</h3>
               <input
@@ -411,27 +415,43 @@ const WorkspaceProject = () => {
                 placeholder="Board name (e.g., Design, Music)"
                 value={newBoardName}
                 onChange={(e) => setNewBoardName(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
+                className={`w-full px-4 py-2.5 border rounded-lg mb-4 focus:outline-none focus:ring-1 transition-colors ${
+                  isDark
+                    ? "bg-gray-900 text-white border-gray-700 focus:border-white focus:ring-white placeholder-gray-400"
+                    : "bg-white text-black border-gray-300 focus:border-black focus:ring-black placeholder-gray-600"
+                }`}
                 onKeyPress={(e) => e.key === "Enter" && createBoard()}
               />
               <textarea
                 placeholder="Description (optional)"
                 value={newBoardDesc}
                 onChange={(e) => setNewBoardDesc(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg mb-6 focus:outline-none focus:border-black focus:ring-1 focus:ring-black resize-none"
+                className={`w-full px-4 py-2.5 border rounded-lg mb-6 focus:outline-none focus:ring-1 transition-colors resize-none ${
+                  isDark
+                    ? "bg-gray-900 text-white border-gray-700 focus:border-white focus:ring-white placeholder-gray-400"
+                    : "bg-white text-black border-gray-300 focus:border-black focus:ring-black placeholder-gray-600"
+                }`}
                 rows={3}
               />
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowNewBoardModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                  className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                    isDark
+                      ? "border border-gray-700 text-white hover:bg-gray-900"
+                      : "border border-gray-300 text-black hover:bg-gray-100"
+                  }`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={createBoard}
                   disabled={!newBoardName.trim()}
-                  className="flex-1 px-4 py-2.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isDark
+                      ? "bg-white text-black hover:bg-gray-100"
+                      : "bg-black text-white hover:bg-gray-900"
+                  }`}
                 >
                   Create
                 </button>
