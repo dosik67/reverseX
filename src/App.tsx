@@ -30,6 +30,7 @@ import Workspace from "./pages/Workspace";
 import WorkspaceAuth from "./pages/WorkspaceAuth";
 import WorkspaceProject from "./pages/WorkspaceProject";
 import WorkspaceSettings from "./pages/WorkspaceSettings";
+import WorkspaceInvite from "./pages/WorkspaceInvite";
 
 import supabase from "@/utils/supabase";
 import "./App.css";
@@ -87,6 +88,7 @@ const App = () => {
                 <Route path="/workspace" element={<Workspace />} />
                 <Route path="/workspace/project/:projectId" element={<WorkspaceProject />} />
                 <Route path="/workspace/settings" element={<WorkspaceSettings />} />
+                <Route path="/workspace/invite/:inviteCode" element={<WorkspaceInvite />} />
 
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />

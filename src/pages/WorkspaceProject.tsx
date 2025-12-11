@@ -171,6 +171,13 @@ const WorkspaceProject = () => {
     }
   };
 
+  const copyInviteLink = () => {
+    if (!project?.invite_code) return;
+    const inviteUrl = `${window.location.origin}/workspace/invite/${project.invite_code}`;
+    navigator.clipboard.writeText(inviteUrl);
+    alert("Invite link copied to clipboard!");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -206,10 +213,18 @@ const WorkspaceProject = () => {
             </button>
             <div className="flex items-center gap-4">
               <button
+                onClick={copyInviteLink}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors"
+                title="Copy invite link"
+              >
+                <Users size={18} />
+                Share
+              </button>
+              <button
                 onClick={() => setShowInviteModal(true)}
                 className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors"
               >
-                <Users size={18} />
+                <Mail size={18} />
                 Invite
               </button>
               <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">

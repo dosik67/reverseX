@@ -69,6 +69,8 @@ const Workspace = () => {
     if (!newProjectName.trim() || !user) return;
 
     try {
+      const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      
       const { data, error } = await supabase
         .from("workspace_projects")
         .insert([
@@ -76,6 +78,7 @@ const Workspace = () => {
             user_id: user.id,
             name: newProjectName,
             description: newProjectDesc,
+            invite_code: inviteCode,
           },
         ])
         .select()

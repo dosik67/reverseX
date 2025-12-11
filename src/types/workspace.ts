@@ -20,6 +20,7 @@ export interface WorkspaceProject {
   user_id: string;
   name: string;
   description?: string;
+  invite_code?: string;
   created_at: string;
   updated_at: string;
 }
