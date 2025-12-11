@@ -194,6 +194,14 @@ const WorkspaceProject = () => {
 
   const createBoard = async () => {
     if (!projectId || !newBoardName.trim()) return;
+    
+    // Check if user is authenticated
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData?.session) {
+      alert("Вы не авторизованы. Пожалуйста, переавторизуйтесь.");
+      navigate("/workspace-auth");
+      return;
+    }
 
     try {
       const boardData: any = {
