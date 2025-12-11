@@ -41,9 +41,7 @@ const Workspace = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    let timeoutId: NodeJS.Timeout;
-
-    // Subscribe to real-time project changes with debounce
+    // Subscribe to real-time project changes
     const channel = supabase
       .channel(`user:${user.id}:projects`)
       .on(
@@ -56,16 +54,12 @@ const Workspace = () => {
         },
         () => {
           console.log("Projects updated in real-time");
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            loadProjects(user.id);
-          }, 300);
+          loadProjects(user.id);
         }
       )
       .subscribe();
 
     return () => {
-      clearTimeout(timeoutId);
       supabase.removeChannel(channel);
     };
   }, [user?.id]);

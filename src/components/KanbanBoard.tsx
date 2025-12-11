@@ -48,9 +48,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
   useEffect(() => {
     if (!projectId) return;
 
-    let timeoutId: NodeJS.Timeout;
-
-    // Subscribe to real-time changes with debounce
+    // Subscribe to real-time changes
     const channel = supabase
       .channel(`project:${projectId}`)
       .on(
@@ -63,11 +61,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
         },
         () => {
           console.log("Realtime update detected, reloading...");
-          // Debounce to prevent rapid consecutive updates
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            loadData();
-          }, 300);
+          loadData();
         }
       )
       .on(
@@ -80,16 +74,12 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
         },
         () => {
           console.log("Columns updated");
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            loadData();
-          }, 300);
+          loadData();
         }
       )
       .subscribe();
 
     return () => {
-      clearTimeout(timeoutId);
       supabase.removeChannel(channel);
     };
   }, [projectId]);
