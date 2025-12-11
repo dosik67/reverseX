@@ -166,13 +166,10 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
         setColumns(columnsData);
       }
 
-      // Load tasks - filter by board_id, not project_id
-      // First get the board to have its ID
-      const boardIdToUse = columns.length > 0 ? columns[0].project_id : projectId;
-      
+      // Load tasks - без joins для избежания RLS ошибок
       const { data: tasksData, error: tasksError } = await supabase
         .from("tasks")
-        .select("*, creator:created_by(id, email)")
+        .select("*")
         .eq("project_id", projectId);
 
       if (tasksError) {
@@ -195,8 +192,6 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
     if (!column) return;
 
     try {
-      const { data: userData } = await supabase.auth.getSession();
-      
       const { data, error } = await supabase
         .from("tasks")
         .insert([
@@ -204,7 +199,6 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
             column_id: column.id,
             project_id: projectId,
             title: newTaskTitle,
-            created_by: userData?.session?.user?.id,
             completed: false,
             order: tasks.filter((t) => {
               const col = columns.find((c) => c.id === t.column_id);
@@ -431,12 +425,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
 
                       {/* Task Meta */}
                       <div className="space-y-2 text-xs text-gray-500">
-                        {task.creator && (
-                          <div className="flex items-center gap-2">
-                            <User size={14} />
-                            <span>Создал: {task.creator.email || "Unknown"}</span>
-                          </div>
-                        )}
+                        {/* Creator info скрыта на время из-за RLS ограничений */}
                         {task.due_date && (
                           <div className="flex items-center gap-2">
                             <Clock size={14} />
@@ -448,7 +437,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                         {task.assigned_to && (
                           <div className="flex items-center gap-2">
                             <User size={14} />
-                            <span>Назначен: {task.assignee?.email || task.assigned_to}</span>
+                            <span>Назначен: {task.assigned_to}</span>
                           </div>
                         )}
                       </div>

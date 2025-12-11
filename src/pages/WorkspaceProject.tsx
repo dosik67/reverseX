@@ -169,10 +169,10 @@ const WorkspaceProject = () => {
         setSelectedBoard(boardsData[0]);
       }
 
-      // Get team members
+      // Get team members - без joins для избежания RLS ошибок
       const { data: membersData, error: membersError } = await supabase
         .from("team_members")
-        .select("*, user:user_id(*)")
+        .select("*")
         .eq("project_id", projectId);
 
       if (membersError) throw membersError;
