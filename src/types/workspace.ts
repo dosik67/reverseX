@@ -55,7 +55,6 @@ export interface Board {
   project_id: string;
   name: string;
   description?: string;
-  work_date?: string;
   created_at: string;
   updated_at: string;
 }
