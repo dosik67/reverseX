@@ -34,30 +34,49 @@ const Workspace = () => {
   const [projects, setProjects] = useState<WorkspaceProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newProjectName, setNewProjectName] = useState(() => {
-    return localStorage.getItem("project_name") || "";
-  });
-  const [newProjectDesc, setNewProjectDesc] = useState(() => {
-    return localStorage.getItem("project_desc") || "";
+
+  // Инициализируем состояние формы из localStorage
+  const [projectFormState, setProjectFormState] = useState(() => {
+    const saved = localStorage.getItem("project_form");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return { showCreateModal: false, newProjectName: "", newProjectDesc: "" };
+      }
+    }
+    return { showCreateModal: false, newProjectName: "", newProjectDesc: "" };
   });
 
-  // Сохраняем содержимое форм в localStorage
-  useEffect(() => {
-    if (newProjectName) {
-      localStorage.setItem("project_name", newProjectName);
-    } else {
-      localStorage.removeItem("project_name");
-    }
-  }, [newProjectName]);
+  const showCreateModal = projectFormState.showCreateModal;
+  const newProjectName = projectFormState.newProjectName;
+  const newProjectDesc = projectFormState.newProjectDesc;
 
+  // Обновляем localStorage каждый раз, когда меняется projectFormState
   useEffect(() => {
-    if (newProjectDesc) {
-      localStorage.setItem("project_desc", newProjectDesc);
-    } else {
-      localStorage.removeItem("project_desc");
-    }
-  }, [newProjectDesc]);
+    localStorage.setItem("project_form", JSON.stringify(projectFormState));
+  }, [projectFormState]);
+
+  const setShowCreateModal = (value: boolean) => {
+    setProjectFormState(prev => ({
+      ...prev,
+      showCreateModal: value
+    }));
+  };
+
+  const setNewProjectName = (name: string) => {
+    setProjectFormState(prev => ({
+      ...prev,
+      newProjectName: name
+    }));
+  };
+
+  const setNewProjectDesc = (desc: string) => {
+    setProjectFormState(prev => ({
+      ...prev,
+      newProjectDesc: desc
+    }));
+  };
 
   useEffect(() => {
     checkAuth();
@@ -140,10 +159,9 @@ const Workspace = () => {
       setProjects([data, ...projects]);
       setNewProjectName("");
       setNewProjectDesc("");
-      // Очищаем localStorage после создания проекта
-      localStorage.removeItem("project_name");
-      localStorage.removeItem("project_desc");
       setShowCreateModal(false);
+      // Очищаем localStorage после создания проекта
+      localStorage.removeItem("project_form");
     } catch (error) {
       console.error("Error creating project:", error);
     }

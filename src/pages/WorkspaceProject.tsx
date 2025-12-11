@@ -33,32 +33,51 @@ const WorkspaceProject = () => {
   const [user, setUser] = useState<any>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [showNewBoardModal, setShowNewBoardModal] = useState(false);
-  const [newBoardName, setNewBoardName] = useState(() => {
-    return localStorage.getItem(`board_name_${projectId}`) || "";
-  });
-  const [newBoardDesc, setNewBoardDesc] = useState(() => {
-    return localStorage.getItem(`board_desc_${projectId}`) || "";
-  });
   const [searchQuery, setSearchQuery] = useState("");
   const [isUserTyping, setIsUserTyping] = useState(false);
 
-  // Сохраняем содержимое форм в localStorage
-  useEffect(() => {
-    if (newBoardName) {
-      localStorage.setItem(`board_name_${projectId}`, newBoardName);
-    } else {
-      localStorage.removeItem(`board_name_${projectId}`);
+  // Инициализируем состояние формы из localStorage
+  const [boardFormState, setBoardFormState] = useState(() => {
+    const saved = localStorage.getItem(`board_form_${projectId}`);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return { showNewBoardModal: false, newBoardName: "", newBoardDesc: "" };
+      }
     }
-  }, [newBoardName, projectId]);
+    return { showNewBoardModal: false, newBoardName: "", newBoardDesc: "" };
+  });
 
+  const showNewBoardModal = boardFormState.showNewBoardModal;
+  const newBoardName = boardFormState.newBoardName;
+  const newBoardDesc = boardFormState.newBoardDesc;
+
+  // Обновляем localStorage каждый раз, когда меняется boardFormState
   useEffect(() => {
-    if (newBoardDesc) {
-      localStorage.setItem(`board_desc_${projectId}`, newBoardDesc);
-    } else {
-      localStorage.removeItem(`board_desc_${projectId}`);
-    }
-  }, [newBoardDesc, projectId]);
+    localStorage.setItem(`board_form_${projectId}`, JSON.stringify(boardFormState));
+  }, [boardFormState, projectId]);
+
+  const setShowNewBoardModal = (value: boolean) => {
+    setBoardFormState(prev => ({
+      ...prev,
+      showNewBoardModal: value
+    }));
+  };
+
+  const setNewBoardName = (name: string) => {
+    setBoardFormState(prev => ({
+      ...prev,
+      newBoardName: name
+    }));
+  };
+
+  const setNewBoardDesc = (desc: string) => {
+    setBoardFormState(prev => ({
+      ...prev,
+      newBoardDesc: desc
+    }));
+  };
 
   useEffect(() => {
     checkAuth();
@@ -187,10 +206,9 @@ const WorkspaceProject = () => {
       setSelectedBoard(data);
       setNewBoardName("");
       setNewBoardDesc("");
-      // Очищаем localStorage после создания доски
-      localStorage.removeItem(`board_name_${projectId}`);
-      localStorage.removeItem(`board_desc_${projectId}`);
       setShowNewBoardModal(false);
+      // Очищаем localStorage после создания доски
+      localStorage.removeItem(`board_form_${projectId}`);
     } catch (error) {
       console.error("Error creating board:", error);
     }

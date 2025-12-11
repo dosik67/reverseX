@@ -34,26 +34,46 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
-  const [showNewTaskModal, setShowNewTaskModal] = useState<TaskStatus | null>(
-    null
-  );
-  const [newTaskTitle, setNewTaskTitle] = useState(() => {
-    // Восстанавливаем из localStorage при загрузке
-    return localStorage.getItem(`kanban_task_${projectId}`) || "";
+  
+  // Инициализируем состояние формы из localStorage
+  const [formState, setFormState] = useState(() => {
+    const saved = localStorage.getItem(`kanban_form_${projectId}`);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return { showNewTaskModal: null, newTaskTitle: "" };
+      }
+    }
+    return { showNewTaskModal: null, newTaskTitle: "" };
   });
+
+  const showNewTaskModal = formState.showNewTaskModal;
+  const newTaskTitle = formState.newTaskTitle;
+
+  // Обновляем localStorage каждый раз, когда меняется формState
+  useEffect(() => {
+    localStorage.setItem(`kanban_form_${projectId}`, JSON.stringify(formState));
+  }, [formState, projectId]);
+
+  const setShowNewTaskModal = (status: TaskStatus | null) => {
+    setFormState(prev => ({
+      ...prev,
+      showNewTaskModal: status
+    }));
+  };
+
+  const setNewTaskTitle = (title: string) => {
+    setFormState(prev => ({
+      ...prev,
+      newTaskTitle: title
+    }));
+  };
+
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTaskTitle, setEditingTaskTitle] = useState("");
   // Флаг для предотвращения загрузки данных, пока пользователь пишет в форме
   const [isUserTyping, setIsUserTyping] = useState(false);
-
-  // Сохраняем содержимое формы в localStorage
-  useEffect(() => {
-    if (newTaskTitle) {
-      localStorage.setItem(`kanban_task_${projectId}`, newTaskTitle);
-    } else {
-      localStorage.removeItem(`kanban_task_${projectId}`);
-    }
-  }, [newTaskTitle, projectId]);
 
   useEffect(() => {
     loadData();
@@ -198,8 +218,9 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
       if (error) throw error;
       setTasks([...tasks, data]);
       setNewTaskTitle("");
-      localStorage.removeItem(`kanban_task_${projectId}`); // Очищаем localStorage после создания
       setShowNewTaskModal(null);
+      // Очищаем localStorage после создания
+      localStorage.removeItem(`kanban_form_${projectId}`);
     } catch (error) {
       console.error("Error creating task:", error);
     }
