@@ -142,6 +142,8 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
         throw columnsError;
       }
 
+      let finalColumns = columnsData;
+
       if (!columnsData || columnsData.length === 0) {
         console.log("Creating default columns...");
         // Create default columns
@@ -163,6 +165,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
         }
         console.log("Created columns:", createdCols);
         setColumns(createdCols || []);
+        finalColumns = createdCols || [];
       } else {
         console.log("Loaded columns:", columnsData);
         setColumns(columnsData);
@@ -178,18 +181,24 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
         setTeamMembers(membersData);
       }
 
-      // Load tasks - без joins для избежания RLS ошибок
-      const { data: tasksData, error: tasksError } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("project_id", projectId);
+      // Load tasks only for this board's columns
+      const boardColumnsIds = finalColumns?.map((col: any) => col.id) || [];
+      
+      if (boardColumnsIds.length > 0) {
+        const { data: tasksData, error: tasksError } = await supabase
+          .from("tasks")
+          .select("*")
+          .in("column_id", boardColumnsIds);
 
-      if (tasksError) {
-        console.error("Tasks error:", tasksError);
-        throw tasksError;
+        if (tasksError) {
+          console.error("Tasks error:", tasksError);
+          throw tasksError;
+        }
+        console.log("Loaded tasks for board:", tasksData);
+        setTasks(tasksData || []);
+      } else {
+        setTasks([]);
       }
-      console.log("Loaded tasks:", tasksData);
-      setTasks(tasksData || []);
     } catch (error) {
       console.error("Error loading board data:", error);
     } finally {
@@ -506,8 +515,9 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                       </div>
 
                       {/* Assign to member */}
-                      <div className="relative group">
+                      <div className="relative group pt-2">
                         <button
+                          onClick={(e) => e.stopPropagation()}
                           className={`w-full text-left px-2 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-2 ${
                             task.assigned_to
                               ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
@@ -518,19 +528,25 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                           {task.assigned_to ? "Назначен" : "Назначить"}
                         </button>
 
-                        {/* Dropdown menu */}
-                        <div className="absolute left-0 top-full mt-1 min-w-max bg-white border border-gray-200 rounded-lg shadow-lg hidden group-hover:block z-20">
+                        {/* Dropdown menu - visible on group hover */}
+                        <div className="absolute left-0 top-full mt-1 min-w-max bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden group-hover:block">
                           <button
-                            onClick={() => updateTaskAssignee(task.id, null)}
-                            className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 first:rounded-t-lg"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateTaskAssignee(task.id, null);
+                            }}
+                            className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 first:rounded-t-lg whitespace-nowrap"
                           >
                             Без назначения
                           </button>
                           {teamMembers.map((member) => (
                             <button
                               key={member.id}
-                              onClick={() => updateTaskAssignee(task.id, member.user_id)}
-                              className={`block w-full text-left px-3 py-2 text-xs transition-colors ${
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateTaskAssignee(task.id, member.user_id);
+                              }}
+                              className={`block w-full text-left px-3 py-2 text-xs transition-colors whitespace-nowrap ${
                                 task.assigned_to === member.user_id
                                   ? "bg-blue-50 text-blue-700"
                                   : "hover:bg-gray-50"
