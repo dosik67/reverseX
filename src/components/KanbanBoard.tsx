@@ -163,7 +163,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
           .select();
 
         if (createError) {
-          console.error("Create columns error:", createError);
+          console.error("Create columns error details:", createError);
           throw createError;
         }
         console.log("Created columns:", createdCols);

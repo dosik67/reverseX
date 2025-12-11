@@ -196,20 +196,29 @@ const WorkspaceProject = () => {
     if (!projectId || !newBoardName.trim()) return;
 
     try {
+      const boardData: any = {
+        project_id: projectId,
+        name: newBoardName,
+      };
+      
+      if (newBoardDesc.trim()) {
+        boardData.description = newBoardDesc;
+      }
+      
+      if (workDate.trim()) {
+        boardData.work_date = workDate;
+      }
+
       const { data, error } = await supabase
         .from("boards")
-        .insert([
-          {
-            project_id: projectId,
-            name: newBoardName,
-            description: newBoardDesc,
-            work_date: workDate || null,
-          },
-        ])
+        .insert([boardData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
 
       setBoards([data, ...boards]);
       setSelectedBoard(data);
@@ -221,6 +230,7 @@ const WorkspaceProject = () => {
       localStorage.removeItem(`board_form_${projectId}`);
     } catch (error) {
       console.error("Error creating board:", error);
+      alert("Ошибка при создании board: " + JSON.stringify(error));
     }
   };
 
