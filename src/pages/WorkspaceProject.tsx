@@ -42,6 +42,41 @@ const WorkspaceProject = () => {
   useEffect(() => {
     if (projectId) {
       loadProjectData();
+
+      // Subscribe to real-time changes
+      const channel = supabase
+        .channel(`project:${projectId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "boards",
+            filter: `project_id=eq.${projectId}`,
+          },
+          () => {
+            console.log("Boards updated");
+            loadProjectData();
+          }
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "team_members",
+            filter: `project_id=eq.${projectId}`,
+          },
+          () => {
+            console.log("Team members updated");
+            loadProjectData();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [projectId]);
 
@@ -217,7 +252,7 @@ const WorkspaceProject = () => {
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`border-b ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"} sticky top-0 z-40 backdrop-blur-sm`}
+        className={`border-b ${isDark ? "bg-black border-white" : "bg-white border-gray-200"} sticky top-0 z-40 backdrop-blur-sm`}
       >
         <div className="max-w-full px-6 py-4">
           <div className="flex items-center justify-between mb-4">
@@ -229,19 +264,19 @@ const WorkspaceProject = () => {
               Back
             </button>
             <div className="flex items-center gap-3">
-              <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-300 bg-gray-50"}`}>
-                <Search size={18} className={isDark ? "text-gray-400" : "text-gray-600"} />
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${isDark ? "border-white bg-black" : "border-gray-300 bg-gray-50"}`}>
+                <Search size={18} className={isDark ? "text-white" : "text-gray-600"} />
                 <input
                   type="text"
                   placeholder="Search boards..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-40 bg-transparent outline-none ${isDark ? "text-white placeholder-gray-500" : "text-black placeholder-gray-400"}`}
+                  className={`w-40 bg-transparent outline-none ${isDark ? "text-white placeholder-gray-300" : "text-black placeholder-gray-400"}`}
                 />
               </div>
               <button
                 onClick={toggleTheme}
-                className={`p-2 rounded-lg transition-colors ${isDark ? "bg-gray-800 hover:bg-gray-700 text-yellow-400" : "bg-gray-100 hover:bg-gray-200 text-gray-600"}`}
+                className={`p-2 rounded-lg transition-colors ${isDark ? "bg-white hover:bg-gray-100 text-black" : "bg-black hover:bg-gray-900 text-white"}`}
                 title={isDark ? "Light mode" : "Dark mode"}
               >
                 {isDark ? <Sun size={20} /> : <Moon size={20} />}
@@ -249,7 +284,7 @@ const WorkspaceProject = () => {
               <button
                 onClick={copyInviteLink}
                 disabled={!project?.invite_code}
-                className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? "border-gray-700 hover:border-white hover:bg-gray-900" : "border-gray-300 hover:border-black hover:bg-gray-50"}`}
+                className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? "border-white hover:border-white hover:bg-white hover:text-black" : "border-gray-300 hover:border-black hover:bg-black hover:text-white"}`}
                 title="Copy invite link"
               >
                 <Users size={18} />
@@ -257,12 +292,12 @@ const WorkspaceProject = () => {
               </button>
               <button
                 onClick={() => setShowInviteModal(true)}
-                className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${isDark ? "border-gray-700 hover:border-white hover:bg-gray-900" : "border-gray-300 hover:border-black hover:bg-gray-50"}`}
+                className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${isDark ? "border-white hover:border-white hover:bg-white hover:text-black" : "border-gray-300 hover:border-black hover:bg-black hover:text-white"}`}
               >
                 <Mail size={18} />
                 Invite
               </button>
-              <button className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-gray-900" : "hover:bg-gray-100"}`}>
+              <button className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-white hover:text-black" : "hover:bg-black hover:text-white"}`}>
                 <Settings size={20} />
               </button>
             </div>

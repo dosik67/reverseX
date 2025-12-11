@@ -38,6 +38,32 @@ const Workspace = () => {
     checkAuth();
   }, []);
 
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Subscribe to real-time project changes
+    const channel = supabase
+      .channel(`user:${user.id}:projects`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "workspace_projects",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          console.log("Projects updated in real-time");
+          loadProjects(user.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   const checkAuth = async () => {
     const { data, error } = await supabase.auth.getSession();
     if (error || !data.session) {

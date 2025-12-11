@@ -43,6 +43,45 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
     loadData();
   }, [boardId]);
 
+  useEffect(() => {
+    if (!projectId) return;
+
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel(`project:${projectId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tasks",
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => {
+          console.log("Realtime update detected, reloading...");
+          loadData();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "board_columns",
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => {
+          console.log("Columns updated");
+          loadData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [projectId]);
+
   const loadData = async () => {
     try {
       const statuses: TaskStatus[] = ["planned", "in_progress", "done", "abandoned"];
