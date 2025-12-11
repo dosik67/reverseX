@@ -37,6 +37,7 @@ const WorkspaceProject = () => {
   const [newBoardName, setNewBoardName] = useState("");
   const [newBoardDesc, setNewBoardDesc] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isUserTyping, setIsUserTyping] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -46,7 +47,7 @@ const WorkspaceProject = () => {
     if (projectId) {
       loadProjectData();
 
-      // Subscribe to real-time changes
+      // Subscribe to real-time changes - но только если пользователь не пишет в форме
       const channel = supabase
         .channel(`project:${projectId}`)
         .on(
@@ -59,7 +60,10 @@ const WorkspaceProject = () => {
           },
           () => {
             console.log("Boards updated");
-            loadProjectData();
+            // Не загружаем, если пользователь пишет в форме или модаль открыта
+            if (!isUserTyping && !showNewBoardModal) {
+              loadProjectData();
+            }
           }
         )
         .on(
@@ -72,7 +76,9 @@ const WorkspaceProject = () => {
           },
           () => {
             console.log("Team members updated");
-            loadProjectData();
+            if (!isUserTyping && !showNewBoardModal) {
+              loadProjectData();
+            }
           }
         )
         .subscribe();
@@ -81,7 +87,7 @@ const WorkspaceProject = () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [projectId]);
+  }, [projectId, isUserTyping, showNewBoardModal]);
 
   const checkAuth = async () => {
     const { data, error } = await supabase.auth.getSession();
@@ -448,7 +454,11 @@ const WorkspaceProject = () => {
                 type="text"
                 placeholder="Board name (e.g., Design, Music)"
                 value={newBoardName}
-                onChange={(e) => setNewBoardName(e.target.value)}
+                onChange={(e) => {
+                  setNewBoardName(e.target.value);
+                  setIsUserTyping(true);
+                }}
+                onBlur={() => setIsUserTyping(false)}
                 className={`w-full px-4 py-2.5 border rounded-lg mb-4 focus:outline-none focus:ring-1 transition-colors ${
                   isDark
                     ? "bg-gray-900 text-white border-gray-700 focus:border-white focus:ring-white placeholder-gray-400"
@@ -459,7 +469,11 @@ const WorkspaceProject = () => {
               <textarea
                 placeholder="Description (optional)"
                 value={newBoardDesc}
-                onChange={(e) => setNewBoardDesc(e.target.value)}
+                onChange={(e) => {
+                  setNewBoardDesc(e.target.value);
+                  setIsUserTyping(true);
+                }}
+                onBlur={() => setIsUserTyping(false)}
                 className={`w-full px-4 py-2.5 border rounded-lg mb-6 focus:outline-none focus:ring-1 transition-colors resize-none ${
                   isDark
                     ? "bg-gray-900 text-white border-gray-700 focus:border-white focus:ring-white placeholder-gray-400"

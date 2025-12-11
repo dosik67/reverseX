@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, LogOut, Settings, Users } from "lucide-react";
+import { Plus, LogOut, Settings, Users, Moon, Sun, Globe } from "lucide-react";
 import supabase from "@/utils/supabase";
+import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { WorkspaceProject } from "@/types/workspace";
 
 const containerVariants = {
@@ -27,6 +29,8 @@ const itemVariants = {
 
 const Workspace = () => {
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
   const [projects, setProjects] = useState<WorkspaceProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -131,30 +135,68 @@ const Workspace = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className={`min-h-screen transition-colors duration-300 ${isDark ? "bg-black text-white" : "bg-white text-black"}`}>
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-b border-gray-200 backdrop-blur-sm sticky top-0 z-50"
+        className={`border-b backdrop-blur-sm sticky top-0 z-50 ${isDark ? "border-gray-700 bg-black/80" : "border-gray-200 bg-white/80"}`}
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-light tracking-tight">Workspace</h1>
-            <p className="text-sm text-gray-500">{user?.email}</p>
+            <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>{user?.email}</p>
           </div>
           <div className="flex items-center gap-4">
             <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-gray-900" : "hover:bg-gray-100"}`}
+              title={isDark ? "Светлая тема" : "Тёмная тема"}
+            >
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <div className="relative group">
+              <button
+                className={`p-2 rounded-lg transition-colors flex items-center gap-1 ${isDark ? "hover:bg-gray-900" : "hover:bg-gray-100"}`}
+                title="Сменить язык"
+              >
+                <Globe size={20} />
+                <span className="text-sm font-medium">{language.toUpperCase()}</span>
+              </button>
+              <div className={`absolute right-0 mt-1 rounded-lg shadow-lg hidden group-hover:block z-10 ${isDark ? "bg-black border border-white" : "bg-white border border-black"}`}>
+                <button
+                  onClick={() => setLanguage("ru")}
+                  className={`block w-full px-4 py-2 text-left text-sm transition-colors whitespace-nowrap ${
+                    language === "ru"
+                      ? isDark ? "bg-white text-black" : "bg-black text-white"
+                      : isDark ? "text-white hover:bg-gray-900" : "text-black hover:bg-gray-100"
+                  } rounded-t-lg`}
+                >
+                  🇷🇺 Русский
+                </button>
+                <button
+                  onClick={() => setLanguage("kk")}
+                  className={`block w-full px-4 py-2 text-left text-sm transition-colors whitespace-nowrap ${
+                    language === "kk"
+                      ? isDark ? "bg-white text-black" : "bg-black text-white"
+                      : isDark ? "text-white hover:bg-gray-900" : "text-black hover:bg-gray-100"
+                  } rounded-b-lg`}
+                >
+                  🇰🇿 Қазақша
+                </button>
+              </div>
+            </div>
+            <button
               onClick={() => navigate("/workspace/settings")}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Settings"
+              className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-gray-900" : "hover:bg-gray-100"}`}
+              title="Параметры"
             >
               <Settings size={20} />
             </button>
             <button
               onClick={handleLogout}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Logout"
+              className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-gray-900" : "hover:bg-gray-100"}`}
+              title="Выход"
             >
               <LogOut size={20} />
             </button>
@@ -220,20 +262,24 @@ const Workspace = () => {
                   transition={{ duration: 0.3 }}
                   whileHover={{ y: -4 }}
                   onClick={() => handleProjectClick(project.id)}
-                  className="p-6 border border-gray-200 rounded-lg cursor-pointer hover:border-black hover:shadow-xl transition-all group"
+                  className={`p-6 border rounded-lg cursor-pointer transition-all group ${
+                    isDark
+                      ? "border-gray-700 bg-gray-900 hover:border-white hover:shadow-xl hover:shadow-white/20"
+                      : "border-gray-200 bg-white hover:border-black hover:shadow-xl"
+                  }`}
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-medium text-lg group-hover:text-black transition-colors">
+                    <h3 className={`font-medium text-lg transition-colors ${isDark ? "group-hover:text-white" : "group-hover:text-black"}`}>
                       {project.name}
                     </h3>
-                    <Users size={18} className="text-gray-400" />
+                    <Users size={18} className={isDark ? "text-gray-500" : "text-gray-400"} />
                   </div>
                   {project.description && (
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                    <p className={`text-sm mb-4 line-clamp-2 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                       {project.description}
                     </p>
                   )}
-                  <p className="text-xs text-gray-400">
+                  <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
                     {new Date(project.created_at).toLocaleDateString()}
                   </p>
                 </motion.div>
@@ -255,37 +301,53 @@ const Workspace = () => {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl"
+            className={`rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl ${isDark ? "bg-black border border-white" : "bg-white"}`}
           >
-            <h3 className="text-xl font-medium mb-6">Create New Project</h3>
+            <h3 className="text-xl font-medium mb-6">Создать новый проект</h3>
             <input
               type="text"
-              placeholder="Project name"
+              placeholder="Название проекта"
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
+              className={`w-full px-4 py-2.5 border rounded-lg mb-4 focus:outline-none focus:ring-1 transition-colors ${
+                isDark
+                  ? "bg-gray-900 text-white border-gray-700 focus:border-white focus:ring-white placeholder-gray-400"
+                  : "bg-white text-black border-gray-300 focus:border-black focus:ring-black placeholder-gray-600"
+              }`}
               onKeyPress={(e) => e.key === "Enter" && createProject()}
             />
             <textarea
-              placeholder="Description (optional)"
+              placeholder="Описание (опционально)"
               value={newProjectDesc}
               onChange={(e) => setNewProjectDesc(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg mb-6 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors resize-none"
+              className={`w-full px-4 py-2.5 border rounded-lg mb-6 focus:outline-none focus:ring-1 transition-colors resize-none ${
+                isDark
+                  ? "bg-gray-900 text-white border-gray-700 focus:border-white focus:ring-white placeholder-gray-400"
+                  : "bg-white text-black border-gray-300 focus:border-black focus:ring-black placeholder-gray-600"
+              }`}
               rows={3}
             />
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                  isDark
+                    ? "border border-gray-700 text-white hover:bg-gray-900"
+                    : "border border-gray-300 text-black hover:bg-gray-100"
+                }`}
               >
-                Cancel
+                Отмена
               </button>
               <button
                 onClick={createProject}
                 disabled={!newProjectName.trim()}
-                className="flex-1 px-4 py-2.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isDark
+                    ? "bg-white text-black hover:bg-gray-100"
+                    : "bg-black text-white hover:bg-gray-900"
+                }`}
               >
-                Create
+                Создать
               </button>
             </div>
           </motion.div>

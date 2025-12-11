@@ -40,6 +40,8 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTaskTitle, setEditingTaskTitle] = useState("");
+  // Флаг для предотвращения загрузки данных, пока пользователь пишет в форме
+  const [isUserTyping, setIsUserTyping] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -48,7 +50,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
   useEffect(() => {
     if (!projectId) return;
 
-    // Subscribe to real-time changes
+    // Subscribe to real-time changes - но только если пользователь не пишет в форме
     const channel = supabase
       .channel(`project:${projectId}`)
       .on(
@@ -60,8 +62,12 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
           filter: `project_id=eq.${projectId}`,
         },
         () => {
-          console.log("Realtime update detected, reloading...");
-          loadData();
+          console.log("Realtime update detected");
+          // Не загружаем, если пользователь пишет в форме
+          if (!isUserTyping && !showNewTaskModal && editingTaskId === null) {
+            console.log("Reloading tasks...");
+            loadData();
+          }
         }
       )
       .on(
@@ -74,7 +80,9 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
         },
         () => {
           console.log("Columns updated");
-          loadData();
+          if (!isUserTyping && !showNewTaskModal && editingTaskId === null) {
+            loadData();
+          }
         }
       )
       .subscribe();
@@ -82,7 +90,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [projectId]);
+  }, [projectId, isUserTyping, showNewTaskModal, editingTaskId]);
 
   const loadData = async () => {
     try {
@@ -433,7 +441,11 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                       autoFocus
                       placeholder="Task title"
                       value={newTaskTitle}
-                      onChange={(e) => setNewTaskTitle(e.target.value)}
+                      onChange={(e) => {
+                        setNewTaskTitle(e.target.value);
+                        setIsUserTyping(true);
+                      }}
+                      onBlur={() => setIsUserTyping(false)}
                       className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 transition-colors ${
                         isDark
                           ? "bg-gray-900 text-white border-gray-700 focus:border-white focus:ring-white placeholder-gray-400"
