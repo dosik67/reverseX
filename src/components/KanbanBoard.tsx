@@ -74,6 +74,8 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
 
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTaskTitle, setEditingTaskTitle] = useState("");
+  const [assigningTaskId, setAssigningTaskId] = useState<string | null>(null);
+  const [assigningSearchText, setAssigningSearchText] = useState("");
   // Флаг для предотвращения загрузки данных, пока пользователь пишет в форме
   const [isUserTyping, setIsUserTyping] = useState(false);
 
@@ -130,11 +132,11 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
     try {
       const statuses: TaskStatus[] = ["planned", "in_progress", "done", "abandoned"];
 
-      // Create or get columns
+      // Create or get columns for THIS board
       const { data: columnsData, error: columnsError } = await supabase
         .from("board_columns")
         .select("*")
-        .eq("project_id", projectId)
+        .eq("board_id", boardId)
         .in("status", statuses);
 
       if (columnsError) {
@@ -145,10 +147,11 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
       let finalColumns = columnsData;
 
       if (!columnsData || columnsData.length === 0) {
-        console.log("Creating default columns...");
-        // Create default columns
+        console.log("Creating default columns for board:", boardId);
+        // Create default columns for this board
         const newColumns = statuses.map((status, index) => ({
           project_id: projectId,
+          board_id: boardId,
           name: columnConfig[status].label,
           status,
           order: index,
@@ -291,9 +294,21 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
           t.id === taskId ? { ...t, assigned_to: memberId } : t
         )
       );
+      setAssigningTaskId(null);
+      setAssigningSearchText("");
     } catch (error) {
       console.error("Error updating task assignee:", error);
     }
+  };
+
+  // Get matching team members based on search text (email or role)
+  const getMatchingMembers = () => {
+    if (!assigningSearchText.trim()) return teamMembers;
+    const search = assigningSearchText.toLowerCase();
+    return teamMembers.filter(member => 
+      member.role?.toLowerCase().includes(search) ||
+      member.user_id?.toLowerCase().includes(search)
+    );
   };
 
   const toggleTaskComplete = async (task: Task) => {
@@ -515,9 +530,74 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                       </div>
 
                       {/* Assign to member */}
-                      <div className="relative group pt-2">
+                      {assigningTaskId === task.id ? (
+                        <div className="relative pt-2 space-y-2">
+                          <input
+                            autoFocus
+                            type="text"
+                            placeholder="Введите имя..."
+                            value={assigningSearchText}
+                            onChange={(e) => setAssigningSearchText(e.target.value)}
+                            className={`w-full px-2 py-1.5 rounded text-xs border focus:outline-none focus:ring-1 transition-colors ${
+                              isDark
+                                ? "bg-gray-900 text-white border-gray-700 focus:border-white focus:ring-white"
+                                : "bg-white text-black border-gray-300 focus:border-black focus:ring-black"
+                            }`}
+                            onKeyDown={(e) => {
+                              if (e.key === "Escape") {
+                                setAssigningTaskId(null);
+                                setAssigningSearchText("");
+                              }
+                            }}
+                          />
+                          
+                          {/* Matching members dropdown */}
+                          {getMatchingMembers().length > 0 && (
+                            <div className={`border rounded-lg shadow-lg max-h-48 overflow-y-auto ${
+                              isDark 
+                                ? "bg-gray-900 border-gray-700" 
+                                : "bg-white border-gray-300"
+                            }`}>
+                              <button
+                                onClick={() => {
+                                  updateTaskAssignee(task.id, null);
+                                }}
+                                className={`block w-full text-left px-2 py-1.5 text-xs transition-colors ${
+                                  isDark
+                                    ? "hover:bg-gray-800"
+                                    : "hover:bg-gray-100"
+                                }`}
+                              >
+                                ✕ Без назначения
+                              </button>
+                              {getMatchingMembers().map((member) => (
+                                <button
+                                  key={member.id}
+                                  onClick={() => {
+                                    updateTaskAssignee(task.id, member.user_id);
+                                  }}
+                                  className={`block w-full text-left px-2 py-1.5 text-xs transition-colors border-t ${
+                                    task.assigned_to === member.user_id
+                                      ? isDark
+                                        ? "bg-blue-900 border-blue-700"
+                                        : "bg-blue-50 border-blue-200"
+                                      : isDark
+                                      ? "border-gray-700 hover:bg-gray-800"
+                                      : "border-gray-200 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  {member.role}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
                         <button
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAssigningTaskId(task.id);
+                          }}
                           className={`w-full text-left px-2 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-2 ${
                             task.assigned_to
                               ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
@@ -527,36 +607,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                           <User size={12} />
                           {task.assigned_to ? "Назначен" : "Назначить"}
                         </button>
-
-                        {/* Dropdown menu - visible on group hover */}
-                        <div className="absolute left-0 top-full mt-1 min-w-max bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden group-hover:block">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              updateTaskAssignee(task.id, null);
-                            }}
-                            className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 first:rounded-t-lg whitespace-nowrap"
-                          >
-                            Без назначения
-                          </button>
-                          {teamMembers.map((member) => (
-                            <button
-                              key={member.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateTaskAssignee(task.id, member.user_id);
-                              }}
-                              className={`block w-full text-left px-3 py-2 text-xs transition-colors whitespace-nowrap ${
-                                task.assigned_to === member.user_id
-                                  ? "bg-blue-50 text-blue-700"
-                                  : "hover:bg-gray-50"
-                              }`}
-                            >
-                              {member.role}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                      )}
 
                       {/* Description */}
                       {task.description && (
