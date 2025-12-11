@@ -213,19 +213,45 @@ const WorkspaceProject = () => {
         boardData.description = newBoardDesc;
       }
 
-      const { data, error } = await supabase
+      const { data: newBoard, error: boardError } = await supabase
         .from("boards")
         .insert([boardData])
         .select()
         .single();
 
-      if (error) {
-        console.error("Supabase error:", error);
-        throw error;
+      if (boardError) {
+        console.error("Supabase board error:", boardError);
+        throw boardError;
       }
 
-      setBoards([data, ...boards]);
-      setSelectedBoard(data);
+      // Create default columns for this board
+      const statuses = ["planned", "in_progress", "done", "abandoned"];
+      const columnLabels = {
+        planned: "В планах",
+        in_progress: "Делается",
+        done: "Сделано",
+        abandoned: "Брошено"
+      };
+
+      const columnsToCreate = statuses.map((status, index) => ({
+        project_id: projectId,
+        board_id: newBoard.id,
+        name: columnLabels[status as keyof typeof columnLabels],
+        status,
+        order: index,
+      }));
+
+      const { error: columnsError } = await supabase
+        .from("board_columns")
+        .insert(columnsToCreate);
+
+      if (columnsError) {
+        console.error("Columns error:", columnsError);
+        // Продолжаем даже если columns не создались
+      }
+
+      setBoards([newBoard, ...boards]);
+      setSelectedBoard(newBoard);
       setNewBoardName("");
       setNewBoardDesc("");
       setWorkDate("");
