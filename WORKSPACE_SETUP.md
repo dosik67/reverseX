@@ -1,11 +1,3 @@
-# ⚙️ Настройка Workspace в Supabase
-
-## Шаг 1: Запуск Миграций
-
-Откройте Supabase Dashboard и выполните следующий SQL в SQL Editor:
-
-```sql
--- Workspace users table
 CREATE TABLE IF NOT EXISTS workspace_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR UNIQUE NOT NULL,
@@ -14,7 +6,6 @@ CREATE TABLE IF NOT EXISTS workspace_users (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Workspace projects
 CREATE TABLE IF NOT EXISTS workspace_projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -24,7 +15,6 @@ CREATE TABLE IF NOT EXISTS workspace_projects (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Team members in projects
 CREATE TABLE IF NOT EXISTS team_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES workspace_projects(id) ON DELETE CASCADE,
@@ -33,7 +23,6 @@ CREATE TABLE IF NOT EXISTS team_members (
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Boards within projects
 CREATE TABLE IF NOT EXISTS boards (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES workspace_projects(id) ON DELETE CASCADE,
@@ -43,7 +32,6 @@ CREATE TABLE IF NOT EXISTS boards (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Board columns (Kanban states)
 CREATE TABLE IF NOT EXISTS board_columns (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES workspace_projects(id) ON DELETE CASCADE,
@@ -53,7 +41,6 @@ CREATE TABLE IF NOT EXISTS board_columns (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Tasks
 CREATE TABLE IF NOT EXISTS tasks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   column_id UUID NOT NULL REFERENCES board_columns(id) ON DELETE CASCADE,
@@ -68,7 +55,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create indexes for better performance
 CREATE INDEX idx_workspace_projects_user_id ON workspace_projects(user_id);
 CREATE INDEX idx_team_members_project_id ON team_members(project_id);
 CREATE INDEX idx_team_members_user_id ON team_members(user_id);
@@ -77,21 +63,13 @@ CREATE INDEX idx_board_columns_project_id ON board_columns(project_id);
 CREATE INDEX idx_tasks_column_id ON tasks(column_id);
 CREATE INDEX idx_tasks_project_id ON tasks(project_id);
 CREATE INDEX idx_tasks_assigned_to ON tasks(assigned_to);
-```
 
-## Шаг 2: Настройка Row Level Security (RLS)
-
-### Включите RLS для каждой таблицы:
-
-```sql
--- Enable RLS
 ALTER TABLE workspace_projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE boards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE board_columns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 
--- workspace_projects: Пользователь может видеть только свои проекты или проекты, где он участник
 CREATE POLICY "Users can view their own projects"
 ON workspace_projects FOR SELECT
 USING (
@@ -111,7 +89,6 @@ CREATE POLICY "Users can update their own projects"
 ON workspace_projects FOR UPDATE
 USING (auth.uid() = user_id);
 
--- team_members: Видны для членов проекта
 CREATE POLICY "Users can view team members of their projects"
 ON team_members FOR SELECT
 USING (
@@ -136,7 +113,6 @@ WITH CHECK (
   )
 );
 
--- boards, board_columns, tasks: Видны для участников проекта
 CREATE POLICY "Users can view boards of accessible projects"
 ON boards FOR SELECT
 USING (
@@ -218,25 +194,4 @@ USING (
     AND workspace_projects.user_id = auth.uid()
   )
 );
-```
 
-## Шаг 3: Проверка Подключения
-
-Откройте браузер и перейдите по ссылке:
-```
-http://localhost:5173/workspace-auth
-```
-
-Если вы видите страницу входа - всё работает!
-
-## Шаг 4: Тестирование
-
-1. Создайте аккаунт
-2. Создайте проект
-3. Добавьте доску
-4. Создайте задачи
-5. Перемещайте задачи между колонками
-
----
-
-**Готово! Ваша секретная платформа командной работы активирована! 🎉**
