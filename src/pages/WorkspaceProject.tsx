@@ -46,7 +46,9 @@ const WorkspaceProject = () => {
     if (projectId) {
       loadProjectData();
 
-      // Subscribe to real-time changes
+      let timeoutId: NodeJS.Timeout;
+
+      // Subscribe to real-time changes with debounce
       const channel = supabase
         .channel(`project:${projectId}`)
         .on(
@@ -59,7 +61,10 @@ const WorkspaceProject = () => {
           },
           () => {
             console.log("Boards updated");
-            loadProjectData();
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+              loadProjectData();
+            }, 300);
           }
         )
         .on(
@@ -72,12 +77,16 @@ const WorkspaceProject = () => {
           },
           () => {
             console.log("Team members updated");
-            loadProjectData();
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+              loadProjectData();
+            }, 300);
           }
         )
         .subscribe();
 
       return () => {
+        clearTimeout(timeoutId);
         supabase.removeChannel(channel);
       };
     }
