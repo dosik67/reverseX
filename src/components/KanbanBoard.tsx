@@ -37,11 +37,23 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
   const [showNewTaskModal, setShowNewTaskModal] = useState<TaskStatus | null>(
     null
   );
-  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskTitle, setNewTaskTitle] = useState(() => {
+    // Восстанавливаем из localStorage при загрузке
+    return localStorage.getItem(`kanban_task_${projectId}`) || "";
+  });
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTaskTitle, setEditingTaskTitle] = useState("");
   // Флаг для предотвращения загрузки данных, пока пользователь пишет в форме
   const [isUserTyping, setIsUserTyping] = useState(false);
+
+  // Сохраняем содержимое формы в localStorage
+  useEffect(() => {
+    if (newTaskTitle) {
+      localStorage.setItem(`kanban_task_${projectId}`, newTaskTitle);
+    } else {
+      localStorage.removeItem(`kanban_task_${projectId}`);
+    }
+  }, [newTaskTitle, projectId]);
 
   useEffect(() => {
     loadData();
@@ -186,6 +198,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
       if (error) throw error;
       setTasks([...tasks, data]);
       setNewTaskTitle("");
+      localStorage.removeItem(`kanban_task_${projectId}`); // Очищаем localStorage после создания
       setShowNewTaskModal(null);
     } catch (error) {
       console.error("Error creating task:", error);

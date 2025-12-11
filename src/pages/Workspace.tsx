@@ -35,8 +35,29 @@ const Workspace = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newProjectName, setNewProjectName] = useState("");
-  const [newProjectDesc, setNewProjectDesc] = useState("");
+  const [newProjectName, setNewProjectName] = useState(() => {
+    return localStorage.getItem("project_name") || "";
+  });
+  const [newProjectDesc, setNewProjectDesc] = useState(() => {
+    return localStorage.getItem("project_desc") || "";
+  });
+
+  // Сохраняем содержимое форм в localStorage
+  useEffect(() => {
+    if (newProjectName) {
+      localStorage.setItem("project_name", newProjectName);
+    } else {
+      localStorage.removeItem("project_name");
+    }
+  }, [newProjectName]);
+
+  useEffect(() => {
+    if (newProjectDesc) {
+      localStorage.setItem("project_desc", newProjectDesc);
+    } else {
+      localStorage.removeItem("project_desc");
+    }
+  }, [newProjectDesc]);
 
   useEffect(() => {
     checkAuth();
@@ -119,6 +140,9 @@ const Workspace = () => {
       setProjects([data, ...projects]);
       setNewProjectName("");
       setNewProjectDesc("");
+      // Очищаем localStorage после создания проекта
+      localStorage.removeItem("project_name");
+      localStorage.removeItem("project_desc");
       setShowCreateModal(false);
     } catch (error) {
       console.error("Error creating project:", error);
