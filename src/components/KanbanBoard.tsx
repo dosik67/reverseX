@@ -112,7 +112,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
           event: "*",
           schema: "public",
           table: "board_columns",
-          filter: `project_id=eq.${projectId}`,
+          filter: `board_id=eq.${boardId}`,
         },
         () => {
           console.log("Columns updated");
@@ -126,7 +126,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [projectId, isUserTyping, showNewTaskModal, editingTaskId]);
+  }, [boardId, projectId, isUserTyping, showNewTaskModal, editingTaskId]);
 
   const loadData = async () => {
     try {

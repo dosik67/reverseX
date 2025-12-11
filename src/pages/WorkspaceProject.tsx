@@ -43,15 +43,16 @@ const WorkspaceProject = () => {
       try {
         return JSON.parse(saved);
       } catch (e) {
-        return { showNewBoardModal: false, newBoardName: "", newBoardDesc: "" };
+        return { showNewBoardModal: false, newBoardName: "", newBoardDesc: "", workDate: "" };
       }
     }
-    return { showNewBoardModal: false, newBoardName: "", newBoardDesc: "" };
+    return { showNewBoardModal: false, newBoardName: "", newBoardDesc: "", workDate: "" };
   });
 
   const showNewBoardModal = boardFormState.showNewBoardModal;
   const newBoardName = boardFormState.newBoardName;
   const newBoardDesc = boardFormState.newBoardDesc;
+  const workDate = boardFormState.workDate;
 
   // Обновляем localStorage каждый раз, когда меняется boardFormState
   useEffect(() => {
@@ -76,6 +77,13 @@ const WorkspaceProject = () => {
     setBoardFormState(prev => ({
       ...prev,
       newBoardDesc: desc
+    }));
+  };
+
+  const setWorkDate = (date: string) => {
+    setBoardFormState(prev => ({
+      ...prev,
+      workDate: date
     }));
   };
 
@@ -220,6 +228,7 @@ const WorkspaceProject = () => {
       setSelectedBoard(data);
       setNewBoardName("");
       setNewBoardDesc("");
+      setWorkDate("");
       setShowNewBoardModal(false);
       // Очищаем localStorage после создания доски
       localStorage.removeItem(`board_form_${projectId}`);
@@ -522,6 +531,20 @@ const WorkspaceProject = () => {
                     : "bg-white text-black border-gray-300 focus:border-black focus:ring-black placeholder-gray-600"
                 }`}
                 onKeyPress={(e) => e.key === "Enter" && createBoard()}
+              />
+              <input
+                type="date"
+                value={workDate}
+                onChange={(e) => {
+                  setWorkDate(e.target.value);
+                  setIsUserTyping(true);
+                }}
+                onBlur={() => setIsUserTyping(false)}
+                className={`w-full px-4 py-2.5 border rounded-lg mb-4 focus:outline-none focus:ring-1 transition-colors ${
+                  isDark
+                    ? "bg-gray-900 text-white border-gray-700 focus:border-white focus:ring-white placeholder-gray-400"
+                    : "bg-white text-black border-gray-300 focus:border-black focus:ring-black placeholder-gray-600"
+                }`}
               />
               <textarea
                 placeholder="Description (optional)"
