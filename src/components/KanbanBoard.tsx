@@ -54,12 +54,15 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
         .eq("project_id", projectId)
         .in("status", statuses);
 
-      if (columnsError) throw columnsError;
+      if (columnsError) {
+        console.error("Columns error:", columnsError);
+        throw columnsError;
+      }
 
       if (!columnsData || columnsData.length === 0) {
+        console.log("Creating default columns...");
         // Create default columns
         const newColumns = statuses.map((status, index) => ({
-          id: `col_${status}_${Date.now()}`,
           project_id: projectId,
           name: columnConfig[status].label,
           status,
@@ -71,19 +74,28 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
           .insert(newColumns)
           .select();
 
-        if (createError) throw createError;
+        if (createError) {
+          console.error("Create columns error:", createError);
+          throw createError;
+        }
+        console.log("Created columns:", createdCols);
         setColumns(createdCols || []);
       } else {
+        console.log("Loaded columns:", columnsData);
         setColumns(columnsData);
       }
 
       // Load tasks
       const { data: tasksData, error: tasksError } = await supabase
         .from("tasks")
-        .select("*, assignee:assigned_to(*)")
+        .select("*")
         .eq("project_id", projectId);
 
-      if (tasksError) throw tasksError;
+      if (tasksError) {
+        console.error("Tasks error:", tasksError);
+        throw tasksError;
+      }
+      console.log("Loaded tasks:", tasksData);
       setTasks(tasksData || []);
     } catch (error) {
       console.error("Error loading board data:", error);
@@ -210,8 +222,10 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
 
   const sortedColumns = [...columns].sort((a, b) => a.order - b.order);
 
+  console.log("KanbanBoard render:", { sortedColumns, tasks, loading });
+
   return (
-    <div className="flex gap-6 overflow-x-auto pb-6 pt-4">
+    <div className="flex gap-6 overflow-x-auto pb-6 pt-4 w-full">
       <AnimatePresence mode="popLayout">
         {sortedColumns.map((column) => {
           const columnTasks = tasks.filter((t) => t.column_id === column.id);
