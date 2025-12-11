@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Gamepad, Music, Book } from "lucide-react";
 
+import { ThemeProvider } from "@/context/ThemeContext";
+
 import Auth from "./pages/Auth";
 import QRAuthPage from "./pages/QRAuthPage";
 import Layout from "./components/Layout";
@@ -74,11 +76,12 @@ const App = () => {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AppProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+        <ThemeProvider>
+          <AppProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/qr-auth" element={<QRAuthPage />} />
@@ -111,6 +114,7 @@ const App = () => {
             </BrowserRouter>
           </TooltipProvider>
         </AppProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

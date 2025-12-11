@@ -39,12 +39,14 @@ export interface Task {
   title: string;
   description?: string;
   assigned_to?: string;
+  created_by?: string;
   due_date?: string;
   completed: boolean;
   created_at: string;
   updated_at: string;
   order: number;
   assignee?: WorkspaceUser;
+  creator?: WorkspaceUser;
 }
 
 export interface Board {

@@ -111,6 +111,8 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
     if (!column) return;
 
     try {
+      const { data: userData } = await supabase.auth.getSession();
+      
       const { data, error } = await supabase
         .from("tasks")
         .insert([
@@ -118,6 +120,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
             column_id: column.id,
             project_id: projectId,
             title: newTaskTitle,
+            created_by: userData?.session?.user?.id,
             completed: false,
             order: tasks.filter((t) => {
               const col = columns.find((c) => c.id === t.column_id);
@@ -338,6 +341,12 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
 
                       {/* Task Meta */}
                       <div className="space-y-2 text-xs text-gray-500">
+                        {task.creator && (
+                          <div className="flex items-center gap-2">
+                            <User size={14} />
+                            <span>Создал: {task.creator.email || "Unknown"}</span>
+                          </div>
+                        )}
                         {task.due_date && (
                           <div className="flex items-center gap-2">
                             <Clock size={14} />
@@ -349,7 +358,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                         {task.assigned_to && (
                           <div className="flex items-center gap-2">
                             <User size={14} />
-                            <span>{task.assignee?.email || task.assigned_to}</span>
+                            <span>Назначен: {task.assignee?.email || task.assigned_to}</span>
                           </div>
                         )}
                       </div>

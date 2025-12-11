@@ -8,8 +8,12 @@ import {
   Settings,
   Mail,
   MoreVertical,
+  Search,
+  Moon,
+  Sun,
 } from "lucide-react";
 import supabase from "@/utils/supabase";
+import { useTheme } from "@/context/ThemeContext";
 import type { Board, TeamMember } from "@/types/workspace";
 import type { WorkspaceProject as WorkspaceProjectType } from "@/types/workspace";
 import KanbanBoard from "@/components/KanbanBoard";
@@ -17,6 +21,7 @@ import KanbanBoard from "@/components/KanbanBoard";
 const WorkspaceProject = () => {
   const navigate = useNavigate();
   const { projectId } = useParams();
+  const { isDark, toggleTheme } = useTheme();
   const [project, setProject] = useState<WorkspaceProjectType | null>(null);
   const [boards, setBoards] = useState<Board[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -28,6 +33,7 @@ const WorkspaceProject = () => {
   const [showNewBoardModal, setShowNewBoardModal] = useState(false);
   const [newBoardName, setNewBoardName] = useState("");
   const [newBoardDesc, setNewBoardDesc] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     checkAuth();
@@ -206,27 +212,44 @@ const WorkspaceProject = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className={`min-h-screen ${isDark ? "bg-black text-white" : "bg-white text-black"}`}>
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-b border-gray-200 sticky top-0 z-40 bg-white/95 backdrop-blur-sm"
+        className={`border-b ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"} sticky top-0 z-40 backdrop-blur-sm`}
       >
         <div className="max-w-full px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={() => navigate("/workspace")}
-              className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors"
+              className={`flex items-center gap-2 ${isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-black"} transition-colors`}
             >
               <ArrowLeft size={20} />
               Back
             </button>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-300 bg-gray-50"}`}>
+                <Search size={18} className={isDark ? "text-gray-400" : "text-gray-600"} />
+                <input
+                  type="text"
+                  placeholder="Search boards..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`w-40 bg-transparent outline-none ${isDark ? "text-white placeholder-gray-500" : "text-black placeholder-gray-400"}`}
+                />
+              </div>
+              <button
+                onClick={toggleTheme}
+                className={`p-2 rounded-lg transition-colors ${isDark ? "bg-gray-800 hover:bg-gray-700 text-yellow-400" : "bg-gray-100 hover:bg-gray-200 text-gray-600"}`}
+                title={isDark ? "Light mode" : "Dark mode"}
+              >
+                {isDark ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
               <button
                 onClick={copyInviteLink}
                 disabled={!project?.invite_code}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? "border-gray-700 hover:border-white hover:bg-gray-900" : "border-gray-300 hover:border-black hover:bg-gray-50"}`}
                 title="Copy invite link"
               >
                 <Users size={18} />
@@ -234,12 +257,12 @@ const WorkspaceProject = () => {
               </button>
               <button
                 onClick={() => setShowInviteModal(true)}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors"
+                className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${isDark ? "border-gray-700 hover:border-white hover:bg-gray-900" : "border-gray-300 hover:border-black hover:bg-gray-50"}`}
               >
                 <Mail size={18} />
                 Invite
               </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <button className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-gray-900" : "hover:bg-gray-100"}`}>
                 <Settings size={20} />
               </button>
             </div>
