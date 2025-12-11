@@ -59,7 +59,11 @@ const WorkspaceProject = () => {
         .eq("id", projectId)
         .single();
 
-      if (projectError) throw projectError;
+      if (projectError) {
+        console.error("Project load error:", projectError);
+        throw projectError;
+      }
+      console.log("Project loaded:", projectData);
       setProject(projectData);
 
       // Get boards

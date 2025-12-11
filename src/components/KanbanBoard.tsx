@@ -234,14 +234,14 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                 }}
               >
                 {/* Tasks */}
-                <AnimatePresence>
+                <AnimatePresence mode="popLayout">
                   {columnTasks.map((task) => (
                     <motion.div
                       key={task.id}
-                      layout
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
                       whileHover={{ y: -2 }}
                       draggable
                       onDragStart={() => setDraggedTask(task)}
