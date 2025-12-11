@@ -36,6 +36,8 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
     null
   );
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingTaskTitle, setEditingTaskTitle] = useState("");
 
   useEffect(() => {
     loadData();
@@ -177,7 +179,27 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
       console.error("Error updating task:", error);
     }
   };
+  const updateTaskTitle = async (taskId: string, newTitle: string) => {
+    if (!newTitle.trim()) return;
 
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ title: newTitle })
+        .eq("id", taskId);
+
+      if (error) throw error;
+
+      setTasks(
+        tasks.map((t) =>
+          t.id === taskId ? { ...t, title: newTitle } : t
+        )
+      );
+      setEditingTaskId(null);
+    } catch (error) {
+      console.error("Error updating task title:", error);
+    }
+  };
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -260,15 +282,37 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                             onChange={() => {}}
                             className="w-4 h-4 rounded accent-black"
                           />
-                          <span
-                            className={`font-medium text-sm flex-1 ${
-                              task.completed
-                                ? "line-through text-gray-400"
-                                : "text-black"
-                            }`}
-                          >
-                            {task.title}
-                          </span>
+                          {editingTaskId === task.id ? (
+                            <input
+                              autoFocus
+                              type="text"
+                              value={editingTaskTitle}
+                              onChange={(e) => setEditingTaskTitle(e.target.value)}
+                              onBlur={() => updateTaskTitle(task.id, editingTaskTitle)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  updateTaskTitle(task.id, editingTaskTitle);
+                                } else if (e.key === "Escape") {
+                                  setEditingTaskId(null);
+                                }
+                              }}
+                              className="flex-1 px-2 py-1 border border-black rounded font-medium text-sm"
+                            />
+                          ) : (
+                            <span
+                              onDoubleClick={() => {
+                                setEditingTaskId(task.id);
+                                setEditingTaskTitle(task.title);
+                              }}
+                              className={`font-medium text-sm flex-1 cursor-text ${
+                                task.completed
+                                  ? "line-through text-gray-400"
+                                  : "text-black"
+                              }`}
+                            >
+                              {task.title}
+                            </span>
+                          )}
                         </div>
                         <button
                           onClick={() => deleteTask(task.id)}
