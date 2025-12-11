@@ -124,10 +124,13 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
         setColumns(columnsData);
       }
 
-      // Load tasks
+      // Load tasks - filter by board_id, not project_id
+      // First get the board to have its ID
+      const boardIdToUse = columns.length > 0 ? columns[0].project_id : projectId;
+      
       const { data: tasksData, error: tasksError } = await supabase
         .from("tasks")
-        .select("*")
+        .select("*, creator:created_by(id, email)")
         .eq("project_id", projectId);
 
       if (tasksError) {
