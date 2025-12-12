@@ -12,6 +12,7 @@ import {
   Moon,
   Sun,
   Globe,
+  Trash2,
 } from "lucide-react";
 import supabase from "@/utils/supabase";
 import { useTheme } from "@/context/ThemeContext";
@@ -35,6 +36,8 @@ const WorkspaceProject = () => {
   const [inviteEmail, setInviteEmail] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isUserTyping, setIsUserTyping] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
 
   // Инициализируем состояние формы из localStorage
   const [boardFormState, setBoardFormState] = useState(() => {
@@ -297,6 +300,26 @@ const WorkspaceProject = () => {
       loadProjectData();
     } catch (error) {
       console.error("Error inviting member:", error);
+    }
+  };
+
+  const deleteMember = async () => {
+    if (!memberToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("team_members")
+        .delete()
+        .eq("id", memberToDelete.id);
+
+      if (error) throw error;
+
+      setShowDeleteModal(false);
+      setMemberToDelete(null);
+      loadProjectData();
+    } catch (error) {
+      console.error("Error deleting member:", error);
+      alert("Error deleting member: " + JSON.stringify(error));
     }
   };
 
@@ -640,12 +663,26 @@ const WorkspaceProject = () => {
                   {teamMembers.map((member) => (
                     <div
                       key={member.id}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded-lg group hover:bg-red-50 transition-colors"
                     >
-                      <span className="text-sm">{member.user?.email}</span>
-                      <span className="text-xs text-gray-500 uppercase">
-                        {member.role}
-                      </span>
+                      <div className="flex-1">
+                        <span className="text-sm block">{member.user?.email}</span>
+                        <span className="text-xs text-gray-500 uppercase">
+                          {member.role}
+                        </span>
+                      </div>
+                      {user?.id !== member.user_id && (
+                        <button
+                          onClick={() => {
+                            setMemberToDelete(member);
+                            setShowDeleteModal(true);
+                          }}
+                          className="p-1.5 rounded opacity-0 group-hover:opacity-100 hover:bg-red-200 transition-all text-red-600"
+                          title="Remove member"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -677,6 +714,47 @@ const WorkspaceProject = () => {
                     Invite
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Member Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && memberToDelete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowDeleteModal(false)}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-lg p-8 max-w-sm w-full mx-4 shadow-2xl"
+            >
+              <h3 className="text-xl font-medium mb-4">Remove Member?</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to remove <span className="font-semibold">{memberToDelete.user?.email}</span> from the project?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={deleteMember}
+                  className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={16} />
+                  Remove
+                </button>
               </div>
             </motion.div>
           </motion.div>

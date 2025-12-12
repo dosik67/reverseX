@@ -281,18 +281,19 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
     }
   };
 
-  const updateTaskAssignee = async (taskId: string, memberId: string | null) => {
+  const updateTaskAssignee = async (taskId: string, assigneeName: string | null) => {
     try {
+      // If assigneeName is provided, use it as assigned_user_email instead of looking up in team_members
       const { error } = await supabase
         .from("tasks")
-        .update({ assigned_to: memberId })
+        .update({ assigned_user_email: assigneeName })
         .eq("id", taskId);
 
       if (error) throw error;
 
       setTasks(
         tasks.map((t) =>
-          t.id === taskId ? { ...t, assigned_to: memberId } : t
+          t.id === taskId ? { ...t, assigned_user_email: assigneeName } : t
         )
       );
       setAssigningTaskId(null);
@@ -300,16 +301,6 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
     } catch (error) {
       console.error("Error updating task assignee:", error);
     }
-  };
-
-  // Get matching team members based on search text (email or role)
-  const getMatchingMembers = () => {
-    if (!assigningSearchText.trim()) return teamMembers;
-    const search = assigningSearchText.toLowerCase();
-    return teamMembers.filter(member => 
-      member.role?.toLowerCase().includes(search) ||
-      member.user_id?.toLowerCase().includes(search)
-    );
   };
 
   const toggleTaskComplete = async (task: Task) => {
@@ -532,66 +523,52 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
 
                       {/* Assign to member */}
                       {assigningTaskId === task.id ? (
-                        <div className="relative pt-2 space-y-2">
+                        <div className="relative pt-2 space-y-2 flex gap-2">
                           <input
                             autoFocus
                             type="text"
-                            placeholder="Введите имя..."
+                            placeholder="Имя, email..."
                             value={assigningSearchText}
                             onChange={(e) => setAssigningSearchText(e.target.value)}
-                            className={`w-full px-2 py-1.5 rounded text-xs border focus:outline-none focus:ring-1 transition-colors ${
+                            className={`flex-1 px-2 py-1.5 rounded text-xs border focus:outline-none focus:ring-1 transition-colors ${
                               isDark
                                 ? "bg-gray-900 text-white border-gray-700 focus:border-white focus:ring-white"
                                 : "bg-white text-black border-gray-300 focus:border-black focus:ring-black"
                             }`}
                             onKeyDown={(e) => {
+                              if (e.key === "Enter" && assigningSearchText.trim()) {
+                                updateTaskAssignee(task.id, assigningSearchText.trim());
+                              }
                               if (e.key === "Escape") {
                                 setAssigningTaskId(null);
                                 setAssigningSearchText("");
                               }
                             }}
                           />
-                          
-                          {/* Matching members dropdown */}
-                          {getMatchingMembers().length > 0 && (
-                            <div className={`border rounded-lg shadow-lg max-h-48 overflow-y-auto ${
-                              isDark 
-                                ? "bg-gray-900 border-gray-700" 
-                                : "bg-white border-gray-300"
-                            }`}>
-                              <button
-                                onClick={() => {
-                                  updateTaskAssignee(task.id, null);
-                                }}
-                                className={`block w-full text-left px-2 py-1.5 text-xs transition-colors ${
-                                  isDark
-                                    ? "hover:bg-gray-800"
-                                    : "hover:bg-gray-100"
-                                }`}
-                              >
-                                ✕ Без назначения
-                              </button>
-                              {getMatchingMembers().map((member) => (
-                                <button
-                                  key={member.id}
-                                  onClick={() => {
-                                    updateTaskAssignee(task.id, member.user_id);
-                                  }}
-                                  className={`block w-full text-left px-2 py-1.5 text-xs transition-colors border-t ${
-                                    task.assigned_to === member.user_id
-                                      ? isDark
-                                        ? "bg-blue-900 border-blue-700"
-                                        : "bg-blue-50 border-blue-200"
-                                      : isDark
-                                      ? "border-gray-700 hover:bg-gray-800"
-                                      : "border-gray-200 hover:bg-gray-50"
-                                  }`}
-                                >
-                                  {member.role}
-                                </button>
-                              ))}
-                            </div>
-                          )}
+                          <button
+                            onClick={() => updateTaskAssignee(task.id, assigningSearchText.trim())}
+                            disabled={!assigningSearchText.trim()}
+                            className={`px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+                              isDark
+                                ? "bg-blue-900 text-white hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                                : "bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            }`}
+                          >
+                            OK
+                          </button>
+                          <button
+                            onClick={() => {
+                              setAssigningTaskId(null);
+                              setAssigningSearchText("");
+                            }}
+                            className={`px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+                              isDark
+                                ? "bg-gray-800 text-white hover:bg-gray-700"
+                                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                            }`}
+                          >
+                            ✕
+                          </button>
                         </div>
                       ) : (
                         <button
@@ -600,13 +577,13 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                             setAssigningTaskId(task.id);
                           }}
                           className={`w-full text-left px-2 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-2 ${
-                            task.assigned_to
+                            task.assigned_user_email
                               ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
                               : "bg-gray-50 text-gray-600 hover:bg-gray-100"
                           }`}
                         >
                           <User size={12} />
-                          {task.assigned_to ? "Назначен" : "Назначить"}
+                          {task.assigned_user_email ? task.assigned_user_email : "Назначить"}
                         </button>
                       )}
 
