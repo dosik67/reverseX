@@ -523,7 +523,7 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
 
                       {/* Assign to member */}
                       {assigningTaskId === task.id ? (
-                        <div className="relative pt-2 space-y-2 flex gap-2">
+                        <div className="relative pt-2 flex gap-2 items-center">
                           <input
                             autoFocus
                             type="text"
@@ -546,25 +546,39 @@ const KanbanBoard = ({ boardId, projectId }: KanbanBoardProps) => {
                             }}
                           />
                           <button
-                            onClick={() => updateTaskAssignee(task.id, assigningSearchText.trim())}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (assigningSearchText.trim()) {
+                                updateTaskAssignee(task.id, assigningSearchText.trim());
+                              }
+                            }}
                             disabled={!assigningSearchText.trim()}
-                            className={`px-2 py-1.5 rounded text-xs font-medium transition-colors ${
-                              isDark
-                                ? "bg-blue-900 text-white hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                                : "bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`whitespace-nowrap px-3 py-1.5 rounded text-xs font-semibold transition-all ${
+                              !assigningSearchText.trim()
+                                ? isDark
+                                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                : isDark
+                                ? "bg-blue-600 text-white hover:bg-blue-500 active:scale-95"
+                                : "bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
                             }`}
                           >
-                            OK
+                            Назначить
                           </button>
                           <button
-                            onClick={() => {
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
                               setAssigningTaskId(null);
                               setAssigningSearchText("");
                             }}
-                            className={`px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+                            className={`whitespace-nowrap px-2.5 py-1.5 rounded text-xs font-semibold transition-all ${
                               isDark
-                                ? "bg-gray-800 text-white hover:bg-gray-700"
-                                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                             }`}
                           >
                             ✕
