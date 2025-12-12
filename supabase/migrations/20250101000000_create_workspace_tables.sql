@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   title VARCHAR NOT NULL,
   description TEXT,
   assigned_to UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  assigned_user_email VARCHAR,
   due_date DATE,
   completed BOOLEAN DEFAULT FALSE,
   "order" INTEGER DEFAULT 0,
