@@ -9,12 +9,8 @@ const FileDownload = () => {
   const fileDescription = "Test C# Module File";
 
   const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = `/testC#-M.qst`;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Use window.location for proper file download
+    window.location.href = `/testC%23-M.qst`;
   };
 
   return (
