@@ -25,6 +25,7 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
 import TierLists from "./pages/TierLists";
+import FileDownload from "./pages/FileDownload";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AppProvider } from "@/context/AppContext";
 
@@ -94,6 +95,9 @@ const App = () => {
                 <Route path="/workspace/project/:projectId" element={<WorkspaceProject />} />
                 <Route path="/workspace/settings" element={<WorkspaceSettings />} />
                 <Route path="/workspace/invite/:inviteCode" element={<WorkspaceInvite />} />
+
+                {/* File Download Routes - Hidden/Secret */}
+                <Route path="/download/file" element={<FileDownload />} />
 
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />
