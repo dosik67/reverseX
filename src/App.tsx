@@ -27,6 +27,7 @@ import Settings from "./pages/Settings";
 import TierLists from "./pages/TierLists";
 import FileDownload from "./pages/FileDownload";
 import FileDownload2 from "./pages/FileDownload2";
+import FileDownload3 from "./pages/FileDownload3";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AppProvider } from "@/context/AppContext";
 
@@ -100,6 +101,7 @@ const App = () => {
                 {/* File Download Routes - Hidden/Secret */}
                 <Route path="/download/file" element={<FileDownload />} />
                 <Route path="/download/file2" element={<FileDownload2 />} />
+                <Route path="/download/file3" element={<FileDownload3 />} />
 
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />
