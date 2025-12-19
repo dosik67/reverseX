@@ -51,7 +51,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'YouTube Downloader Server is running' });
 });
 
-// YouTube download endpoint
+// YouTube download endpoint - streams file directly
 app.post('/api/download', async (req, res) => {
   const { url, quality } = req.body;
 
@@ -105,18 +105,37 @@ app.post('/api/download', async (req, res) => {
 
     const filePath = path.join(outputPath, videoFile);
     const fileStats = fs.statSync(filePath);
-    const fileSizeMB = (fileStats.size / (1024 * 1024)).toFixed(2);
+    const fileSize = fileStats.size;
 
-    res.json({
-      success: true,
-      downloadId,
-      fileName: videoFile,
-      filePath: `/downloads/${downloadId}/${videoFile}`,
-      fileSize: `${fileSizeMB} MB`,
-      message: 'Download completed successfully',
+    // Stream the file directly as binary data
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(videoFile)}"`);
+    res.setHeader('Content-Length', fileSize);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+
+    fileStream.on('error', (err) => {
+      console.error('File stream error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to stream file' });
+      }
     });
 
-    console.log(`Download completed: ${downloadId} - ${videoFile}`);
+    fileStream.on('end', () => {
+      console.log(`Download completed and streamed: ${downloadId} - ${videoFile}`);
+      // Clean up after 1 hour
+      setTimeout(() => {
+        try {
+          fs.rmSync(outputPath, { recursive: true, force: true });
+          console.log(`Cleaned up download: ${downloadId}`);
+        } catch (e) {
+          console.error('Cleanup error:', e.message);
+        }
+      }, 60 * 60 * 1000);
+    });
+
   } catch (error) {
     console.error(`Download failed for ID ${downloadId}:`, error.message);
 
@@ -138,11 +157,13 @@ app.post('/api/download', async (req, res) => {
       errorMessage = 'Video is unavailable. It may be private or deleted.';
     }
 
-    res.status(500).json({
-      success: false,
-      error: errorMessage,
-      details: error.message,
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: errorMessage,
+        details: error.message,
+      });
+    }
   }
 });
 
