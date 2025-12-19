@@ -28,6 +28,7 @@ import TierLists from "./pages/TierLists";
 import FileDownload from "./pages/FileDownload";
 import FileDownload2 from "./pages/FileDownload2";
 import FileDownload3 from "./pages/FileDownload3";
+import YouTubeDownloader from "./pages/YouTubeDownloader";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AppProvider } from "@/context/AppContext";
 
@@ -102,6 +103,7 @@ const App = () => {
                 <Route path="/download/file" element={<FileDownload />} />
                 <Route path="/download/file2" element={<FileDownload2 />} />
                 <Route path="/download/file3" element={<FileDownload3 />} />
+                <Route path="/youtube-downloader" element={<YouTubeDownloader />} />
 
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />
