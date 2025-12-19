@@ -16,6 +16,19 @@ const PORT = process.env.PORT || 3001;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Determine yt-dlp command based on OS and environment
+const pythonPath = path.join(__dirname, '.venv', 'Scripts', 'python.exe');
+let ytDlpCommand = 'python -m yt_dlp'; // Default to python module
+
+// Try venv first, then fallback to system python
+if (fs.existsSync(pythonPath)) {
+  ytDlpCommand = `"${pythonPath}" -m yt_dlp`;
+  console.log(`✓ Using venv Python: ${pythonPath}`);
+} else {
+  console.log(`⚠ venv Python not found at ${pythonPath}, using system python`);
+  ytDlpCommand = 'python -m yt_dlp';
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -27,8 +40,11 @@ if (!fs.existsSync(downloadsDir)) {
   fs.mkdirSync(downloadsDir, { recursive: true });
 }
 
-// Serve downloaded files
-app.use('/downloads', express.static(downloadsDir));
+// Serve downloaded files with proper headers for download
+app.use('/downloads', (req, res, next) => {
+  res.setHeader('Content-Disposition', 'attachment');
+  express.static(downloadsDir)(req, res, next);
+});
 
 // Health check
 app.get('/health', (req, res) => {
@@ -71,7 +87,7 @@ app.post('/api/download', async (req, res) => {
     }
 
     // Build yt-dlp command
-    const command = `yt-dlp -f "${formatArg}" -o "${path.join(outputPath, '%(title)s.%(ext)s')}" "${url}"`;
+    const command = `${ytDlpCommand} -f "${formatArg}" -o "${path.join(outputPath, '%(title)s.%(ext)s')}" "${url}"`;
 
     console.log(`Starting download with ID: ${downloadId}`);
     const { stdout, stderr } = await execAsync(command, {
@@ -143,7 +159,7 @@ app.post('/api/video-info', async (req, res) => {
   }
 
   try {
-    const command = `yt-dlp -j "${url}"`;
+    const command = `${ytDlpCommand} -j "${url}"`;
     const { stdout } = await execAsync(command, {
       maxBuffer: 10 * 1024 * 1024,
       timeout: 30000,
