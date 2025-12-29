@@ -1,93 +1,116 @@
-import React from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const Task21: React.FC = () => {
+const Task21 = () => {
   return (
-    <div className="min-h-screen bg-white text-gray-900">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-100 text-center py-5 bg-gray-100 border-b border-gray-300">
-        <Link to="/tasks/20" className="mx-4 text-gray-900 font-medium hover:text-gray-600 hover:border-b-2 hover:border-gray-900">
-          Тапсырма 20
-        </Link>
-        <span className="mx-2">|</span>
-        <Link to="/tasks/21" className="mx-4 text-gray-900 font-medium hover:text-gray-600 hover:border-b-2 hover:border-gray-900">
-          Тапсырма 21
-        </Link>
-        <span className="mx-2">|</span>
-        <Link to="/tasks/22" className="mx-4 text-gray-900 font-medium hover:text-gray-600 hover:border-b-2 hover:border-gray-900">
-          Тапсырма 22
-        </Link>
-        <span className="mx-2">|</span>
-        <Link to="/tasks/23" className="mx-4 text-gray-900 font-medium hover:text-gray-600 hover:border-b-2 hover:border-gray-900">
-          Тапсырма 23
-        </Link>
-        <span className="mx-2">|</span>
-        <Link to="/tasks/24" className="mx-4 text-gray-900 font-medium hover:text-gray-600 hover:border-b-2 hover:border-gray-900">
-          Тапсырма 24
-        </Link>
-      </nav>
-
-      {/* Main Container */}
-      <div className="max-w-4xl mx-auto px-5 py-10">
-        <h1 className="text-4xl font-bold mb-2 text-black">Тапсырма 21. «Жарнама мәтіні»</h1>
-        <h2 className="text-xl text-gray-600 mb-12 font-medium uppercase tracking-wide">
-          5-БӨЛІМ. ФУНКЦИОНАЛДЫҚ ОҚУ САУАТТЫЛЫҒЫ
-        </h2>
-
-        {/* Purpose Section */}
-        <div className="mb-10 p-8 bg-gray-50 border-l-4 border-black shadow-sm rounded">
-          <h3 className="text-2xl font-bold mb-4 text-black">📌 Мақсаты:</h3>
-          <p className="text-gray-700 leading-relaxed">
-            <strong>қысқа ақпараттық мәтіннен маңызды мәліметті бөліп алу.</strong>
-          </p>
-        </div>
-
-        {/* Process Section */}
-        <div className="mb-10 p-8 bg-gray-50 border-l-4 border-black shadow-sm rounded">
-          <h3 className="text-2xl font-bold mb-6 text-black">📖 Өткізу барысы:</h3>
-          <p className="text-gray-700 mb-6 leading-relaxed">
-            Мұғалім қысқа жарнама немесе хабарландыру мәтінін береді (мысалы, «Кітап көрмесі», «Спорттық жарыс» туралы).
-          </p>
-
-          <p className="font-bold text-black mb-6 text-lg">Оқушылар жарнамадан 4 ақпаратты табады:</p>
-
-          {/* Info Grid */}
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="p-4 bg-white border border-gray-300 rounded">
-              <strong className="block text-black mb-2">1️⃣ Не туралы?</strong>
-              <span className="text-gray-600">Жарнаманың тақырыбы</span>
-            </div>
-            <div className="p-4 bg-white border border-gray-300 rounded">
-              <strong className="block text-black mb-2">2️⃣ Қайда?</strong>
-              <span className="text-gray-600">Орын/адрес</span>
-            </div>
-            <div className="p-4 bg-white border border-gray-300 rounded">
-              <strong className="block text-black mb-2">3️⃣ Қашан?</strong>
-              <span className="text-gray-600">Уақыт/күн</span>
-            </div>
-            <div className="p-4 bg-white border border-gray-300 rounded">
-              <strong className="block text-black mb-2">4️⃣ Кім үшін?</strong>
-              <span className="text-gray-600">Аудитория</span>
-            </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="sticky top-0 z-50 bg-card border-b border-border">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <Link to="/tasks/20">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Назад
+              </Button>
+            </Link>
+            <h1 className="text-2xl font-bold">Тапсырма 21</h1>
+            <Link to="/tasks/22">
+              <Button variant="ghost" size="sm">
+                Дальше
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
           </div>
-
-          <p className="text-gray-700">Жауаптарын ауызша немесе дәптерге жазады.</p>
-        </div>
-
-        {/* Expected Results Section */}
-        <div className="mb-10 p-8 bg-gray-50 border-l-4 border-black shadow-sm rounded">
-          <h3 className="text-2xl font-bold mb-6 text-black">✅ Күтілетін нәтиже:</h3>
-          <ul className="list-disc list-inside space-y-3 text-gray-700">
-            <li>оқушылар нақты ақпаратты тез табады;</li>
-            <li>мәтіннің мақсатын түсінеді.</li>
-          </ul>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {[20, 21, 22, 23, 24].map((num) => (
+              <Link key={num} to={`/tasks/${num}`}>
+                <Button 
+                  variant={num === 21 ? "default" : "outline"} 
+                  size="sm"
+                >
+                  {num}
+                </Button>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="text-center py-8 px-5 mt-16 border-t border-gray-300 bg-gray-100 text-gray-600">
-        5-БӨЛІМ. ФУНКЦИОНАЛДЫҚ ОҚУ САУАТТЫЛЫҒЫ © 2025
-      </footer>
+      <div className="container mx-auto px-4 py-8">
+        <Card className="p-8 card-glow mb-8">
+          <h2 className="text-3xl font-bold mb-2">Жарнама мәтіні</h2>
+          <p className="text-muted-foreground text-lg">
+            5-БӨЛІМ. ФУНКЦИОНАЛДЫҚ ОҚУ САУАТТЫЛЫҒЫ
+          </p>
+        </Card>
+
+        <Card className="p-6 mb-6 border-l-4 border-primary">
+          <h3 className="text-xl font-bold mb-4">📌 Мақсаты</h3>
+          <p className="text-foreground leading-relaxed">
+            Жарнама мәтіндегі негізгі ақпаратты ажырата білу, түсінуге үйрету.
+          </p>
+        </Card>
+
+        <Card className="p-6 mb-6">
+          <h3 className="text-xl font-bold mb-4">📖 Өткізу барысы</h3>
+          <ul className="space-y-3">
+            <li className="flex gap-3">
+              <span className="text-primary font-bold">•</span>
+              <span>Оқушыларға әр түрлі жарнама мәтіндері беріледі.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-primary font-bold">•</span>
+              <span>Жарнамада қалай, қайда, қашан, кімге, не үшін мәтіндерін табуға үйретіледі.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-primary font-bold">•</span>
+              <span>Жарнама мәтінінің мақсатын түсіну арқылы сыни ойлау дамиды.</span>
+            </li>
+          </ul>
+        </Card>
+
+        <Card className="p-6 mb-8">
+          <h3 className="text-xl font-bold mb-4">✅ Күтілетін нәтижелер</h3>
+          <p className="text-foreground leading-relaxed">
+            Оқушы жарнама мәтінінің құрылымын түсіне білу және оның мақсатын анықтай біледі.
+          </p>
+        </Card>
+
+        <Card className="p-8 bg-muted">
+          <h4 className="text-lg font-semibold mb-4">📝 Жарнама мәтіні талдау пішіні:</h4>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-background p-4 rounded border border-border">
+              <p className="font-semibold mb-2">Қалай?</p>
+              <p className="text-sm text-muted-foreground">Жарнаманың әдіс-тәсілі</p>
+            </div>
+            <div className="bg-background p-4 rounded border border-border">
+              <p className="font-semibold mb-2">Қайда?</p>
+              <p className="text-sm text-muted-foreground">Жарнаманың орны</p>
+            </div>
+            <div className="bg-background p-4 rounded border border-border">
+              <p className="font-semibold mb-2">Қашан?</p>
+              <p className="text-sm text-muted-foreground">Жарнаманың уақыты</p>
+            </div>
+            <div className="bg-background p-4 rounded border border-border">
+              <p className="font-semibold mb-2">Кімге?</p>
+              <p className="text-sm text-muted-foreground">Жарнама аудиториясы</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div className="border-t border-border bg-card/50 backdrop-blur-sm sticky bottom-0">
+        <div className="container mx-auto px-4 py-6 flex justify-between">
+          <Link to="/tasks/20">
+            <Button variant="outline">← Алдыңғы</Button>
+          </Link>
+          <Link to="/tasks/22">
+            <Button>Келесі →</Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };
