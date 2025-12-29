@@ -38,6 +38,7 @@ import Task21 from "./pages/Task21";
 import Task22 from "./pages/Task22";
 import Task23 from "./pages/Task23";
 import Task24 from "./pages/Task24";
+import Task25 from "./pages/Task25";
 
 // Workspace imports
 import Workspace from "./pages/Workspace";
@@ -114,6 +115,7 @@ const App = () => {
                 <Route path="/tasks/22" element={<Task22 />} />
                 <Route path="/tasks/23" element={<Task23 />} />
                 <Route path="/tasks/24" element={<Task24 />} />
+                <Route path="/tasks/25" element={<Task25 />} />
 
                 {/* Workspace Routes - Hidden/Secret */}
                 <Route path="/workspace-auth" element={<WorkspaceAuth />} />

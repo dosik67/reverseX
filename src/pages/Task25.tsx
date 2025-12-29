@@ -1,33 +1,28 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const Task24 = () => {
+const Task25 = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="sticky top-0 z-50 bg-card border-b border-border">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <Link to="/tasks/23">
+            <Link to="/tasks/24">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Назад
               </Button>
             </Link>
-            <h1 className="text-2xl font-bold">Тапсырма 24</h1>
-            <Link to="/tasks/25">
-              <Button variant="ghost" size="sm">
-                Дальше
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+            <h1 className="text-2xl font-bold">Тапсырма 25</h1>
+            <div />
           </div>
           <div className="flex flex-wrap gap-2 justify-center">
             {[20, 21, 22, 23, 24, 25].map((num) => (
               <Link key={num} to={`/tasks/${num}`}>
                 <Button 
-                  variant={num === 24 ? "default" : "outline"} 
+                  variant={num === 25 ? "default" : "outline"} 
                   size="sm"
                 >
                   {num}
@@ -40,7 +35,7 @@ const Task24 = () => {
 
       <div className="container mx-auto px-4 py-8">
         <Card className="p-8 card-glow mb-8">
-          <h2 className="text-3xl font-bold mb-2">Сәйкестендір</h2>
+          <h2 className="text-3xl font-bold mb-2">Ынамдық кеспетті тану</h2>
           <p className="text-muted-foreground text-lg">
             5-БӨЛІМ. ФУНКЦИОНАЛДЫҚ ОҚУ САУАТТЫЛЫҒЫ
           </p>
@@ -49,7 +44,7 @@ const Task24 = () => {
         <Card className="p-6 mb-6 border-l-4 border-primary">
           <h3 className="text-xl font-bold mb-4">📌 Мақсаты</h3>
           <p className="text-foreground leading-relaxed">
-            Мәтін ішінде логикалық байланыстарды табу, себеп-салдарық қатынастарды анықтау, сәйкестіктерді табуға үйрету.
+            Динамикалық кеспетті оқу, түсіну және талдау арқылы функционалдық оқу сауаттылығын дамыту.
           </p>
         </Card>
 
@@ -58,15 +53,15 @@ const Task24 = () => {
           <ul className="space-y-3">
             <li className="flex gap-3">
               <span className="text-primary font-bold">•</span>
-              <span>Оқушыларға әр түрлі мәтін бөліктері беріледі.</span>
+              <span>Оқушыларға әр түрлі динамикалық кеспет беріледі.</span>
             </li>
             <li className="flex gap-3">
               <span className="text-primary font-bold">•</span>
-              <span>Мәтінде берілген фактілер мен қорытындыларының сәйкес екендігін тапу.</span>
+              <span>Кеспеттің құрылымын, мәнін және өзгерісін түсіну.</span>
             </li>
             <li className="flex gap-3">
               <span className="text-primary font-bold">•</span>
-              <span>Себеп пен салдарыны анықтау, логикалық құрылымын түсіну.</span>
+              <span>Кеспеттің негізінде берілген ақпаратты өндіктеп, сорысарын бөліседі.</span>
             </li>
           </ul>
         </Card>
@@ -74,40 +69,28 @@ const Task24 = () => {
         <Card className="p-6 mb-8">
           <h3 className="text-xl font-bold mb-4">✅ Күтілетін нәтижелер</h3>
           <p className="text-foreground leading-relaxed">
-            Оқушы мәтінде логикалық байланыстарды табы біліп, сәйкестіктерді анықтай алады.
+            Оқушы динамикалық кеспет бойынша ақпарат оқи біліп, өндіктеп түсіне біліп, дұрыс қорытындысын жасай алады.
           </p>
         </Card>
 
         <Card className="p-8 bg-muted">
-          <h4 className="text-lg font-semibold mb-6">🔗 Логикалық байланыстар түрлері:</h4>
+          <h4 className="text-lg font-semibold mb-6">📊 Динамикалық кеспеттің құрамы:</h4>
           <div className="space-y-4">
             <div className="bg-background p-4 rounded border border-border">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-2xl">→</span>
-                <p className="font-semibold">Себеп-салдарық қатынас</p>
-              </div>
-              <p className="text-sm text-muted-foreground">Өйткені, себебінде, үйтіндіде</p>
+              <p className="font-semibold mb-2">🎯 Атауы</p>
+              <p className="text-sm text-muted-foreground">Кеспеттің тақырыбы және мақсаты</p>
             </div>
             <div className="bg-background p-4 rounded border border-border">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-2xl">⟷</span>
-                <p className="font-semibold">Ұқсастық</p>
-              </div>
-              <p className="text-sm text-muted-foreground">Сондай-ақ, дәл сол сияқты</p>
+              <p className="font-semibold mb-2">📈 Өндік</p>
+              <p className="text-sm text-muted-foreground">Кеспеттің көлемі, соңы, ағымы</p>
             </div>
             <div className="bg-background p-4 rounded border border-border">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-2xl">⊗</span>
-                <p className="font-semibold">Қарама-қайшылық</p>
-              </div>
-              <p className="text-sm text-muted-foreground">Бірақ, дегенмен, өйткені</p>
+              <p className="font-semibold mb-2">⏱️ Уақыт</p>
+              <p className="text-sm text-muted-foreground">Уақыт аралығы және өндіктік</p>
             </div>
             <div className="bg-background p-4 rounded border border-border">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-2xl">≡</span>
-                <p className="font-semibold">Теңдіктік</p>
-              </div>
-              <p className="text-sm text-muted-foreground">Яғни, айтпақшы, басқаша айтқанда</p>
+              <p className="font-semibold mb-2">📝 Түсіндіру</p>
+              <p className="text-sm text-muted-foreground">Кеспеттің мәні және болмасы</p>
             </div>
           </div>
         </Card>
@@ -115,7 +98,7 @@ const Task24 = () => {
 
       <div className="border-t border-border bg-card/50 backdrop-blur-sm sticky bottom-0">
         <div className="container mx-auto px-4 py-6 flex justify-between">
-          <Link to="/tasks/23">
+          <Link to="/tasks/24">
             <Button variant="outline">← Алдыңғы</Button>
           </Link>
           <Link to="/">
@@ -127,4 +110,4 @@ const Task24 = () => {
   );
 };
 
-export default Task24;
+export default Task25;

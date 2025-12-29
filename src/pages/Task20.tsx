@@ -27,7 +27,7 @@ const Task20 = () => {
           
           {/* Navigation between tasks */}
           <div className="flex flex-wrap gap-2 justify-center">
-            {[20, 21, 22, 23, 24].map((num) => (
+            {[20, 21, 22, 23, 24, 25].map((num) => (
               <Link key={num} to={`/tasks/${num}`}>
                 <Button 
                   variant={num === 20 ? "default" : "outline"} 
