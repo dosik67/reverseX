@@ -4,21 +4,7 @@
   "env": {
     "NODE_OPTIONS": "--max_old_space_size=4096"
   },
-  "rewrites": [
-    {
-      "source": "/tasks/(.*)",
-      "destination": "/tasks/$1.html"
-    }
-  ],
   "routes": [
-    {
-      "src": "^/tasks/(?<file>[0-9]+)$",
-      "dest": "/tasks/$file.html"
-    },
-    {
-      "src": "^/tasks/[0-9]+\\.html$",
-      "dest": "/$0"
-    },
     {
       "src": "^/(?!.*\\.)(?!api).*$",
       "dest": "/index.html"
