@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const Task23: React.FC = () => {
+const Task24: React.FC = () => {
   return (
     <div className="min-h-screen bg-white text-gray-900">
       {/* Navigation */}
@@ -83,4 +83,4 @@ const Task23: React.FC = () => {
   );
 };
 
-export default Task23;
+export default Task24;
