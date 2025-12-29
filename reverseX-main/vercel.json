@@ -1,14 +1,21 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "env": {
+    "NODE_OPTIONS": "--max_old_space_size=4096"
+  },
   "routes": [
     {
-      "src": "^/fileTASk[1-5](\\.html)?$",
+      "src": "^/assets/.*",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "^/fileTASk[1-5](?:\\.html)?$",
       "dest": "/fileTASk$1.html"
     },
     {
       "src": "^/(?!.*\\.)(?!api).*$",
       "dest": "/index.html"
     }
-  ],
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  ]
 }
