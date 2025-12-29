@@ -4,9 +4,20 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Создаём клиент Supabase
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Создаём клиент Supabase только если переменные установлены
+let supabase: any = null;
 
-console.log("✅ Supabase клиент инициализирован с URL:", supabaseUrl);
+if (supabaseUrl && supabaseAnonKey) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  console.log("✅ Supabase клиент инициализирован с URL:", supabaseUrl);
+} else {
+  console.warn("⚠️  Supabase переменные окружения не установлены. Создан mock клиент.");
+  // Mock объект для случаев когда нет переменных
+  supabase = {
+    from: () => ({
+      select: () => Promise.resolve({ data: [], error: null }),
+    }),
+  };
+}
 
 export default supabase;

@@ -46,7 +46,7 @@ import WorkspaceProject from "./pages/WorkspaceProject";
 import WorkspaceSettings from "./pages/WorkspaceSettings";
 import WorkspaceInvite from "./pages/WorkspaceInvite";
 
-import supabase from "@/utils/supabase";
+import supabase from "@/lib/supabase";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -59,6 +59,15 @@ const App = () => {
     
     async function checkSupabase() {
       try {
+        // Only check Supabase if environment variables are configured
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        
+        if (!supabaseUrl || !supabaseAnonKey) {
+          console.warn("⚠️  Supabase переменные окружения не установлены");
+          return;
+        }
+        
         console.log("🔍 Проверка подключения Supabase...");
         const { data, error } = await supabase.from("comments").select("*").limit(1);
         if (error) {
