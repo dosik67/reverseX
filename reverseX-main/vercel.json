@@ -1,0 +1,14 @@
+{
+  "routes": [
+    {
+      "src": "^/fileTASk[1-5](\\.html)?$",
+      "dest": "/fileTASk$1.html"
+    },
+    {
+      "src": "^/(?!.*\\.)(?!api).*$",
+      "dest": "/index.html"
+    }
+  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
+}
