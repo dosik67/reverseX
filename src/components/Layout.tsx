@@ -22,25 +22,31 @@ const Layout = () => {
   const [showMessages, setShowMessages] = useState(false);
 
   useEffect(() => {
-    // Проверяем сессию
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
-    });
+    try {
+      // Проверяем сессию
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session);
+        if (session?.user) {
+          fetchProfile(session.user.id);
+        }
+      }).catch((err) => {
+        console.warn("⚠️  Error getting session:", err);
+      });
 
-    // Подписываемся на изменения auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
-      }
-    });
+      // Подписываемся на изменения auth
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session);
+        if (session?.user) {
+          fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
+      });
 
-    return () => subscription?.unsubscribe();
+      return () => subscription?.unsubscribe();
+    } catch (err) {
+      console.warn("⚠️  Auth not available:", err);
+    }
   }, []);
 
   const fetchProfile = async (userId: string) => {
