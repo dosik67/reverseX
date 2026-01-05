@@ -75,9 +75,6 @@ const createMockQueryBuilder = () => {
     order: function() {
       return this;
     },
-    range: function() {
-      return this;
-    },
     offset: function() {
       return this;
     },
