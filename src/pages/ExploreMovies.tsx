@@ -102,20 +102,40 @@ const ExploreMovies = () => {
         setLoading(true);
         const allMoviesData: Movie[] = [];
 
-        // Load first 3 pages initially
+        // Load first 3 pages initially with timeout
         for (let page = 1; page <= 3; page++) {
-          const pageMovies = await fetchMoviesPage(page);
-          allMoviesData.push(...pageMovies);
+          try {
+            const pageMovies = await Promise.race([
+              fetchMoviesPage(page),
+              new Promise<Movie[]>((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout')), 5000)
+              )
+            ]);
+            allMoviesData.push(...pageMovies);
+          } catch (err) {
+            console.warn(`Failed to load page ${page}:`, err);
+          }
           await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-        setAllMovies(allMoviesData);
-        setApiPage(4);
-        
-        // Load more pages in background
-        loadMoreMoviesInBackground(4);
-        
-        await loadUserMovieStatuses();
+        if (allMoviesData.length > 0) {
+          setAllMovies(allMoviesData);
+          setApiPage(4);
+          
+          // Load more pages in background
+          setTimeout(() => loadMoreMoviesInBackground(4), 500);
+        }
+
+        // Load user statuses with timeout (non-blocking)
+        Promise.race([
+          loadUserMovieStatuses(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout')), 3000)
+          )
+        ]).catch(err => {
+          console.warn('Could not load user movie statuses:', err);
+        });
+
       } catch (error) {
         console.error('Error loading movies:', error);
       } finally {
@@ -127,13 +147,22 @@ const ExploreMovies = () => {
   }, [fetchMoviesPage, loadUserMovieStatuses]);
 
   // Load more pages in the background
-  const loadMoreMoviesInBackground = async (startPage: number) => {
+  const loadMoreMoviesInBackground = useCallback(async (startPage: number) => {
     try {
       setLoadingMore(true);
       for (let page = startPage; page < startPage + 5; page++) {
-        const pageMovies = await fetchMoviesPage(page);
-        setAllMovies(prev => [...prev, ...pageMovies]);
-        setApiPage(page + 1);
+        try {
+          const pageMovies = await Promise.race([
+            fetchMoviesPage(page),
+            new Promise<Movie[]>((_, reject) => 
+              setTimeout(() => reject(new Error('Timeout')), 5000)
+            )
+          ]);
+          setAllMovies(prev => [...prev, ...pageMovies]);
+          setApiPage(page + 1);
+        } catch (err) {
+          console.warn(`Failed to load page ${page}:`, err);
+        }
         await new Promise(resolve => setTimeout(resolve, 150));
       }
     } catch (error) {
@@ -141,7 +170,7 @@ const ExploreMovies = () => {
     } finally {
       setLoadingMore(false);
     }
-  };
+  }, [fetchMoviesPage]);
 
   // Virtual scroll - load more when reaching bottom
   const handleScroll = useCallback(() => {
@@ -160,7 +189,7 @@ const ExploreMovies = () => {
     if (displayedCount < allMovies.length && distanceFromBottom < 1500) {
       setDisplayedCount(prev => Math.min(prev + DISPLAY_PER_BATCH, allMovies.length));
     }
-  }, [loadingMore, apiPage, displayedCount, allMovies.length, totalApiPages]);
+  }, [loadingMore, apiPage, displayedCount, allMovies.length, totalApiPages, loadMoreMoviesInBackground]);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
