@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
 import GameCard from "@/components/GameCard";
+import MovieSortFilter, { SortOption } from "@/components/MovieSortFilter";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useTranslation } from "react-i18next";
 
@@ -35,6 +36,8 @@ const GAME_GENRES = [
 
 const Games = () => {
   const { t } = useTranslation();
+  const observerTarget = useRef<HTMLDivElement>(null);
+  
   const [allGames, setAllGames] = useState<Game[]>([]);
   const [displayGames, setDisplayGames] = useState<Game[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,19 +45,76 @@ const Games = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [sortBy, setSortBy] = useState<SortOption>('popularity');
 
   // Restore scroll after content loads
   useScrollRestore(!loading ? 0 : 50);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [hasMore, loading, page, filteredAndSortedGames]);
+
+  // Apply filters and sorting to all games
+  const filteredAndSortedGames = useMemo(() => {
+    let result = allGames;
+
+    // Apply genre filter
+    if (selectedGenres.length > 0) {
+      result = result.filter(game => {
+        return game.genres?.some(genre => selectedGenres.includes(genre));
+      });
+    }
+
+    // Apply sorting
+    result = [...result].sort((a, b) => {
+      switch (sortBy) {
+        case 'rating':
+          return b.rating - a.rating;
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'year':
+          return parseInt(b.year) - parseInt(a.year);
+        case 'popularity':
+        default:
+          return b.rating - a.rating; // Default to rating for games
+      }
+    });
+
+    return result;
+  }, [allGames, selectedGenres, sortBy]);
 
   useEffect(() => {
     fetchPopularGames();
   }, []);
 
   useEffect(() => {
-    if (searchQuery.trim() || selectedGenres.length > 0) {
+    if (searchQuery.trim()) {
       performSearch();
+    } else {
+      // Apply filtered and sorted games when not searching
+      setDisplayGames(filteredAndSortedGames.slice(0, GAMES_PER_PAGE));
+      setPage(1);
+      setHasMore(filteredAndSortedGames.length > GAMES_PER_PAGE);
     }
-  }, [searchQuery, selectedGenres]);
+  }, [searchQuery, filteredAndSortedGames]);
 
   const fetchPopularGames = async () => {
     try {
@@ -151,9 +211,10 @@ const Games = () => {
     const start = page * GAMES_PER_PAGE;
     const end = start + GAMES_PER_PAGE;
 
-    setDisplayGames((prev) => [...prev, ...allGames.slice(start, end)]);
+    const source = filteredAndSortedGames;
+    setDisplayGames((prev) => [...prev, ...source.slice(start, end)]);
     setPage(nextPage);
-    setHasMore(end < allGames.length);
+    setHasMore(end < source.length);
   };
 
   const toggleGenre = (genre: string) => {
@@ -209,6 +270,14 @@ const Games = () => {
             ))}
           </div>
         </div>
+
+        {/* Sort Filter */}
+        <MovieSortFilter
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          genre="all"
+          onGenreChange={() => {}}
+        />
       </div>
 
       {loading ? (
@@ -225,13 +294,10 @@ const Games = () => {
             ))}
           </div>
 
-          {hasMore && (
-            <div className="flex justify-center mt-12">
-              <Button onClick={loadMore} size="lg">
-                Загрузить ещё
-              </Button>
-            </div>
-          )}
+          {/* Infinite Scroll Observer */}
+          <div ref={observerTarget} className="flex justify-center py-8">
+            {hasMore && <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-purple-500" />}
+          </div>
         </>
       ) : (
         <div className="text-center py-12">

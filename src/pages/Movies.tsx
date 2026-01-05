@@ -88,7 +88,7 @@ const Movies = () => {
         observer.unobserve(observerTarget.current);
       }
     };
-  }, [hasMore, loading, isSearching]);
+  }, [hasMore, loading, isSearching, page, filteredAndSortedMovies]);
 
   useEffect(() => {
     if (tab === 'trending') {
@@ -99,18 +99,55 @@ const Movies = () => {
     setSearchQuery("");
   }, [tab]);
 
+  // Apply filters and sorting to all movies
+  const filteredAndSortedMovies = useMemo(() => {
+    let result = allMovies;
+
+    // Apply category filter
+    if (selectedCategory !== 'all') {
+      result = result.filter(movie => {
+        // TODO: Filter by user's movie list status once implemented
+        return true;
+      });
+    }
+
+    // Apply genre filter
+    if (genreFilter !== 'all') {
+      result = result.filter(movie => {
+        // TODO: Filter by genre once genre_ids are properly populated from TMDB
+        return true;
+      });
+    }
+
+    // Apply sorting
+    result = [...result].sort((a, b) => {
+      switch (sortBy) {
+        case 'rating':
+          return b.rating - a.rating;
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'year':
+          return parseInt(b.year) - parseInt(a.year);
+        case 'popularity':
+        default:
+          return (a.rank || 0) - (b.rank || 0) || 0;
+      }
+    });
+
+    return result;
+  }, [allMovies, selectedCategory, sortBy, genreFilter]);
+
   useEffect(() => {
     if (searchQuery.trim()) {
       handleSearch(searchQuery);
     } else {
-      // Reset to base movies
-      const source = allMovies;
-      setDisplayMovies(source.slice(0, MOVIES_PER_PAGE));
+      // Apply filtered and sorted movies
+      setDisplayMovies(filteredAndSortedMovies.slice(0, MOVIES_PER_PAGE));
       setPage(1);
-      setHasMore(source.length > MOVIES_PER_PAGE);
+      setHasMore(filteredAndSortedMovies.length > MOVIES_PER_PAGE);
       setIsSearching(false);
     }
-  }, [searchQuery, allMovies]);
+  }, [searchQuery, filteredAndSortedMovies]);
 
   const fetchPopularMovies = async () => {
     try {
@@ -223,7 +260,7 @@ const Movies = () => {
     const start = page * MOVIES_PER_PAGE;
     const end = start + MOVIES_PER_PAGE;
 
-    const source = allMovies;
+    const source = filteredAndSortedMovies;
     setDisplayMovies((prev) => [...prev, ...source.slice(start, end)]);
     setPage(nextPage);
     setHasMore(end < source.length);
