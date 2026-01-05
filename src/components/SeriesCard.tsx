@@ -6,7 +6,7 @@ import supabase from "@/utils/supabase";
 import { toast } from "sonner";
 import { useIMDbRating } from "@/hooks/useIMDbRating";
 import AddToBookmarksButton from "@/components/AddToBookmarksButton";
-import QuickAddMovieButton from "@/components/QuickAddMovieButton";
+import QuickAddContentButton from "@/components/QuickAddMovieButton";
 
 interface Series {
   id: number;
@@ -126,8 +126,9 @@ const SeriesCard = ({ series }: { series: Series }) => {
             }}
           />
           <div className="absolute top-2 right-2 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 flex flex-col gap-2">
-            <QuickAddMovieButton
-              movieId={series.id.toString()}
+            <QuickAddContentButton
+              contentId={series.id.toString()}
+              contentType="series"
               title={series.title}
               posterUrl={posterUrl}
               externalRating={series.rating}

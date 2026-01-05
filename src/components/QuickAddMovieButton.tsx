@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { ChevronDown, Star, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ContentStatus, CONTENT_STATUS_CONFIG } from '@/types/anime';
+import { ContentStatus, ContentType, CONTENT_STATUS_CONFIG } from '@/types/anime';
 import * as bookmarkService from '@/services/bookmarkService';
 import supabase from '@/lib/supabase';
 import { toast } from 'sonner';
 
-interface QuickAddMovieButtonProps {
-  movieId: string;
+interface QuickAddContentButtonProps {
+  contentId: string;
+  contentType: ContentType;
   title: string;
   posterUrl?: string;
   externalRating?: number;
@@ -17,15 +18,16 @@ interface QuickAddMovieButtonProps {
   genre?: string;
 }
 
-export default function QuickAddMovieButton({
-  movieId,
+export default function QuickAddContentButton({
+  contentId,
+  contentType,
   title,
   posterUrl,
   externalRating,
   releaseYear,
   synopsis,
   genre,
-}: QuickAddMovieButtonProps) {
+}: QuickAddContentButtonProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [userRating, setUserRating] = useState<string>('');
@@ -43,8 +45,8 @@ export default function QuickAddMovieButton({
       }
 
       await bookmarkService.addToBookmarks(userData.user.id, {
-        contentType: 'movie',
-        contentId: movieId,
+        contentType,
+        contentId,
         title,
         posterUrl,
         status,
@@ -62,7 +64,7 @@ export default function QuickAddMovieButton({
       setShowMenu(false);
       toast.success(`Добавлено в "${CONTENT_STATUS_CONFIG[status].label}"`);
     } catch (error) {
-      console.error('Error adding movie:', error);
+      console.error('Error adding content:', error);
       toast.error('Ошибка при добавлении');
     } finally {
       setLoading(false);
@@ -86,8 +88,8 @@ export default function QuickAddMovieButton({
 
       // Automatically add to "watched" (просмотрено) when rating
       await bookmarkService.addToBookmarks(userData.user.id, {
-        contentType: 'movie',
-        contentId: movieId,
+        contentType,
+        contentId,
         title,
         posterUrl,
         status: 'watched',
@@ -105,10 +107,10 @@ export default function QuickAddMovieButton({
       setShowRatingModal(false);
       setUserRating('');
       setShowMenu(false);
-      toast.success('Фильм добавлен в "Просмотрено" с оценкой');
+      toast.success('Добавлено в "Просмотрено" с оценкой');
     } catch (error) {
-      console.error('Error rating movie:', error);
-      toast.error('Ошибка при оценке фильма');
+      console.error('Error rating content:', error);
+      toast.error('Ошибка при оценке');
     } finally {
       setLoading(false);
     }
@@ -138,7 +140,7 @@ export default function QuickAddMovieButton({
               className="w-full text-left px-4 py-2 text-sm text-white hover:bg-zinc-700 transition-colors flex items-center gap-2"
             >
               <Star className="w-4 h-4" />
-              Оценить фильм
+              Оценить
             </button>
 
             <div className="border-t border-zinc-700 my-1" />
@@ -173,7 +175,7 @@ export default function QuickAddMovieButton({
             className="bg-zinc-900 border-zinc-800 w-80 p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-white mb-4">Оценить фильм</h3>
+            <h3 className="text-lg font-bold text-white mb-4">Оценить</h3>
 
             <div className="mb-6">
               <input
