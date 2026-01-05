@@ -6,7 +6,7 @@ import { ContentBookmark, ContentStatus, ContentType } from '@/types/anime';
  */
 export const addToBookmarks = async (
   userId: string,
-  bookmark: Omit<ContentBookmark, 'id' | 'createdAt' | 'updatedAt'>
+  bookmark: Omit<ContentBookmark, 'id' | 'createdAt' | 'updatedAt' | 'userId'>
 ): Promise<ContentBookmark | null> => {
   try {
     const { data, error } = await supabase

@@ -61,10 +61,10 @@ export const MovieDetailBookmarkExample = ({
       genre,
       releaseYear,
       isFavorite: status === "favorite",
-      userRating: undefined,
-      progress: undefined,
-      totalItems: undefined,
-      notes: undefined,
+      userRating: 0,
+      progress: 0,
+      totalItems: 0,
+      notes: "",
     });
   };
 
