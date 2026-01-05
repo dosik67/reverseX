@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import supabase from "@/utils/supabase";
 import { toast } from "sonner";
 import { useIMDbRating } from "@/hooks/useIMDbRating";
+import AddToBookmarksButton from "@/components/AddToBookmarksButton";
 
 interface Series {
   id: number;
@@ -122,10 +123,20 @@ const SeriesCard = ({ series }: { series: Series }) => {
               e.currentTarget.src = FALLBACK_IMAGE;
             }}
           />
+          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <AddToBookmarksButton
+              contentId={series.id.toString()}
+              contentType="series"
+              title={series.title}
+              posterUrl={posterUrl}
+              externalRating={series.rating}
+              releaseYear={series.year}
+            />
+          </div>
           <button
             onClick={handleAddToTop50}
             disabled={loading}
-            className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 disabled:opacity-50"
+            className="absolute top-12 right-2 z-10 bg-black/50 hover:bg-black/70 p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 disabled:opacity-50"
             title="Add to Top 50"
           >
             <Plus className="w-5 h-5 transition-colors text-white" />
