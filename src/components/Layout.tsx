@@ -26,6 +26,7 @@ const Layout = () => {
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Film, label: 'Movies', path: '/movies' },
+    { icon: Film, label: 'Explore', path: '/explore-movies' },
     { icon: Tv, label: 'Series', path: '/series' },
     { icon: Gamepad, label: 'Games', path: '/games' },
     { icon: Bookmark, label: 'Bookmarks', path: '/bookmarks' },

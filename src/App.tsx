@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import QRAuthPage from "./pages/QRAuthPage";
 import Layout from "./components/Layout";
 import Movies from "./pages/Movies";
+import ExploreMovies from "./pages/ExploreMovies";
 import MovieDetail from "./pages/MovieDetail";
 import SeriesPage from "./pages/Series";
 import SeriesDetail from "./pages/SeriesDetail";
@@ -134,6 +135,7 @@ const App = () => {
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />
                   <Route path="/movies" element={<Movies />} />
+                  <Route path="/explore-movies" element={<ExploreMovies />} />
                   <Route path="/movie/:id" element={<MovieDetail />} />
                   <Route path="/series" element={<SeriesPage />} />
                   <Route path="/series/:id" element={<SeriesDetail />} />
