@@ -88,7 +88,7 @@ const Movies = () => {
         observer.unobserve(observerTarget.current);
       }
     };
-  }, [hasMore, loading, isSearching, page, filteredAndSortedMovies]);
+  }, [hasMore, loading, isSearching, page]);
 
   useEffect(() => {
     if (tab === 'trending') {
@@ -147,7 +147,7 @@ const Movies = () => {
       setHasMore(filteredAndSortedMovies.length > MOVIES_PER_PAGE);
       setIsSearching(false);
     }
-  }, [searchQuery, filteredAndSortedMovies]);
+  }, [searchQuery]);
 
   const fetchPopularMovies = async () => {
     try {

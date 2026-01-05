@@ -114,7 +114,7 @@ const Games = () => {
       setPage(1);
       setHasMore(filteredAndSortedGames.length > GAMES_PER_PAGE);
     }
-  }, [searchQuery, filteredAndSortedGames]);
+  }, [searchQuery]);
 
   const fetchPopularGames = async () => {
     try {
