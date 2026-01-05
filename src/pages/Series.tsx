@@ -127,6 +127,15 @@ const SeriesPage = () => {
     return result;
   }, [allSeries, selectedCategory, sortBy, genreFilter]);
 
+  // Initialize display when allSeries loads
+  useEffect(() => {
+    if (allSeries.length > 0) {
+      setDisplaySeries(filteredAndSortedSeries.slice(0, SERIES_PER_PAGE));
+      setPage(1);
+      setHasMore(filteredAndSortedSeries.length > SERIES_PER_PAGE);
+    }
+  }, [allSeries.length]);
+
   useEffect(() => {
     fetchSeries();
   }, []);
@@ -141,7 +150,7 @@ const SeriesPage = () => {
       setHasMore(filteredAndSortedSeries.length > SERIES_PER_PAGE);
       setIsSearching(false);
     }
-  }, [searchQuery, selectedCategory, sortBy, genreFilter, allSeries]);
+  }, [searchQuery, selectedCategory, sortBy, genreFilter]);
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {

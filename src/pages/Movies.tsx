@@ -137,6 +137,15 @@ const Movies = () => {
     return result;
   }, [allMovies, selectedCategory, sortBy, genreFilter]);
 
+  // Initialize display when allMovies loads
+  useEffect(() => {
+    if (allMovies.length > 0) {
+      setDisplayMovies(filteredAndSortedMovies.slice(0, MOVIES_PER_PAGE));
+      setPage(1);
+      setHasMore(filteredAndSortedMovies.length > MOVIES_PER_PAGE);
+    }
+  }, [allMovies.length]);
+
   useEffect(() => {
     if (searchQuery.trim()) {
       handleSearch(searchQuery);
@@ -147,7 +156,7 @@ const Movies = () => {
       setHasMore(filteredAndSortedMovies.length > MOVIES_PER_PAGE);
       setIsSearching(false);
     }
-  }, [searchQuery, selectedCategory, sortBy, genreFilter, allMovies]);
+  }, [searchQuery, selectedCategory, sortBy, genreFilter]);
 
   const fetchPopularMovies = async () => {
     try {

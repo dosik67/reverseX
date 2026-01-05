@@ -101,6 +101,15 @@ const Games = () => {
     return result;
   }, [allGames, selectedGenres, sortBy]);
 
+  // Initialize display when allGames loads
+  useEffect(() => {
+    if (allGames.length > 0) {
+      setDisplayGames(filteredAndSortedGames.slice(0, GAMES_PER_PAGE));
+      setPage(1);
+      setHasMore(filteredAndSortedGames.length > GAMES_PER_PAGE);
+    }
+  }, [allGames.length]);
+
   useEffect(() => {
     fetchPopularGames();
   }, []);
@@ -114,7 +123,7 @@ const Games = () => {
       setPage(1);
       setHasMore(filteredAndSortedGames.length > GAMES_PER_PAGE);
     }
-  }, [searchQuery, selectedGenres, sortBy, allGames]);
+  }, [searchQuery, selectedGenres, sortBy]);
 
   const fetchPopularGames = async () => {
     try {
