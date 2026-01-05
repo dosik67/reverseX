@@ -1,91 +1,258 @@
 import { useState, useEffect } from 'react';
-import { Trash2, Star, Search, Filter, MoreVertical, BookmarkIcon } from 'lucide-react';
+import { Trash2, Star, Search, Filter, MoreVertical, BookmarkIcon, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
 import * as bookmarkService from '@/services/bookmarkService';
 import { ContentBookmark, ContentStatus, CONTENT_STATUS_CONFIG } from '@/types/anime';
 import supabase from '@/lib/supabase';
+import { toast } from 'sonner';
 
-const BookmarkCard = ({ bookmark, onDelete }: { bookmark: ContentBookmark; onDelete: () => void }) => {
+const BookmarkCard = ({ 
+  bookmark, 
+  onDelete, 
+  onStatusChange,
+  onRatingChange
+}: { 
+  bookmark: ContentBookmark; 
+  onDelete: () => void;
+  onStatusChange: (newStatus: ContentStatus) => void;
+  onRatingChange: (newRating: number) => void;
+}) => {
+  const navigate = useNavigate();
+  const [showMenu, setShowMenu] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [userRating, setUserRating] = useState(bookmark.userRating || 0);
   const config = CONTENT_STATUS_CONFIG[bookmark.status];
+  const statuses: ContentStatus[] = ['favorite', 'watching', 'planned', 'watched', 'postponed', 'dropped'];
+
+  const handlePosterClick = () => {
+    const contentTypeRoute = bookmark.contentType === 'movie' ? 'movie' : 
+                           bookmark.contentType === 'series' ? 'series' : 'game';
+    navigate(`/${contentTypeRoute}/${bookmark.contentId}`);
+  };
+
+  const handleRatingSubmit = async () => {
+    try {
+      await onRatingChange(userRating);
+      setShowRatingModal(false);
+      toast.success('Рейтинг обновлён');
+    } catch (error) {
+      toast.error('Ошибка при обновлении рейтинга');
+    }
+  };
+
+  const handleStatusChange = async (newStatus: ContentStatus) => {
+    try {
+      await onStatusChange(newStatus);
+      setShowMenu(false);
+      toast.success('Статус обновлён');
+    } catch (error) {
+      toast.error('Ошибка при обновлении статуса');
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm('Вы уверены? Закладка будет удалена.');
+    if (confirmed) {
+      try {
+        await onDelete();
+        setShowMenu(false);
+        toast.success('Закладка удалена');
+      } catch (error) {
+        toast.error('Ошибка при удалении');
+      }
+    }
+  };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-zinc-900 border-zinc-800">
-      <div className="flex gap-4 p-4">
-        {/* Poster */}
-        <div className="flex-shrink-0">
+    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 bg-zinc-900 border-zinc-800 hover:border-purple-500/30 group">
+      <div className="flex flex-col h-full">
+        {/* Poster - Clickable */}
+        <div className="relative overflow-hidden bg-zinc-800 cursor-pointer aspect-video">
           {bookmark.posterUrl ? (
             <img
               src={bookmark.posterUrl}
               alt={bookmark.title}
-              className="w-[80px] h-[120px] object-cover rounded-lg"
+              onClick={handlePosterClick}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="120"%3E%3Crect fill="%23333" width="80" height="120"/%3E%3C/svg%3E';
+                (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="150"%3E%3Crect fill="%23333" width="100" height="150"/%3E%3C/svg%3E';
               }}
             />
           ) : (
-            <div className="w-[80px] h-[120px] bg-zinc-800 rounded-lg flex items-center justify-center">
-              <span className="text-xs text-zinc-500">Нет</span>
+            <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+              <span className="text-xs text-zinc-500">Нет постера</span>
+            </div>
+          )}
+          {/* External Rating Badge */}
+          {bookmark.externalRating && (
+            <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/70 backdrop-blur px-2 py-1 rounded-full">
+              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs font-semibold text-yellow-400">{bookmark.externalRating.toFixed(1)}</span>
             </div>
           )}
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 p-4 flex flex-col">
           <div className="flex items-start justify-between gap-2 mb-2">
-            <div className="flex-1">
-              <h3 className="font-bold text-white text-sm leading-tight line-clamp-2">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-white text-base leading-tight line-clamp-2 mb-1">
                 {bookmark.title}
               </h3>
-              {bookmark.genre && (
-                <p className="text-xs text-zinc-400 mt-1">{bookmark.genre}</p>
+              {bookmark.releaseYear && (
+                <p className="text-xs text-zinc-500 font-medium">{bookmark.releaseYear}</p>
               )}
             </div>
-            <button
-              onClick={onDelete}
-              className="p-1 hover:bg-zinc-800 rounded transition-colors text-zinc-400 hover:text-red-500"
-              title="Удалить"
-            >
-              <MoreVertical className="w-4 h-4" />
-            </button>
+            {/* Menu Button */}
+            <div className="relative">
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-1.5 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-400 hover:text-white flex-shrink-0"
+                title="Меню"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+              
+              {/* Dropdown Menu */}
+              {showMenu && (
+                <div className="absolute right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg z-10 min-w-[200px]">
+                  <div className="py-1">
+                    <button
+                      onClick={() => setShowRatingModal(true)}
+                      className="w-full text-left px-4 py-2 text-sm text-white hover:bg-zinc-700 transition-colors flex items-center gap-2"
+                    >
+                      <Star className="w-4 h-4" />
+                      Мой рейтинг ({userRating}/10)
+                    </button>
+                    
+                    <div className="border-t border-zinc-700 my-1" />
+                    
+                    <div className="px-2 py-1">
+                      <p className="text-xs text-zinc-400 font-semibold px-2 py-1">Изменить статус:</p>
+                      {statuses.map(status => (
+                        <button
+                          key={status}
+                          onClick={() => handleStatusChange(status)}
+                          className={`w-full text-left px-4 py-2 text-xs transition-colors rounded ${
+                            bookmark.status === status
+                              ? 'bg-purple-500/30 text-purple-400 font-semibold'
+                              : 'text-zinc-300 hover:bg-zinc-700'
+                          }`}
+                        >
+                          {CONTENT_STATUS_CONFIG[status].label}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    <div className="border-t border-zinc-700 my-1" />
+                    
+                    <button
+                      onClick={handleDelete}
+                      className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Удалить закладку
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Rating and Episodes */}
-          <div className="flex items-center gap-4 mb-2 text-xs text-zinc-400">
+          {/* Genre */}
+          {bookmark.genre && (
+            <p className="text-xs text-zinc-400 mb-2 line-clamp-1">{bookmark.genre}</p>
+          )}
+
+          {/* Info Row */}
+          <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400 mb-3">
             {bookmark.totalItems && (
-              <span>{bookmark.totalItems} эп.</span>
-            )}
-            {bookmark.externalRating && (
-              <div className="flex items-center gap-1">
-                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                <span className="text-yellow-400">{bookmark.externalRating.toFixed(1)}</span>
-              </div>
+              <span className="flex items-center gap-1">
+                <span className="text-zinc-500">•</span>
+                <span>{bookmark.totalItems} эп.</span>
+              </span>
             )}
             {bookmark.isFavorite && (
-              <BookmarkIcon className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+              <span className="flex items-center gap-1 text-amber-400">
+                <BookmarkIcon className="w-3 h-3 fill-current" />
+                <span>Избранное</span>
+              </span>
+            )}
+            {bookmark.progress !== undefined && bookmark.totalItems && (
+              <span className="flex items-center gap-1">
+                <span className="text-zinc-500">•</span>
+                <span>{bookmark.progress}/{bookmark.totalItems}</span>
+              </span>
             )}
           </div>
 
-          {/* Description */}
-          {bookmark.notes && (
-            <p className="text-xs text-zinc-400 line-clamp-2 mb-2">
-              {bookmark.notes}
+          {/* Description - Show if available */}
+          {bookmark.synopsis && (
+            <p className="text-xs text-zinc-400 line-clamp-3 mb-3 leading-relaxed">
+              {bookmark.synopsis}
             </p>
           )}
 
-          {/* Status Badge and Progress */}
-          <div className="flex items-center justify-between mt-auto pt-2 border-t border-zinc-800">
-            <div className={`px-2 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.color}`}>
+          {/* User Notes */}
+          {bookmark.notes && bookmark.notes !== bookmark.synopsis && (
+            <p className="text-xs text-zinc-500 italic line-clamp-2 mb-3 border-l-2 border-purple-500/30 pl-2">
+              &quot;{bookmark.notes}&quot;
+            </p>
+          )}
+
+          {/* Status Badge - Bottom */}
+          <div className="mt-auto pt-3 border-t border-zinc-800/50">
+            <div className={`px-3 py-1.5 rounded-full text-xs font-semibold w-fit ${config.bgColor} ${config.color}`}>
               {config.label}
             </div>
-            {bookmark.progress !== undefined && bookmark.totalItems && (
-              <div className="text-xs text-zinc-400">
-                {bookmark.progress}/{bookmark.totalItems}
-              </div>
-            )}
           </div>
         </div>
       </div>
+
+      {/* Rating Modal */}
+      {showRatingModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20">
+          <Card className="bg-zinc-900 border-zinc-800 w-96 p-6">
+            <h3 className="text-lg font-bold text-white mb-4">Ваш рейтинг</h3>
+            
+            <div className="mb-6">
+              <div className="flex gap-1 mb-4">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                  <button
+                    key={num}
+                    onClick={() => setUserRating(num)}
+                    className={`flex-1 py-2 rounded text-sm font-semibold transition-colors ${
+                      userRating === num
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+              <p className="text-center text-2xl font-bold text-purple-400">{userRating}/10</p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowRatingModal(false)}
+                className="flex-1 px-4 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition-colors text-sm font-medium"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleRatingSubmit}
+                className="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
+              >
+                Сохранить
+              </button>
+            </div>
+          </Card>
+        </div>
+      )}
     </Card>
   );
 };
@@ -177,6 +344,26 @@ export default function BookmarksNew() {
       setBookmarks(bookmarks.filter(b => b.id !== id));
     } catch (error) {
       console.error('Error deleting bookmark:', error);
+    }
+  };
+
+  const handleStatusChange = async (id: string, newStatus: ContentStatus) => {
+    try {
+      const updatedBookmark = await bookmarkService.updateBookmarkStatus(id, newStatus);
+      setBookmarks(bookmarks.map(b => b.id === id ? updatedBookmark : b));
+    } catch (error) {
+      console.error('Error updating bookmark status:', error);
+      throw error;
+    }
+  };
+
+  const handleRatingChange = async (id: string, newRating: number) => {
+    try {
+      const updatedBookmark = await bookmarkService.updateBookmarkRating(id, newRating);
+      setBookmarks(bookmarks.map(b => b.id === id ? updatedBookmark : b));
+    } catch (error) {
+      console.error('Error updating bookmark rating:', error);
+      throw error;
     }
   };
 
@@ -281,6 +468,8 @@ export default function BookmarksNew() {
                 key={bookmark.id}
                 bookmark={bookmark}
                 onDelete={() => handleDelete(bookmark.id)}
+                onStatusChange={(newStatus) => handleStatusChange(bookmark.id, newStatus)}
+                onRatingChange={(newRating) => handleRatingChange(bookmark.id, newRating)}
               />
             ))}
           </div>

@@ -140,6 +140,7 @@ const GameCard = ({ game }: { game: Game }) => {
               posterUrl={posterUrl}
               externalRating={game.rating}
               releaseYear={game.year}
+              synopsis={game.description}
             />
           </div>
           <button

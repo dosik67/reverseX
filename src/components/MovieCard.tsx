@@ -133,6 +133,7 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
               posterUrl={posterUrl}
               externalRating={movie.rating}
               releaseYear={movie.year}
+              synopsis={movie.description}
             />
           </div>
           <button

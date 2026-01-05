@@ -25,6 +25,7 @@ export const addToBookmarks = async (
           total_items: bookmark.totalItems,
           is_favorite: bookmark.isFavorite,
           notes: bookmark.notes,
+          synopsis: bookmark.synopsis,
           genre: bookmark.genre,
           release_year: bookmark.releaseYear,
           created_at: new Date().toISOString(),
@@ -186,6 +187,26 @@ export const toggleFavorite = async (
 };
 
 /**
+ * Update bookmark status
+ */
+export const updateBookmarkStatus = async (
+  bookmarkId: string,
+  newStatus: ContentStatus
+): Promise<ContentBookmark | null> => {
+  return updateBookmark(bookmarkId, { status: newStatus });
+};
+
+/**
+ * Update bookmark rating
+ */
+export const updateBookmarkRating = async (
+  bookmarkId: string,
+  newRating: number
+): Promise<ContentBookmark | null> => {
+  return updateBookmark(bookmarkId, { userRating: newRating });
+};
+
+/**
  * Delete bookmark
  */
 export const deleteBookmark = async (bookmarkId: string): Promise<boolean> => {
@@ -281,6 +302,7 @@ function transformBookmark(data: any): ContentBookmark {
     totalItems: data.total_items,
     isFavorite: data.is_favorite,
     notes: data.notes,
+    synopsis: data.synopsis,
     genre: data.genre,
     releaseYear: data.release_year,
     createdAt: data.created_at,

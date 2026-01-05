@@ -22,6 +22,7 @@ interface AddToBookmarksButtonProps {
   genre?: string;
   releaseYear?: string;
   totalItems?: number;
+  synopsis?: string;
 }
 
 export default function AddToBookmarksButton({
@@ -33,6 +34,7 @@ export default function AddToBookmarksButton({
   genre,
   releaseYear,
   totalItems,
+  synopsis,
 }: AddToBookmarksButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -59,6 +61,7 @@ export default function AddToBookmarksButton({
         externalRating,
         genre,
         releaseYear,
+        synopsis,
         totalItems: totalItems || 0,
         isFavorite: status === 'favorite',
         userRating: 0,

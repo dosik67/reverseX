@@ -17,6 +17,7 @@ export interface ContentBookmark {
   totalItems?: number; // Total episodes / chapters
   isFavorite: boolean;
   notes?: string;
+  synopsis?: string; // Description/overview
   genre?: string;
   releaseYear?: string;
   createdAt: string;

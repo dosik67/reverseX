@@ -13,6 +13,7 @@ interface Series {
   year: string;
   rating: number;
   poster: string;
+  description?: string;
 }
 
 const FALLBACK_IMAGE = 'https://placehold.co/342x513/1a1a2e/ffffff?text=No+Image';
@@ -131,6 +132,7 @@ const SeriesCard = ({ series }: { series: Series }) => {
               posterUrl={posterUrl}
               externalRating={series.rating}
               releaseYear={series.year}
+              synopsis={series.description}
             />
           </div>
           <button
