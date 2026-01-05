@@ -25,7 +25,7 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
 import TierLists from "./pages/TierLists";
-import Bookmarks from "./pages/Bookmarks";
+import BookmarksNew from "./pages/BookmarksNew";
 import FileDownload from "./pages/FileDownload";
 import FileDownload2 from "./pages/FileDownload2";
 import FileDownload3 from "./pages/FileDownload3";
@@ -139,7 +139,7 @@ const App = () => {
                   <Route path="/series/:id" element={<SeriesDetail />} />
                   <Route path="/profile/:userId" element={<Profile />} />
                   <Route path="/profile/:userId/edit" element={<ProfileEdit />} />
-                  <Route path="/bookmarks" element={<Bookmarks />} />
+                  <Route path="/bookmarks" element={<BookmarksNew />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/tier-lists" element={<TierLists />} />
                   <Route path="/games" element={<Games />} />
