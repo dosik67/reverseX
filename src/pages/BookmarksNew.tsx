@@ -22,7 +22,7 @@ const BookmarkCard = ({
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
-  const [userRating, setUserRating] = useState(bookmark.userRating || 0);
+  const [userRating, setUserRating] = useState<string>((bookmark.userRating || 0).toString());
   const config = CONTENT_STATUS_CONFIG[bookmark.status];
   const statuses: ContentStatus[] = ['favorite', 'watching', 'planned', 'watched', 'postponed', 'dropped'];
 
@@ -34,7 +34,12 @@ const BookmarkCard = ({
 
   const handleRatingSubmit = async () => {
     try {
-      await onRatingChange(userRating);
+      const rating = parseFloat(userRating);
+      if (isNaN(rating) || rating < 0 || rating > 10) {
+        toast.error('Рейтинг должен быть от 0 до 10');
+        return;
+      }
+      await onRatingChange(rating);
       setShowRatingModal(false);
       toast.success('Рейтинг обновлён');
     } catch (error) {
@@ -66,36 +71,29 @@ const BookmarkCard = ({
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 bg-zinc-900 border-zinc-800 hover:border-purple-500/30 group">
-      <div className="flex flex-col h-full">
+    <Card className="overflow-visible hover:shadow-lg transition-all duration-300 bg-zinc-900 border-zinc-800 hover:border-purple-500/30">
+      <div className="flex gap-4 p-4">
         {/* Poster - Clickable */}
-        <div className="relative overflow-hidden bg-zinc-800 cursor-pointer aspect-video">
+        <div className="flex-shrink-0">
           {bookmark.posterUrl ? (
             <img
               src={bookmark.posterUrl}
               alt={bookmark.title}
               onClick={handlePosterClick}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-[80px] h-[120px] object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="150"%3E%3Crect fill="%23333" width="100" height="150"/%3E%3C/svg%3E';
+                (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="120"%3E%3Crect fill="%23333" width="80" height="120"/%3E%3C/svg%3E';
               }}
             />
           ) : (
-            <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+            <div className="w-[80px] h-[120px] bg-zinc-800 rounded-lg flex items-center justify-center cursor-pointer hover:bg-zinc-700 transition-colors">
               <span className="text-xs text-zinc-500">Нет постера</span>
-            </div>
-          )}
-          {/* External Rating Badge */}
-          {bookmark.externalRating && (
-            <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/70 backdrop-blur px-2 py-1 rounded-full">
-              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-              <span className="text-xs font-semibold text-yellow-400">{bookmark.externalRating.toFixed(1)}</span>
             </div>
           )}
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-4 flex flex-col">
+        <div className="flex-1 flex flex-col relative">
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-white text-base leading-tight line-clamp-2 mb-1">
@@ -109,22 +107,22 @@ const BookmarkCard = ({
             <div className="relative">
               <button
                 onClick={() => setShowMenu(!showMenu)}
-                className="p-1.5 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-400 hover:text-white flex-shrink-0"
+                className="p-1.5 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-400 hover:text-white flex-shrink-0 ml-2"
                 title="Меню"
               >
                 <MoreVertical className="w-5 h-5" />
               </button>
               
-              {/* Dropdown Menu */}
+              {/* Dropdown Menu - positioned to left to avoid cutoff */}
               {showMenu && (
-                <div className="absolute right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg z-10 min-w-[200px]">
+                <div className="absolute right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg z-20 min-w-[200px]">
                   <div className="py-1">
                     <button
                       onClick={() => setShowRatingModal(true)}
                       className="w-full text-left px-4 py-2 text-sm text-white hover:bg-zinc-700 transition-colors flex items-center gap-2"
                     >
                       <Star className="w-4 h-4" />
-                      Мой рейтинг ({userRating}/10)
+                      Мой рейтинг ({(bookmark.userRating || 0).toFixed(1)}/10)
                     </button>
                     
                     <div className="border-t border-zinc-700 my-1" />
@@ -167,7 +165,7 @@ const BookmarkCard = ({
           )}
 
           {/* Info Row */}
-          <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400 mb-3">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400 mb-2">
             {bookmark.totalItems && (
               <span className="flex items-center gap-1">
                 <span className="text-zinc-500">•</span>
@@ -186,24 +184,31 @@ const BookmarkCard = ({
                 <span>{bookmark.progress}/{bookmark.totalItems}</span>
               </span>
             )}
+            {bookmark.externalRating && (
+              <span className="flex items-center gap-1">
+                <span className="text-zinc-500">•</span>
+                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                <span className="text-yellow-400">{bookmark.externalRating.toFixed(1)}</span>
+              </span>
+            )}
           </div>
 
           {/* Description - Show if available */}
           {bookmark.synopsis && (
-            <p className="text-xs text-zinc-400 line-clamp-3 mb-3 leading-relaxed">
+            <p className="text-xs text-zinc-400 line-clamp-2 mb-2 leading-relaxed">
               {bookmark.synopsis}
             </p>
           )}
 
           {/* User Notes */}
           {bookmark.notes && bookmark.notes !== bookmark.synopsis && (
-            <p className="text-xs text-zinc-500 italic line-clamp-2 mb-3 border-l-2 border-purple-500/30 pl-2">
+            <p className="text-xs text-zinc-500 italic line-clamp-1 mb-2 border-l-2 border-purple-500/30 pl-2">
               &quot;{bookmark.notes}&quot;
             </p>
           )}
 
           {/* Status Badge - Bottom */}
-          <div className="mt-auto pt-3 border-t border-zinc-800/50">
+          <div className="mt-auto pt-2 border-t border-zinc-800/50">
             <div className={`px-3 py-1.5 rounded-full text-xs font-semibold w-fit ${config.bgColor} ${config.color}`}>
               {config.label}
             </div>
@@ -213,27 +218,26 @@ const BookmarkCard = ({
 
       {/* Rating Modal */}
       {showRatingModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20">
-          <Card className="bg-zinc-900 border-zinc-800 w-96 p-6">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowRatingModal(false)}>
+          <Card className="bg-zinc-900 border-zinc-800 w-80 p-6" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-white mb-4">Ваш рейтинг</h3>
             
             <div className="mb-6">
-              <div className="flex gap-1 mb-4">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                  <button
-                    key={num}
-                    onClick={() => setUserRating(num)}
-                    className={`flex-1 py-2 rounded text-sm font-semibold transition-colors ${
-                      userRating === num
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                    }`}
-                  >
-                    {num}
-                  </button>
-                ))}
+              <div className="mb-4">
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  step="0.1"
+                  value={userRating}
+                  onChange={(e) => setUserRating(e.target.value)}
+                  placeholder="Введите рейтинг (0-10)"
+                  className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 text-white rounded-lg focus:outline-none focus:border-purple-500 text-center text-2xl font-bold"
+                />
               </div>
-              <p className="text-center text-2xl font-bold text-purple-400">{userRating}/10</p>
+              <p className="text-center text-sm text-zinc-400">
+                Введите значение от 0 до 10 (например: 5.5, 7.6, 8.0)
+              </p>
             </div>
 
             <div className="flex gap-2">
@@ -462,7 +466,7 @@ export default function BookmarksNew() {
             <p className="text-sm text-zinc-500">Добавьте контент чтобы начать</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-4">
             {filteredBookmarks.map(bookmark => (
               <BookmarkCard
                 key={bookmark.id}
