@@ -5,35 +5,93 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Mock builder для метод-чейнинга
-const createMockQueryBuilder = () => ({
-  select: function() {
-    return this;
-  },
-  eq: function() {
-    return this;
-  },
-  single: function() {
-    return Promise.resolve({ data: null, error: null });
-  },
-  update: function() {
-    return Promise.resolve({ data: [], error: null });
-  },
-  delete: function() {
-    return Promise.resolve({ data: [], error: null });
-  },
-  insert: function() {
-    return Promise.resolve({ data: [], error: null });
-  },
-  limit: function() {
-    return this;
-  },
-  then: function(resolve: any) {
-    return Promise.resolve({ data: [], error: null }).then(resolve);
-  },
-  catch: function(reject: any) {
-    return Promise.resolve({ data: [], error: null }).catch(reject);
-  },
-});
+const createMockQueryBuilder = () => {
+  const mockPromise = Promise.resolve({ data: [], error: null });
+  
+  return {
+    select: function() {
+      return this;
+    },
+    eq: function() {
+      return this;
+    },
+    neq: function() {
+      return this;
+    },
+    lt: function() {
+      return this;
+    },
+    lte: function() {
+      return this;
+    },
+    gt: function() {
+      return this;
+    },
+    gte: function() {
+      return this;
+    },
+    like: function() {
+      return this;
+    },
+    in: function() {
+      return this;
+    },
+    contains: function() {
+      return this;
+    },
+    containedBy: function() {
+      return this;
+    },
+    range: function() {
+      return this;
+    },
+    overlaps: function() {
+      return this;
+    },
+    textSearch: function() {
+      return this;
+    },
+    match: function() {
+      return this;
+    },
+    single: function() {
+      return mockPromise;
+    },
+    update: function() {
+      return mockPromise;
+    },
+    delete: function() {
+      return mockPromise;
+    },
+    insert: function() {
+      return mockPromise;
+    },
+    upsert: function() {
+      return mockPromise;
+    },
+    limit: function() {
+      return this;
+    },
+    order: function() {
+      return this;
+    },
+    range: function() {
+      return this;
+    },
+    offset: function() {
+      return this;
+    },
+    then: function(resolve?: any) {
+      return (resolve ? mockPromise.then(resolve) : mockPromise) as any;
+    },
+    catch: function(reject?: any) {
+      return (reject ? mockPromise.catch(reject) : mockPromise) as any;
+    },
+    finally: function(fn?: any) {
+      return (fn ? mockPromise.finally(fn) : mockPromise) as any;
+    },
+  };
+};
 
 // Создаём клиент Supabase только если переменные установлены
 let supabase: any = null;
