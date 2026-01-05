@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Film, Home, Tv, Gamepad, Music, Book, Bell, MessageSquare, User, LogOut, Settings, Crown } from "lucide-react";
+import { Film, Home, Tv, Gamepad, Music, Book, Bookmark, Bell, MessageSquare, User, LogOut, Settings, Crown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -110,6 +110,12 @@ const Layout = () => {
                 <Link to="/tier-lists" className="flex items-center gap-2">
                   <Crown className="w-4 h-4" />
                   Tier Lists
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/bookmarks" className="flex items-center gap-2">
+                  <Bookmark className="w-4 h-4" />
+                  Bookmarks
                 </Link>
               </Button>
               <Button variant="ghost" size="sm" asChild>

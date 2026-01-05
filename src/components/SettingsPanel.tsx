@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import supabase from "@/utils/supabase";
+import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,6 +13,7 @@ import {
   Eye,
   Volume2,
   Moon,
+  Sun,
   Save,
   LogOut,
   Trash2,
@@ -85,6 +87,7 @@ const SettingToggle = ({
 
 const SettingsPanel = () => {
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
   const [settings, setSettings] = useState<AppSettings>({
     notifications: {
       email: true,
@@ -100,7 +103,7 @@ const SettingsPanel = () => {
       allowMessages: true,
     },
     display: {
-      darkMode: true,
+      darkMode: isDark,
       soundEnabled: true,
       animationsEnabled: true,
       compactMode: false,
@@ -120,6 +123,14 @@ const SettingsPanel = () => {
       loadSettings();
     }
   }, [currentUserId]);
+
+  // Sync theme state with isDark value
+  useEffect(() => {
+    setSettings((prev) => ({
+      ...prev,
+      display: { ...prev.display, darkMode: isDark },
+    }));
+  }, [isDark]);
 
   const getCurrentUser = async () => {
     try {
@@ -367,13 +378,38 @@ const SettingsPanel = () => {
           {/* Display Tab */}
           <TabsContent value="display" className="space-y-4 mt-4">
             <div className="bg-muted/50 p-4 rounded-lg space-y-4">
-              <SettingToggle
-                icon={<Moon className="w-4 h-4" />}
-                title="Dark Mode"
-                description="Use dark theme"
-                checked={settings.display.darkMode}
-                onChange={() => toggleSetting("display", "darkMode")}
-              />
+              {/* Theme Toggle with real effect */}
+              <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:border-primary/50 transition-colors">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="text-muted-foreground">
+                    {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm">Theme</div>
+                    <div className="text-xs text-muted-foreground">
+                      {isDark ? 'Dark theme enabled' : 'Light theme enabled'}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    toggleTheme();
+                    setSettings(prev => ({
+                      ...prev,
+                      display: { ...prev.display, darkMode: !isDark }
+                    }));
+                  }}
+                  className={`relative w-10 h-6 rounded-full transition-colors ${
+                    isDark ? "bg-primary" : "bg-muted"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                      isDark ? "translate-x-5" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
 
               <SettingToggle
                 icon={<Volume2 className="w-4 h-4" />}
