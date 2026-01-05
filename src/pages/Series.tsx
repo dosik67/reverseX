@@ -87,7 +87,7 @@ const SeriesPage = () => {
         observer.unobserve(observerTarget.current);
       }
     };
-  }, [hasMore, loading, isSearching, page, filteredAndSortedSeries]);
+  }, [hasMore, loading, isSearching, page]);
 
   // Apply filters and sorting to all series
   const filteredAndSortedSeries = useMemo(() => {

@@ -70,7 +70,7 @@ const Games = () => {
         observer.unobserve(observerTarget.current);
       }
     };
-  }, [hasMore, loading, page, filteredAndSortedGames]);
+  }, [hasMore, loading, page]);
 
   // Apply filters and sorting to all games
   const filteredAndSortedGames = useMemo(() => {
