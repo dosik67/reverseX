@@ -6,6 +6,7 @@ import supabase from "@/utils/supabase";
 import { toast } from "sonner";
 import { useIMDbRating } from "@/hooks/useIMDbRating";
 import AddToBookmarksButton from "@/components/AddToBookmarksButton";
+import QuickAddMovieButton from "@/components/QuickAddMovieButton";
 
 interface Movie {
   id: number;
@@ -125,7 +126,15 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
               e.currentTarget.src = FALLBACK_IMAGE;
             }}
           />
-          <div className="absolute top-2 right-2 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
+          <div className="absolute top-2 right-2 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 flex flex-col gap-2">
+            <QuickAddMovieButton
+              movieId={movie.id.toString()}
+              title={movie.title}
+              posterUrl={posterUrl}
+              externalRating={movie.rating}
+              releaseYear={movie.year}
+              synopsis={movie.description}
+            />
             <AddToBookmarksButton
               contentId={movie.id.toString()}
               contentType="movie"

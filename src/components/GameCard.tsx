@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import supabase from "@/utils/supabase";
 import { toast } from "sonner";
 import AddToBookmarksButton from "@/components/AddToBookmarksButton";
+import QuickAddMovieButton from "@/components/QuickAddMovieButton";
 
 interface Game {
   id: number;
@@ -132,7 +133,15 @@ const GameCard = ({ game }: { game: Game }) => {
               e.currentTarget.src = FALLBACK_IMAGE;
             }}
           />
-          <div className="absolute top-2 right-2 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
+          <div className="absolute top-2 right-2 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 flex flex-col gap-2">
+            <QuickAddMovieButton
+              movieId={game.id.toString()}
+              title={game.title}
+              posterUrl={posterUrl}
+              externalRating={game.rating}
+              releaseYear={game.year}
+              synopsis={game.description}
+            />
             <AddToBookmarksButton
               contentId={game.id.toString()}
               contentType="game"
