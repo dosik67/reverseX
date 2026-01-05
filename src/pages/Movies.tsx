@@ -1,11 +1,15 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import MovieCard from "@/components/MovieCard";
+import MovieCategoryFilter from "@/components/MovieCategoryFilter";
+import MovieSortFilter, { SortOption, GenreFilter } from "@/components/MovieSortFilter";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { getPopularMovies, searchMovies, getTopRatedMovies } from "@/utils/tmdbApi";
 import { useTranslation } from "react-i18next";
+import { ContentStatus } from "@/types/anime";
+import supabase from "@/lib/supabase";
 
 interface Movie {
   id: number;
@@ -15,12 +19,15 @@ interface Movie {
   poster: string;
   description: string;
   rank?: number;
+  genre_ids?: number[];
 }
 
 const MOVIES_PER_PAGE = 20;
 
 const Movies = () => {
   const { t } = useTranslation();
+  const observerTarget = useRef<HTMLDivElement>(null);
+  
   const [tab, setTab] = useState<'trending' | 'top1000'>('trending');
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [displayMovies, setDisplayMovies] = useState<Movie[]>([]);
@@ -29,9 +36,59 @@ const Movies = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<ContentStatus | 'all'>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('popularity');
+  const [genreFilter, setGenreFilter] = useState<GenreFilter>('all');
+  const [userBookmarks, setUserBookmarks] = useState<Set<string>>(new Set());
 
-  // Restore scroll after content loads (50ms delay for DOM to render)
+  // Restore scroll after content loads
   useScrollRestore(!loading ? 0 : 50);
+
+  // Load user bookmarks
+  useEffect(() => {
+    loadUserBookmarks();
+  }, []);
+
+  const loadUserBookmarks = async () => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user?.id) return;
+
+      const { data } = await supabase
+        .from('content_bookmarks')
+        .select('content_id')
+        .eq('user_id', user.user.id)
+        .eq('content_type', 'movie');
+
+      if (data) {
+        setUserBookmarks(new Set(data.map((item: any) => item.content_id.toString())));
+      }
+    } catch (error) {
+      console.error('Error loading bookmarks:', error);
+    }
+  };
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading && !isSearching) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [hasMore, loading, isSearching]);
 
   useEffect(() => {
     if (tab === 'trending') {
@@ -202,7 +259,7 @@ const Movies = () => {
         <h1 className="text-4xl font-bold mb-4 gradient-text">
           {tab === 'trending' ? t('movies.explore') : 'Величайшие Фильмы Всех Времён'}
         </h1>
-        <div className="relative max-w-md">
+        <div className="relative max-w-md mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <Input
             type="text"
@@ -213,6 +270,20 @@ const Movies = () => {
           />
         </div>
       </div>
+
+      {/* Category Filter */}
+      <MovieCategoryFilter 
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+      />
+
+      {/* Sort and Genre Filter */}
+      <MovieSortFilter
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        genre={genreFilter}
+        onGenreChange={setGenreFilter}
+      />
 
       {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -235,11 +306,11 @@ const Movies = () => {
               </div>
             ))}
           </div>
-          {hasMore && (
-            <div className="flex justify-center mt-8">
-              <Button onClick={loadMore}>{t('movies.loadMore') || 'Загрузить ещё'}</Button>
-            </div>
-          )}
+          
+          {/* Infinite Scroll Observer */}
+          <div ref={observerTarget} className="flex justify-center py-8">
+            {hasMore && <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-purple-500" />}
+          </div>
         </>
       )}
 
