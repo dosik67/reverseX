@@ -147,7 +147,7 @@ const Movies = () => {
       setHasMore(filteredAndSortedMovies.length > MOVIES_PER_PAGE);
       setIsSearching(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, selectedCategory, sortBy, genreFilter, allMovies]);
 
   const fetchPopularMovies = async () => {
     try {

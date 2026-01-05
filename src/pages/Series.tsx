@@ -141,7 +141,7 @@ const SeriesPage = () => {
       setHasMore(filteredAndSortedSeries.length > SERIES_PER_PAGE);
       setIsSearching(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, selectedCategory, sortBy, genreFilter, allSeries]);
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
