@@ -32,9 +32,11 @@ if (supabaseUrl && supabaseAnonKey) {
       getSession: () => Promise.resolve({ data: { session: null }, error: null }),
       signUp: () => Promise.resolve({ data: null, error: { message: "Auth not configured" } }),
       signInWithPassword: () => Promise.resolve({ data: null, error: { message: "Auth not configured" } }),
+      signInWithOAuth: () => Promise.resolve({ data: null, error: { message: "Supabase is not configured. Please check your environment variables (VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY)" } }),
       signOut: () => Promise.resolve({ error: null }),
       onAuthStateChange: () => ({ data: { subscription: null }, error: null }),
       resetPasswordForEmail: () => Promise.resolve({ data: null, error: null }),
+      getUser: () => Promise.resolve({ data: { user: null }, error: null }),
     },
     realtime: {
       on: () => ({ unsubscribe: () => {} }),

@@ -28,9 +28,19 @@ const Auth = () => {
           }
         },
       });
-      if (error) throw error;
+      if (error) {
+        console.error('Google OAuth error:', error);
+        // Check if it's a configuration error
+        if (error.message?.includes('provider') || error.message?.includes('not configured')) {
+          toast.error('Google authentication is not configured yet. Enable it in Supabase settings.');
+        } else {
+          toast.error(error.message || 'Failed to sign in with Google');
+        }
+        throw error;
+      }
     } catch (error: any) {
-      toast.error('Google authentication is not configured yet. Enable it in backend settings.');
+      console.error('Google sign in error:', error);
+      // Don't show additional toast if already shown above
     } finally {
       setLoading(false);
     }
