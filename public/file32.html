@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PS5 Rental: Стратегия "Снежный Ком"</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@500;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #f1f5f9; /* Slate 100 */
+        }
+        
+        h1, h2, h3, .stat-value {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .card-gradient {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid #334155;
+        }
+
+        .neon-glow {
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #3b82f6;
+        }
+
+        .slider-thumb::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #3b82f6;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px; /* Base height */
+            max-height: 400px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        
+        .risk-card:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col items-center">
+
+    <div class="w-full max-w-7xl px-4 py-8 space-y-8">
+        
+        <!-- Header Section -->
+        <header class="text-center space-y-4 mb-12">
+            <div class="inline-block px-4 py-1 rounded-full bg-blue-900/30 border border-blue-500/50 text-blue-400 text-sm font-bold tracking-wider uppercase mb-2">Бизнес-план</div>
+            <h1 class="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                Стратегия "Снежный Ком"
+            </h1>
+            <p class="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
+                Интерактивная модель масштабирования бизнеса по аренде PS5. От 3 до 10 консолей за 8 месяцев с помощью реинвестирования прибыли.
+            </p>
+        </header>
+
+        <!-- Main Simulation Dashboard -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left: Controls & Key Current Stats -->
+            <div class="lg:col-span-1 card-gradient rounded-2xl p-6 shadow-xl neon-glow flex flex-col justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-white mb-2 flex items-center">
+                        <span class="text-3xl mr-2">🎮</span> Симулятор Времени
+                    </h2>
+                    <p class="text-slate-400 text-sm mb-6">Перемещайте слайдер, чтобы увидеть рост бизнеса по месяцам.</p>
+                    
+                    <div class="mb-8">
+                        <div class="flex justify-between text-blue-400 font-bold mb-2">
+                            <span>Месяц 1</span>
+                            <span id="month-display" class="text-2xl text-white">Месяц 1</span>
+                            <span>Месяц 8</span>
+                        </div>
+                        <input type="range" min="0" max="7" value="0" class="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer slider-thumb" id="month-slider">
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                        <div class="text-slate-400 text-xs uppercase tracking-wider">Ваш Флот</div>
+                        <div class="text-4xl font-bold text-white stat-value mt-1" id="fleet-stat">3 <span class="text-lg font-normal text-slate-500">PS5</span></div>
+                    </div>
+                    <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                        <div class="text-slate-400 text-xs uppercase tracking-wider">Оборот (в месяц)</div>
+                        <div class="text-4xl font-bold text-blue-400 stat-value mt-1" id="revenue-stat">420 000 ₸</div>
+                    </div>
+                    <div class="bg-green-900/20 p-4 rounded-xl border border-green-800/50">
+                        <div class="text-green-400 text-xs uppercase tracking-wider">Остаток в кармане</div>
+                        <div class="text-4xl font-bold text-green-400 stat-value mt-1" id="pocket-stat">106 000 ₸</div>
+                        <div class="text-green-600 text-xs mt-1">*После покупки новой консоли</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Dynamic Chart -->
+            <div class="lg:col-span-2 card-gradient rounded-2xl p-6 shadow-xl relative">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-white">Траектория Роста</h2>
+                    <div class="flex gap-4 text-xs">
+                        <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>Выручка</div>
+                        <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span>Чистые (до покупки)</div>
+                    </div>
+                </div>
+                <!-- Chart Container -->
+                <div class="chart-container">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Detailed Analytics Section -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Expense Breakdown -->
+            <div class="card-gradient rounded-2xl p-6">
+                <div class="mb-4">
+                    <h3 class="text-lg font-bold text-white">Структура Расходов (на 1 консоль)</h3>
+                    <p class="text-slate-400 text-sm">Куда уходят деньги каждый месяц?</p>
+                </div>
+                <div class="flex flex-col md:flex-row items-center justify-center gap-6">
+                    <div class="w-full md:w-1/2 h-64 relative">
+                        <div class="chart-container" style="height: 250px;">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/2 space-y-3 text-sm">
+                        <div class="flex justify-between p-2 rounded bg-slate-800/50">
+                            <span class="text-red-400">Реклама (Таргет/OLX)</span>
+                            <span class="font-bold">15 000 ₸</span>
+                        </div>
+                        <div class="flex justify-between p-2 rounded bg-slate-800/50">
+                            <span class="text-orange-400">Ремонт/Амортизация</span>
+                            <span class="font-bold">7 000 ₸</span>
+                        </div>
+                        <div class="flex justify-between p-2 rounded bg-slate-800/50">
+                            <span class="text-yellow-400">Игры/Подписки</span>
+                            <span class="font-bold">7 000 ₸</span>
+                        </div>
+                        <div class="flex justify-between p-2 rounded bg-slate-800/50 border-t border-slate-700">
+                            <span class="text-slate-300">Постоянные (Сайт)</span>
+                            <span class="font-bold">~2 300 ₸*</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2">*В расчете на 1 консоль (при парке из 3 шт)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strategy Insights -->
+            <div class="card-gradient rounded-2xl p-6 flex flex-col justify-center">
+                <h3 class="text-lg font-bold text-white mb-4">Логика Масштабирования</h3>
+                <div class="space-y-4">
+                    <div class="border-l-4 border-blue-500 pl-4 py-1">
+                        <h4 class="font-bold text-blue-400">Реинвестирование</h4>
+                        <p class="text-slate-300 text-sm mt-1">Каждый месяц мы покупаем 1 новую консоль (220к), пока не достигнем 10 штук. Это "съедает" часть прибыли, но увеличивает актив.</p>
+                    </div>
+                    <div class="border-l-4 border-green-500 pl-4 py-1">
+                        <h4 class="font-bold text-green-400">Точка Свободы</h4>
+                        <p class="text-slate-300 text-sm mt-1">На 8-й месяц у нас 10 консолей. Мы перестаем покупать новые. Чистая прибыль резко скачет до <span class="text-green-400 font-bold">1 100 000 ₸</span>.</p>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4 py-1">
+                        <h4 class="font-bold text-purple-400">Безопасность</h4>
+                        <p class="text-slate-300 text-sm mt-1">Даже в фазе активного роста (месяцы 1-7) у владельца всегда остается "кэш в кармане" (от 100к до 770к тенге).</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Detailed Data Table -->
+        <section class="w-full">
+            <h3 class="text-2xl font-bold text-white mb-6 px-2 border-l-4 border-blue-500 pl-4">Детальный План по Месяцам</h3>
+            <div class="overflow-x-auto rounded-xl shadow-xl border border-slate-700">
+                <table class="w-full text-left text-sm text-slate-400">
+                    <thead class="bg-slate-800 text-slate-200 uppercase font-bold text-xs">
+                        <tr>
+                            <th class="px-6 py-4">Месяц</th>
+                            <th class="px-6 py-4">Кол-во PS5</th>
+                            <th class="px-6 py-4">Выручка</th>
+                            <th class="px-6 py-4">Расходы</th>
+                            <th class="px-6 py-4">Чистые (До покупки)</th>
+                            <th class="px-6 py-4 text-red-400">Покупка PS5</th>
+                            <th class="px-6 py-4 text-green-400">Остаток в кармане</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700 bg-slate-900" id="data-table-body">
+                        <!-- Rows generated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Risks Section -->
+        <section class="w-full pb-12">
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-white mb-2 px-2 border-l-4 border-red-500 pl-4">Управление Рисками</h3>
+                <p class="text-slate-400 pl-6">На что обратить внимание при росте до 10 консолей</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="risk-card bg-slate-800 p-6 rounded-xl border border-slate-700 cursor-pointer group">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-red-400 font-bold text-lg">Поиск Клиентов</h4>
+                        <span class="text-2xl">📢</span>
+                    </div>
+                    <p class="text-slate-300 text-sm mb-4">Найти клиентов на 3 приставки легко. На 10 приставок (200 дней аренды) — сложно.</p>
+                    <div class="bg-slate-900 p-3 rounded text-xs text-slate-400 group-hover:text-white transition-colors border-l-2 border-red-500">
+                        <strong>Решение:</strong> Бюджет на рекламу растет пропорционально (15к на консоль). Не экономить на таргете!
+                    </div>
+                </div>
+
+                <div class="risk-card bg-slate-800 p-6 rounded-xl border border-slate-700 cursor-pointer group">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-orange-400 font-bold text-lg">Логистика</h4>
+                        <span class="text-2xl">🚚</span>
+                    </div>
+                    <p class="text-slate-300 text-sm mb-4">Развозить 10 приставок одному человеку физически нереально.</p>
+                    <div class="bg-slate-900 p-3 rounded text-xs text-slate-400 group-hover:text-white transition-colors border-l-2 border-orange-500">
+                        <strong>Совет:</strong> На 6-7 месяце нанять курьера. Заложить 100-150к из прибыли на зарплату.
+                    </div>
+                </div>
+
+                <div class="risk-card bg-slate-800 p-6 rounded-xl border border-slate-700 cursor-pointer group">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-blue-400 font-bold text-lg">Сезонность</h4>
+                        <span class="text-2xl">❄️</span>
+                    </div>
+                    <p class="text-slate-300 text-sm mb-4">Летом спрос падает (все гуляют), зимой и в праздники — растет.</p>
+                    <div class="bg-slate-900 p-3 rounded text-xs text-slate-400 group-hover:text-white transition-colors border-l-2 border-blue-500">
+                        <strong>Стратегия:</strong> Летом делать акции "3 дня по цене 2", зимой повышать цены в выходные.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // Data Source from the Report
+        const businessData = [
+            { month: 1, ps5: 3, revenue: 420000, expenses: 94000, netBeforeBuy: 326000, buyCost: 220000, pocket: 106000 },
+            { month: 2, ps5: 4, revenue: 560000, expenses: 123000, netBeforeBuy: 437000, buyCost: 220000, pocket: 217000 },
+            { month: 3, ps5: 5, revenue: 700000, expenses: 152000, netBeforeBuy: 548000, buyCost: 220000, pocket: 328000 },
+            { month: 4, ps5: 6, revenue: 840000, expenses: 181000, netBeforeBuy: 659000, buyCost: 220000, pocket: 439000 },
+            { month: 5, ps5: 7, revenue: 980000, expenses: 210000, netBeforeBuy: 770000, buyCost: 220000, pocket: 550000 },
+            { month: 6, ps5: 8, revenue: 1120000, expenses: 239000, netBeforeBuy: 881000, buyCost: 220000, pocket: 661000 },
+            { month: 7, ps5: 9, revenue: 1260000, expenses: 268000, netBeforeBuy: 992000, buyCost: 220000, pocket: 772000 },
+            { month: 8, ps5: 10, revenue: 1400000, expenses: 297000, netBeforeBuy: 1103000, buyCost: 0, pocket: 1103000 }
+        ];
+
+        // Format Currency Helper
+        const formatKZT = (num) => {
+            return new Intl.NumberFormat('ru-RU').format(num) + ' ₸';
+        };
+
+        // DOM Elements
+        const slider = document.getElementById('month-slider');
+        const monthDisplay = document.getElementById('month-display');
+        const fleetStat = document.getElementById('fleet-stat');
+        const revenueStat = document.getElementById('revenue-stat');
+        const pocketStat = document.getElementById('pocket-stat');
+        const tableBody = document.getElementById('data-table-body');
+
+        // Initialize Charts
+        let growthChartInstance = null;
+        let expenseChartInstance = null;
+
+        function initCharts() {
+            // Growth Chart (Line)
+            const ctxGrowth = document.getElementById('growthChart').getContext('2d');
+            growthChartInstance = new Chart(ctxGrowth, {
+                type: 'line',
+                data: {
+                    labels: businessData.map(d => `Месяц ${d.month}`),
+                    datasets: [
+                        {
+                            label: 'Выручка',
+                            data: businessData.map(d => d.revenue),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            fill: true,
+                            pointBackgroundColor: '#1e293b',
+                            pointBorderColor: '#3b82f6',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Остаток ("В кармане")',
+                            data: businessData.map(d => d.pocket),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            fill: true,
+                            pointBackgroundColor: '#1e293b',
+                            pointBorderColor: '#10b981',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#cbd5e1' } },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#fff',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) {
+                                        label += formatKZT(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: function(value) { return value / 1000 + 'к'; } } }
+                    }
+                }
+            });
+
+            // Expense Breakdown Chart (Doughnut)
+            const ctxExpense = document.getElementById('expenseChart').getContext('2d');
+            expenseChartInstance = new Chart(ctxExpense, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Реклама', 'Ремонт/Амортизация', 'Игры/Подписки', 'Сайт (доля)'],
+                    datasets: [{
+                        data: [15000, 7000, 7000, 2300],
+                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#64748b'],
+                        borderColor: '#0f172a',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#cbd5e1', boxWidth: 12 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) { label += ': '; }
+                                    label += formatKZT(context.parsed);
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render Table
+        function renderTable() {
+            tableBody.innerHTML = '';
+            businessData.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.id = `row-${index}`;
+                tr.className = 'transition-colors duration-300 hover:bg-slate-800';
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-bold text-white">Месяц ${row.month}</td>
+                    <td class="px-6 py-4 text-blue-400 font-bold">${row.ps5} шт.</td>
+                    <td class="px-6 py-4">${formatKZT(row.revenue)}</td>
+                    <td class="px-6 py-4 text-slate-500">${formatKZT(row.expenses)}</td>
+                    <td class="px-6 py-4">${formatKZT(row.netBeforeBuy)}</td>
+                    <td class="px-6 py-4 text-red-400 font-medium">${row.buyCost > 0 ? '-' + formatKZT(row.buyCost) : '0 ₸'}</td>
+                    <td class="px-6 py-4 text-green-400 font-bold text-lg">${formatKZT(row.pocket)}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // Update Dashboard State
+        function updateDashboard(index) {
+            const data = businessData[index];
+            
+            monthDisplay.textContent = `Месяц ${data.month}`;
+            fleetStat.innerHTML = `${data.ps5} <span class="text-lg font-normal text-slate-500">PS5</span>`;
+            revenueStat.textContent = formatKZT(data.revenue);
+            pocketStat.textContent = formatKZT(data.pocket);
+
+            document.querySelectorAll('tbody tr').forEach(tr => {
+                tr.classList.remove('bg-blue-900/40', 'border-l-4', 'border-blue-500');
+            });
+            const activeRow = document.getElementById(`row-${index}`);
+            if (activeRow) {
+                activeRow.classList.add('bg-blue-900/40', 'border-l-4', 'border-blue-500');
+            }
+
+            if (growthChartInstance) {
+                growthChartInstance.data.datasets.forEach(dataset => {
+                    dataset.pointRadius = businessData.map((_, i) => i === index ? 10 : 6);
+                    dataset.pointBackgroundColor = businessData.map((_, i) => i === index ? '#ffffff' : '#1e293b');
+                });
+                growthChartInstance.update();
+            }
+        }
+
+        slider.addEventListener('input', (e) => {
+            updateDashboard(parseInt(e.target.value));
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            renderTable();
+            updateDashboard(0);
+        });
+
+    </script>
+</body>
+</html>
