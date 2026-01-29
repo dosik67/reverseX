@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Film, Home, Tv, Gamepad, Music, Book, Bookmark, Bell, MessageSquare, User, LogOut, Settings, Crown, ChevronRight, ChevronLeft } from "lucide-react";
+import { Film, Home, Tv, Gamepad, Music, Book, Bookmark, Bell, MessageSquare, User, LogOut, Settings, Crown, ChevronRight, ChevronLeft, Lightbulb } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +30,7 @@ const Layout = () => {
     { icon: Tv, label: 'Series', path: '/series' },
     { icon: Gamepad, label: 'Games', path: '/games' },
     { icon: Bookmark, label: 'Bookmarks', path: '/bookmarks' },
+    { icon: Lightbulb, label: 'Recommendations', path: '/recommendations' },
     { icon: Crown, label: 'Tier Lists', path: '/tier-lists' },
     { icon: Music, label: 'Music', path: '/music' },
     { icon: Book, label: 'Books', path: '/books' },
@@ -131,8 +132,12 @@ const Layout = () => {
                   Games
                 </Link>
               </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/tier-lists" className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild>                <Link to="/recommendations" className="flex items-center gap-2">
+                  <Lightbulb className="w-4 h-4" />
+                  Recommendations
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>                <Link to="/tier-lists" className="flex items-center gap-2">
                   <Crown className="w-4 h-4" />
                   Tier Lists
                 </Link>
