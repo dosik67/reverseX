@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Film, Home, Tv, Gamepad, Music, Book, Bookmark, Bell, MessageSquare, User, LogOut, Settings, Crown, ChevronRight, ChevronLeft, Lightbulb } from "lucide-react";
 import {
@@ -108,58 +107,42 @@ const Layout = () => {
             </Link>
 
             <div className="hidden md:flex items-center gap-1">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/" className="flex items-center gap-2">
-                  <Home className="w-4 h-4" />
-                  Home
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/movies" className="flex items-center gap-2">
-                  <Film className="w-4 h-4" />
-                  Movies
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/series" className="flex items-center gap-2">
-                  <Tv className="w-4 h-4" />
-                  Series
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/games" className="flex items-center gap-2">
-                  <Gamepad className="w-4 h-4" />
-                  Games
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>                <Link to="/recommendations" className="flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4" />
-                  Recommendations
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>                <Link to="/tier-lists" className="flex items-center gap-2">
-                  <Crown className="w-4 h-4" />
-                  Tier Lists
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/bookmarks" className="flex items-center gap-2">
-                  <Bookmark className="w-4 h-4" />
-                  Bookmarks
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/music" className="flex items-center gap-2">
-                  <Music className="w-4 h-4" />
-                  Music
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/books" className="flex items-center gap-2">
-                  <Book className="w-4 h-4" />
-                  Books
-                </Link>
-              </Button>
+              <Link to="/" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
+                <Home className="w-4 h-4" />
+                Home
+              </Link>
+              <Link to="/movies" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
+                <Film className="w-4 h-4" />
+                Movies
+              </Link>
+              <Link to="/series" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
+                <Tv className="w-4 h-4" />
+                Series
+              </Link>
+              <Link to="/games" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
+                <Gamepad className="w-4 h-4" />
+                Games
+              </Link>
+              <Link to="/recommendations" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
+                <Lightbulb className="w-4 h-4" />
+                Recommendations
+              </Link>
+              <Link to="/tier-lists" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
+                <Crown className="w-4 h-4" />
+                Tier Lists
+              </Link>
+              <Link to="/bookmarks" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
+                <Bookmark className="w-4 h-4" />
+                Bookmarks
+              </Link>
+              <Link to="/music" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
+                <Music className="w-4 h-4" />
+                Music
+              </Link>
+              <Link to="/books" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
+                <Book className="w-4 h-4" />
+                Books
+              </Link>
             </div>
 
             <div className="flex items-center gap-2">
@@ -184,12 +167,12 @@ const Layout = () => {
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                      <button className="relative h-10 w-10 rounded-full hover:bg-secondary transition-colors">
                         <Avatar>
                           <AvatarImage src={profile?.avatar_url} />
                           <AvatarFallback>{profile?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                         </Avatar>
-                      </Button>
+                      </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
                       <DropdownMenuLabel>

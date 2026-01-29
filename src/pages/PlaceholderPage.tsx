@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -6,12 +5,10 @@ import { Link } from "react-router-dom";
 const PlaceholderPage = ({ title, icon: Icon }: { title: string; icon: any }) => {
   return (
     <div className="container mx-auto px-4 py-16">
-      <Button variant="ghost" asChild className="mb-8">
-        <Link to="/" className="flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" />
-          Back to Movies
-        </Link>
-      </Button>
+      <Link to="/" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors inline-block mb-8">
+        <ArrowLeft className="w-4 h-4" />
+        Back to Movies
+      </Link>
 
       <Card className="p-12 text-center card-glow">
         <Icon className="w-24 h-24 mx-auto mb-6 text-primary" />
