@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { createRecommendation } from '@/services/recommendationService';
@@ -144,22 +143,21 @@ export function RecommendationCreate({ onSuccess, onCancel }: RecommendationCrea
           </div>
 
           <div className="form-actions">
-            <Button
+            <button
               type="button"
-              variant="outline"
               onClick={onCancel}
               disabled={loading}
               className="btn-cancel"
             >
               Отмена
-            </Button>
-            <Button
+            </button>
+            <button
               type="submit"
               disabled={loading || !title.trim() || !content.trim()}
               className="btn-submit"
             >
               {loading ? 'Загрузка...' : 'Поделиться'}
-            </Button>
+            </button>
           </div>
         </form>
       </div>

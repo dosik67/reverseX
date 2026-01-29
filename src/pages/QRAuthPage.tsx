@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import supabase from "@/utils/supabase";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
@@ -127,9 +126,9 @@ const QRAuthPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate('/auth')} className="w-full">
+            <button onClick={() => navigate('/auth')} className="w-full p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
               Go to Sign In
-            </Button>
+            </button>
           </CardContent>
         </Card>
       </div>
@@ -147,38 +146,40 @@ const QRAuthPage = () => {
         </CardHeader>
         <CardContent className="space-y-3">
           {accounts.map((account) => (
-            <Button
+            <button
               key={account.id}
               onClick={() => handleSelectAccount(account.id)}
               disabled={authenticating || selectedAccount !== null}
-              variant={selectedAccount === account.id ? 'default' : 'outline'}
-              className="w-full justify-between group"
+              className={`w-full p-4 rounded-lg border transition-colors flex items-center gap-3 text-left ${
+                selectedAccount === account.id
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-background border-border hover:border-primary/50'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <div className="text-left">
+              <div className="flex-1">
                 <p className="font-semibold text-sm">{account.username}</p>
-                <p className="text-xs text-muted-foreground">{account.email}</p>
+                <p className="text-xs text-muted-foreground/80">{account.email}</p>
               </div>
               {selectedAccount === account.id && authenticating && (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-background"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
               )}
               {selectedAccount === account.id && !authenticating && (
                 <Check className="w-4 h-4" />
               )}
-            </Button>
+            </button>
           ))}
 
           <div className="pt-4 border-t">
             <p className="text-xs text-muted-foreground text-center mb-3">
               Don't see your account?
             </p>
-            <Button 
+            <button
               onClick={() => navigate('/auth')}
-              variant="ghost"
-              className="w-full"
+              className="w-full p-2 rounded-md hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               disabled={authenticating}
             >
               Sign in with Email
-            </Button>
+            </button>
           </div>
         </CardContent>
       </Card>

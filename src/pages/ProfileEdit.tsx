@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import supabase from "@/utils/supabase";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -239,14 +238,13 @@ const ProfileEdit = () => {
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 py-8">
       <div className="container mx-auto px-4 max-w-2xl">
         {/* Back Button */}
-        <Button
-          variant="ghost"
-          className="mb-6 flex items-center gap-2"
+        <button
+          className="mb-6 flex items-center gap-2 px-4 py-2 rounded-md hover:bg-secondary transition-colors"
           onClick={() => navigate(`/profile/${currentUserId}`)}
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Profile
-        </Button>
+        </button>
 
         {/* Main Card */}
         <Card>
@@ -401,21 +399,21 @@ const ProfileEdit = () => {
 
             {/* Save Button */}
             <div className="flex gap-2 pt-4 border-t border-border">
-              <Button
+              <button
                 onClick={saveProfile}
                 disabled={saving}
-                className="flex-1 flex items-center justify-center gap-2"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Save className="w-4 h-4" />
                 {saving ? "Saving..." : "Save Changes"}
-              </Button>
-              <Button
-                variant="outline"
+              </button>
+              <button
                 onClick={() => navigate(`/profile/${currentUserId}`)}
                 disabled={saving}
+                className="px-4 py-2 border border-border rounded-md hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Cancel
-              </Button>
+              </button>
             </div>
           </CardContent>
         </Card>

@@ -162,6 +162,8 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  border: none;
+  font-size: 0.875rem;
 }
 
 .btn-cancel {
@@ -178,7 +180,6 @@
 .btn-submit {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
-  border: none;
 }
 
 .btn-submit:hover:not(:disabled) {

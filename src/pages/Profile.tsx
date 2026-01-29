@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import supabase from "@/utils/supabase";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -134,12 +133,12 @@ const ProfileEditor = ({ profile, open, onClose, onUpdate }: { profile: Profile;
         <CardContent className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">Редактирование профиля</h2>
-            <Button variant="ghost" onClick={onClose}>✕</Button>
+            <button onClick={onClose} className="p-2 rounded-md hover:bg-secondary transition-colors">✕</button>
           </div>
           <p className="text-muted-foreground mb-4">Редактор профиля будет здесь</p>
           <div className="flex gap-3 justify-end">
-            <Button variant="outline" onClick={onClose}>Отмена</Button>
-            <Button onClick={onUpdate}>Сохранить</Button>
+            <button onClick={onClose} className="px-4 py-2 border border-border rounded-md hover:bg-secondary transition-colors">Отмена</button>
+            <button onClick={onUpdate} className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">Сохранить</button>
           </div>
         </CardContent>
       </Card>
@@ -154,7 +153,7 @@ const ChatWindow = ({ open, onClose, friendId, friendUsername, friendAvatar, cur
         <CardContent className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold">Чат с {friendUsername}</h2>
-            <Button variant="ghost" onClick={onClose}>✕</Button>
+            <button onClick={onClose} className="p-2 rounded-md hover:bg-secondary transition-colors">✕</button>
           </div>
           <p className="text-muted-foreground text-center py-8">Чат будет реализован позже</p>
         </CardContent>
@@ -513,12 +512,12 @@ const Profile = () => {
             </p>
           )}
           <div className="flex gap-3 justify-center pt-4">
-            <Button onClick={fetchProfile} variant="default">
+            <button onClick={fetchProfile} className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
               Попробовать снова
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/">На главную</Link>
-            </Button>
+            </button>
+            <Link to="/" className="px-4 py-2 border border-border rounded-md hover:bg-secondary transition-colors inline-flex items-center">
+              На главную
+            </Link>
           </div>
         </div>
       </div>
@@ -563,13 +562,11 @@ const Profile = () => {
                   <p className="text-lg opacity-90 drop-shadow">@{profile.username}</p>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost"
-                        className="text-white hover:bg-white/10 h-auto p-0"
-                        size="sm"
+                      <button
+                        className="text-white hover:bg-white/10 h-auto p-0 px-2 py-1 rounded transition-colors"
                       >
                         <Share className="w-4 h-4" />
-                      </Button>
+                      </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-56">
                       <DropdownMenuItem onClick={() => handleShareProfile('copy')} className="cursor-pointer">
@@ -618,22 +615,20 @@ const Profile = () => {
             <div className="flex gap-3 mb-4 flex-wrap">
               {isOwnProfile ? (
                 <>
-                  <Button 
+                  <button
                     onClick={() => setShowEditor(true)} 
-                    className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30"
-                    size="sm"
+                    className="px-3 py-1 text-sm bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30 rounded transition-colors"
                   >
                     Редактировать профиль
-                  </Button>
+                  </button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button 
-                        className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30"
-                        size="sm"
+                      <button
+                        className="px-3 py-1 text-sm bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30 rounded transition-colors flex items-center"
                       >
                         <Share className="w-4 h-4 mr-2" />
                         Поделиться
-                      </Button>
+                      </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
                       <DropdownMenuItem onClick={() => handleShareProfile('copy')} className="cursor-pointer">
@@ -665,60 +660,53 @@ const Profile = () => {
                 </>
               ) : (
                 <>
-                  <Button 
+                  <button
                     onClick={handleFollow} 
-                    variant={isFollowing ? "outline" : "default"}
-                    className={isFollowing ? "bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20" : ""}
-                    size="sm"
+                    className={`px-3 py-1 text-sm rounded transition-colors flex items-center ${isFollowing ? "bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:bg-white/20" : "bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30"}`}
                   >
                     {isFollowing ? <UserCheck className="w-4 h-4 mr-2" /> : <UserPlus className="w-4 h-4 mr-2" />}
                     {isFollowing ? "Подписано" : "Подписаться"}
-                  </Button>
+                  </button>
 
                   {!friendshipStatus && (
-                    <Button 
+                    <button
                       onClick={handleFriendRequest} 
-                      variant="outline"
-                      className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
-                      size="sm"
+                      className="px-3 py-1 text-sm bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:bg-white/20 rounded transition-colors flex items-center"
                     >
                       <Users className="w-4 h-4 mr-2" />
                       Добавить в друзья
-                    </Button>
+                    </button>
                   )}
 
                   {friendshipStatus === "pending" && (
-                    <Button variant="outline" disabled className="bg-white/10 backdrop-blur-sm text-white border-white/20">
+                    <button disabled className="px-3 py-1 text-sm bg-white/10 backdrop-blur-sm text-white border border-white/20 rounded opacity-50 cursor-not-allowed flex items-center">
                       Запрос отправлен
-                    </Button>
+                    </button>
                   )}
 
                   {friendshipStatus === "accepted" && (
                     <>
-                      <Button variant="outline" disabled className="bg-white/10 backdrop-blur-sm text-white border-white/20">
+                      <button disabled className="px-3 py-1 text-sm bg-white/10 backdrop-blur-sm text-white border border-white/20 rounded opacity-50 cursor-not-allowed flex items-center">
                         <Users className="w-4 h-4 mr-2" />
                         Друзья
-                      </Button>
-                      <Button 
+                      </button>
+                      <button 
                         onClick={() => setShowChat(true)} 
-                        variant="outline"
-                        className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
+                        className="px-3 py-1 text-sm bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:bg-white/20 rounded transition-colors flex items-center"
                       >
                         <MessageSquare className="w-4 h-4 mr-2" />
                         Сообщение
-                      </Button>
+                      </button>
                     </>
                   )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="outline"
-                        className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
-                        size="sm"
+                      <button
+                        className="px-3 py-1 text-sm bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:bg-white/20 rounded transition-colors flex items-center"
                       >
                         <Share className="w-4 h-4 mr-2" />
                         Поделиться
-                      </Button>
+                      </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
                       <DropdownMenuItem onClick={() => handleShareProfile('copy')} className="cursor-pointer">
@@ -987,14 +975,14 @@ const Profile = () => {
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <Button 
+                    <button 
                       type="submit" 
                       disabled={submittingComment || !newComment.trim()} 
-                      className="bg-primary hover:bg-primary/90"
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Опубликовать
-                    </Button>
+                    </button>
                   </div>
                 </form>
               )}
@@ -1041,14 +1029,12 @@ const Profile = () => {
                           </div>
 
                           {(isOwnProfile || currentUserId === comment.author_id) && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
+                            <button 
                               onClick={() => handleDeleteComment(comment.id)} 
-                              className="text-destructive hover:bg-destructive/20 h-8 w-8 p-0"
+                              className="p-2 text-destructive hover:bg-destructive/20 rounded transition-colors h-8 w-8 flex items-center justify-center"
                             >
                               <Trash2 className="w-4 h-4" />
-                            </Button>
+                            </button>
                           )}
                         </div>
                         <p className="text-sm break-words whitespace-pre-wrap leading-relaxed">
