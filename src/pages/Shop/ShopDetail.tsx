@@ -255,11 +255,11 @@ export default function ShopDetail() {
               </div>
               <div className="flex items-center justify-between bg-card/50 rounded-lg p-3">
                 <span className="text-sm">Starfield</span>
-                <span className="font-bold text-accent">50+ FPS</span>
+                <span className="font-bold text-accent">70+ FPS</span>
               </div>
               <div className="flex items-center justify-between bg-card/50 rounded-lg p-3">
-                <span className="text-sm">GTA VI</span>
-                <span className="font-bold text-accent">45+ FPS</span>
+                <span className="text-sm">GTA 5</span>
+                <span className="font-bold text-accent">85+ FPS</span>
               </div>
               <div className="flex items-center justify-between bg-card/50 rounded-lg p-3">
                 <span className="text-sm">Fortnite</span>
@@ -269,9 +269,9 @@ export default function ShopDetail() {
                 <span className="text-sm">Valorant</span>
                 <span className="font-bold text-accent">120+ FPS</span>
               </div>
-              <div className="flex items-center justify-between bg-card/50 rounded-lg p-3">
-                <span className="text-sm">CS:GO</span>
-                <span className="font-bold text-accent">140+ FPS</span>
+              <div className="bg-card/50 rounded-lg p-3">
+                <p className="text-sm font-semibold text-accent mb-1">CS:2</p>
+                <p className="text-xs text-muted-foreground">120+ FPS • До 200 стабильных</p>
               </div>
             </div>
           </div>
