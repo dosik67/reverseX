@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import supabase from "@/utils/supabase";
 
 const WorkspaceSettings = () => {

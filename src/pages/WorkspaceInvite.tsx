@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import supabase from "@/utils/supabase";
 
 const WorkspaceInvite = () => {

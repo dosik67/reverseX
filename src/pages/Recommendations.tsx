@@ -13,6 +13,7 @@ import {
   RecommendationReplyList,
   RecommendationReplyInput,
 } from '@/components/RecommendationReply';
+import { Button } from '@/components/ui/button';
 import supabase from '@/lib/supabase';
 import { Loader2, ChevronDown } from 'lucide-react';
 import './Recommendations.css';
