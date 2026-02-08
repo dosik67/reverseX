@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Phone, MessageCircle, Mail, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Phone, MessageCircle, Mail, ArrowLeft, Play } from 'lucide-react';
 
 interface Product {
   id: number;
@@ -80,6 +80,8 @@ export default function ShopDetail() {
     alert('📦 Оформление заказа\n\nСкоро функция заказа будет доступна!');
   };
 
+  const isVideo = (url: string) => url.toLowerCase().endsWith('.mp4');
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Back Button */}
@@ -95,13 +97,21 @@ export default function ShopDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Images Section */}
         <div className="flex flex-col gap-4">
-          {/* Main Image */}
+          {/* Main Image/Video */}
           <div className="aspect-square bg-muted rounded-lg overflow-hidden border border-border">
-            <img
-              src={product.images[mainImage]}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
+            {isVideo(product.images[mainImage]) ? (
+              <video
+                src={product.images[mainImage]}
+                controls
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                src={product.images[mainImage]}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            )}
           </div>
 
           {/* Thumbnails */}
@@ -111,17 +121,25 @@ export default function ShopDetail() {
                 <button
                   key={index}
                   onClick={() => setMainImage(index)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-all relative group ${
                     mainImage === index
                       ? 'border-primary'
                       : 'border-border hover:border-muted-foreground'
                   }`}
                 >
-                  <img
-                    src={image}
-                    alt={`Thumbnail ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
+                  {isVideo(image) ? (
+                    <>
+                      <div className="w-full h-full bg-muted flex items-center justify-center">
+                        <Play className="w-6 h-6 text-primary fill-primary" />
+                      </div>
+                    </>
+                  ) : (
+                    <img
+                      src={image}
+                      alt={`Thumbnail ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </button>
               ))}
             </div>
