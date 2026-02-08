@@ -22,7 +22,7 @@ const products: Record<number, Product> = {
   1: {
     id: 1,
     name: 'RX 580 Gaming PC',
-    price: 150000,
+    price: 90000,
     specs: {
       gpu: 'RX 580 8GB',
       cpu: 'Xeon E5-2670v2',
@@ -63,11 +63,11 @@ export default function ShopDetail() {
   };
 
   const handlePhoneCall = () => {
-    window.location.href = 'tel:+77771234567';
+    window.location.href = 'tel:+87752570646';
   };
 
   const handleWhatsApp = () => {
-    window.open('https://wa.me/77771234567', '_blank');
+    window.open('https://wa.me/87752570646', '_blank');
   };
 
   const handleEmail = () => {

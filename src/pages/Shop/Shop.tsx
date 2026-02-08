@@ -22,20 +22,22 @@ const products: Product[] = [
   {
     id: 1,
     name: 'RX 580 Gaming PC',
-    price: 150000,
+    price: 90000,
     specs: {
-      gpu: 'RX 580 8GB',
+      gpu: 'RX 580 4GB',
       cpu: 'Xeon E5-2670v2',
       motherboard: 'X79',
       ram: '16GB DDR3',
       psu: '500W PC Cooler',
     },
     images: [
-      '/video-for my success market/IMG_20260208_033311.jpg.jpeg',
-      '/video-for my success market/IMG_20260208_033600.jpg.jpeg',
-      '/video-for my success market/unnamed (1).jpg',
-    ],
-  },
+  '/video-for my success market/IMG_20260208_033311.jpg.jpeg',
+  '/video-for my success market/IMG_20260208_033600.jpg.jpeg',
+  '/video-for my success market/unnamed (1).jpg',
+  '/video-for my success market/vid.mp4',
+  '/video-for my success market/unnamed (2).jpg',
+],
+},
 ];
 
 export default function Shop() {
