@@ -34,7 +34,10 @@ export default function Recommendations() {
   // Get current user
   useEffect(() => {
     const getCurrentUser = async () => {
+      console.log('Getting current user...');
       const { data } = await supabase.auth.getUser();
+      console.log('Current user ID:', data.user?.id);
+      console.log('Current user email:', data.user?.email);
       setCurrentUserId(data.user?.id || null);
     };
     getCurrentUser();
@@ -156,7 +159,10 @@ export default function Recommendations() {
 
         <button
           className="btn-create-recommendation"
-          onClick={() => setShowCreateForm(!showCreateForm)}
+          onClick={() => {
+            console.log('Create recommendation button clicked');
+            setShowCreateForm(!showCreateForm);
+          }}
         >
           {showCreateForm ? 'Отмена' : '+ Новая рекомендация'}
         </button>

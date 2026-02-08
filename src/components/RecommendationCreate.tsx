@@ -32,6 +32,11 @@ export function RecommendationCreate({ onSuccess, onCancel }: RecommendationCrea
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submit clicked');
+    console.log('Title:', title);
+    console.log('Content:', content);
+    console.log('Files:', files);
+    
     if (!title.trim() || !content.trim()) {
       setError('Пожалуйста, заполните название и описание');
       return;
@@ -41,7 +46,9 @@ export function RecommendationCreate({ onSuccess, onCancel }: RecommendationCrea
       setLoading(true);
       setError(null);
 
+      console.log('Starting createRecommendation...');
       await createRecommendation(title, content, files.length > 0 ? files : undefined);
+      console.log('createRecommendation completed successfully');
 
       // Reset form
       setTitle('');
@@ -50,7 +57,9 @@ export function RecommendationCreate({ onSuccess, onCancel }: RecommendationCrea
 
       onSuccess?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка при создании рекомендации');
+      console.error('Error in handleSubmit:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Ошибка при создании рекомендации';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
