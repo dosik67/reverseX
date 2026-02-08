@@ -1,174 +1,121 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Search, ShoppingCart } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Phone, MessageCircle, Mail } from 'lucide-react';
-import './Shop.css';
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  specs: {
+    gpu: string;
+    cpu: string;
+    motherboard: string;
+    ram: string;
+    psu: string;
+  };
+  images: string[];
+}
+
+const products: Product[] = [
+  {
+    id: 1,
+    name: 'RX 580 Gaming PC',
+    price: 150000,
+    specs: {
+      gpu: 'RX 580 8GB',
+      cpu: 'Xeon E5-2670v2',
+      motherboard: 'X79',
+      ram: '16GB DDR3',
+      psu: '500W PC Cooler',
+    },
+    images: [
+      '/video-for my success market/IMG_20260208_033311.jpg.jpeg',
+      '/video-for my success market/IMG_20260208_033600.jpg.jpeg',
+      '/video-for my success market/unnamed (1).jpg',
+    ],
+  },
+];
 
 export default function Shop() {
-  const [cart, setCart] = useState(0);
-
-  const handleAddToCart = () => {
-    setCart(cart + 1);
-    alert(`✅ Добавлено в корзину! (${cart + 1} товаров)`);
-  };
-
-  const handlePhoneCall = () => {
-    window.location.href = 'tel:+77771234567';
-  };
-
-  const handleWhatsApp = () => {
-    window.open('https://wa.me/77771234567', '_blank');
-  };
-
-  const handleEmail = () => {
-    window.location.href = 'mailto:shop@reversex.kz';
-  };
-
-  const handleOrder = () => {
-    alert('📦 Оформление заказа\n\nСкоро функция заказа будет доступна!');
-  };
+  const [searchQuery, setSearchQuery] = useState('');
 
   return (
-    <div className="shop-page">
-      <div className="shop-wrapper">
-        {/* Header */}
-        <div className="shop-header-section">
-          <h1 className="gradient-text">🛒 reverseX SHOP</h1>
-          <p className="shop-subtitle">Мощные игровые ПК</p>
-        </div>
-
-        {/* Main Product */}
-        <div className="product-section">
-          <div className="product-card">
-            {/* Images */}
-            <div className="product-images">
-              <img 
-                src="/video-for my success market/IMG_20260208_033311.jpg.jpeg"
-                alt="Gaming PC 1"
-                className="product-image main-image"
-              />
-              <div className="product-thumbnails">
-                <img 
-                  src="/video-for my success market/IMG_20260208_033311.jpg.jpeg"
-                  alt="thumb1"
-                  className="thumbnail"
-                />
-                <img 
-                  src="/video-for my success market/IMG_20260208_033600.jpg.jpeg"
-                  alt="thumb2"
-                  className="thumbnail"
-                />
-                <img 
-                  src="/video-for my success market/unnamed (1).jpg"
-                  alt="thumb3"
-                  className="thumbnail"
-                />
-              </div>
-            </div>
-
-            {/* Product Info */}
-            <div className="product-info">
-              <div className="product-header">
-                <h2>RX 580 Gaming PC</h2>
-                <span className="badge-in-stock">✓ В наличии</span>
-              </div>
-
-              <div className="product-price-section">
-                <span className="price-label">Цена:</span>
-                <span className="price">₸ 150,000</span>
-              </div>
-
-              <div className="specs-container">
-                <h3>Характеристики:</h3>
-                <div className="specs-grid">
-                  <div className="spec-item">
-                    <span className="spec-name">GPU</span>
-                    <span className="spec-value">RX 580 8GB</span>
-                  </div>
-                  <div className="spec-item">
-                    <span className="spec-name">CPU</span>
-                    <span className="spec-value">Xeon E5-2670v2</span>
-                  </div>
-                  <div className="spec-item">
-                    <span className="spec-name">Платформа</span>
-                    <span className="spec-value">X79</span>
-                  </div>
-                  <div className="spec-item">
-                    <span className="spec-name">ОЗУ</span>
-                    <span className="spec-value">16GB DDR3</span>
-                  </div>
-                  <div className="spec-item">
-                    <span className="spec-name">БП</span>
-                    <span className="spec-value">500W PC Cooler</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="payment-methods">
-                <h3>Способы оплаты:</h3>
-                <div className="payment-badges">
-                  <span className="payment-badge">💳 Kaspi Рассрочка</span>
-                  <span className="payment-badge">🔴 Kaspi Red</span>
-                  <span className="payment-badge">🏦 Кредит</span>
-                </div>
-              </div>
-
-              <div className="actions">
-                <Button 
-                  size="lg"
-                  onClick={handleAddToCart}
-                  className="btn-add-cart"
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                  Добавить в корзину ({cart})
-                </Button>
-                <Button 
-                  size="lg"
-                  onClick={handleOrder}
-                  className="btn-order"
-                >
-                  🛍️ Заказать
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Contact Section */}
-        <div className="contact-section">
-          <h2>📞 Свяжись с нами</h2>
-          <p className="contact-subtitle">Вопросы? Мы здесь, чтобы помочь!</p>
-          
-          <div className="contact-grid">
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={handlePhoneCall}
-              className="contact-btn"
-            >
-              <Phone className="w-5 h-5" />
-              <span>Позвонить</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={handleWhatsApp}
-              className="contact-btn"
-            >
-              <MessageCircle className="w-5 h-5" />
-              <span>WhatsApp</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={handleEmail}
-              className="contact-btn"
-            >
-              <Mail className="w-5 h-5" />
-              <span>Email</span>
-            </Button>
-          </div>
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-4 gradient-text">🛒 SHOP</h1>
+        <div className="relative max-w-md mb-6">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+          <Input
+            type="text"
+            placeholder="Поиск товаров..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
         </div>
       </div>
+
+      {/* Products Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {products.map((product) => (
+          <Link
+            key={product.id}
+            to={`/shop/${product.id}`}
+            className="group"
+          >
+            <div className="h-fit bg-card border border-border rounded-lg overflow-hidden hover-lift card-glow">
+              {/* Product Image */}
+              <div className="aspect-[3/4] bg-muted overflow-hidden relative">
+                <img
+                  src={product.images[0]}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-semibold">
+                  В наличии
+                </div>
+              </div>
+
+              {/* Product Info */}
+              <div className="p-4">
+                <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
+                  {product.name}
+                </h3>
+
+                {/* Specs */}
+                <div className="text-xs text-muted-foreground mb-3 space-y-1">
+                  <p>🎮 {product.specs.gpu}</p>
+                  <p>🖥️ {product.specs.cpu}</p>
+                  <p>💾 {product.specs.ram}</p>
+                </div>
+
+                {/* Price */}
+                <div className="text-2xl font-bold gradient-text mb-4">
+                  ₸ {product.price.toLocaleString()}
+                </div>
+
+                {/* CTA */}
+                <Button className="w-full gap-2" onClick={(e) => {
+                  e.preventDefault();
+                }}>
+                  <ShoppingCart className="w-4 h-4" />
+                  Посмотреть
+                </Button>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {products.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg">Товары не найдены</p>
+        </div>
+      )}
     </div>
   );
 }
