@@ -94,8 +94,18 @@ export async function createRecommendation(
   files?: File[]
 ) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.error('Auth error:', userError);
+      throw new Error('Failed to get user authentication: ' + userError.message);
+    }
+    
+    if (!user) {
+      throw new Error('You must be logged in to create a recommendation');
+    }
+
+    console.log('Creating recommendation for user:', user.id);
 
     // Create recommendation
     const { data: recommendation, error: createError } = await supabase
@@ -110,7 +120,12 @@ export async function createRecommendation(
       .select()
       .single();
 
-    if (createError) throw createError;
+    if (createError) {
+      console.error('Insert error:', createError);
+      console.error('Error code:', createError.code);
+      console.error('Error message:', createError.message);
+      throw new Error(createError.message || 'Failed to create recommendation');
+    }
 
     // Upload media files if provided
     if (files && files.length > 0) {
@@ -205,8 +220,18 @@ export async function addReplyToRecommendation(
   content: string
 ) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.error('Auth error:', userError);
+      throw new Error('Failed to get user authentication: ' + userError.message);
+    }
+    
+    if (!user) {
+      throw new Error('You must be logged in to reply');
+    }
+
+    console.log('Adding reply for user:', user.id);
 
     const { data, error } = await supabase
       .from('recommendation_replies')
@@ -220,7 +245,10 @@ export async function addReplyToRecommendation(
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Insert error:', error);
+      throw new Error(error.message || 'Failed to add reply');
+    }
 
     // Get author info
     const author = await getUserInfo(user.id);
@@ -293,8 +321,14 @@ export async function getRecommendationRepliesCount(recommendationId: string) {
  */
 export async function likeRecommendation(recommendationId: string) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.error('Auth error:', userError);
+      throw new Error('Failed to get user authentication: ' + userError.message);
+    }
+    
+    if (!user) throw new Error('You must be logged in to like recommendations');
 
     const { error } = await supabase
       .from('recommendation_likes')
@@ -305,7 +339,10 @@ export async function likeRecommendation(recommendationId: string) {
         },
       ]);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Like error:', error);
+      throw new Error(error.message || 'Failed to like recommendation');
+    }
     return true;
   } catch (error) {
     console.error('Error liking recommendation:', error);
@@ -318,8 +355,14 @@ export async function likeRecommendation(recommendationId: string) {
  */
 export async function unlikeRecommendation(recommendationId: string) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.error('Auth error:', userError);
+      throw new Error('Failed to get user authentication: ' + userError.message);
+    }
+    
+    if (!user) throw new Error('You must be logged in to unlike recommendations');
 
     const { error } = await supabase
       .from('recommendation_likes')
@@ -327,7 +370,10 @@ export async function unlikeRecommendation(recommendationId: string) {
       .eq('recommendation_id', recommendationId)
       .eq('user_id', user.id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Unlike error:', error);
+      throw new Error(error.message || 'Failed to unlike recommendation');
+    }
     return true;
   } catch (error) {
     console.error('Error unliking recommendation:', error);
