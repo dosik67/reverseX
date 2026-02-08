@@ -276,6 +276,49 @@ export default function ShopDetail() {
             </div>
           </div>
 
+          {/* Detailed Description */}
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 text-primary">📝 Полное описание</h3>
+            <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+              <p>
+                💻 <span className="text-accent font-semibold">Xeon E5-2670v2 с 10 ядрами</span> - зверь для многозадачности: рендер, кодинг, даже виртуалки. Справляется со всем без проблем.
+              </p>
+              <p>
+                🎮 <span className="text-accent font-semibold">RX 580 8GB</span> тянет игры в 1080p на высоких: GTA, Cyberpunk и много других. Отличная производительность для своей цены.
+              </p>
+              <p>
+                🖥️ <span className="text-accent font-semibold">16GB DDR3</span> хватает для всего. X79 платформа надёжная, легко апгрейдить в случае необходимости.
+              </p>
+              <p>
+                ⚡ <span className="text-accent font-semibold">БП 500W</span> стабильный и тихий. Запас мощности для комфортной работы.
+              </p>
+              <p className="text-base text-accent font-semibold">
+                ✨ Бюджетный вариант для геймера или фрилансера - служит годами! Цена огонь, бери не думай!
+              </p>
+            </div>
+          </div>
+
+          {/* Delivery Info */}
+          <div className="bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/30 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 gradient-text">🚚 Доставка</h3>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 bg-card/50 rounded-lg p-3">
+                <span className="text-xl">🎁</span>
+                <div>
+                  <p className="font-semibold text-sm text-accent">Бесплатная доставка в Алматы</p>
+                  <p className="text-xs text-muted-foreground">Доставим за 3 часа</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 bg-card/50 rounded-lg p-3">
+                <span className="text-xl">🇰🇿</span>
+                <div>
+                  <p className="font-semibold text-sm text-accent">Доставка в другие города</p>
+                  <p className="text-xs text-muted-foreground">Свяжись с нами для расчёта стоимости</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Action Buttons */}
           <div className="space-y-3">
             <Button
