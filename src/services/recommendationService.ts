@@ -153,6 +153,8 @@ export async function uploadRecommendationMedia(
       const fileExt = file.name.split('.').pop();
       const fileName = `${recommendationId}/${Date.now()}.${fileExt}`;
 
+      console.log('Uploading file:', file.name, 'size:', file.size, 'type:', file.type);
+
       // Upload to storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from(STORAGE_BUCKET)
@@ -161,18 +163,25 @@ export async function uploadRecommendationMedia(
           upsert: false,
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('File uploaded successfully:', uploadData);
 
       // Get public URL
       const { data: publicUrl } = supabase.storage
         .from(STORAGE_BUCKET)
         .getPublicUrl(fileName);
 
+      console.log('Public URL:', publicUrl.publicUrl);
+
       // Determine media type based on file
       const mediaType = file.type.startsWith('image/') ? 'image' : 'drawing';
 
       // Save metadata to database
-      const { error: dbError } = await supabase
+      const { data: dbData, error: dbError } = await supabase
         .from('recommendation_media')
         .insert([
           {
@@ -181,12 +190,19 @@ export async function uploadRecommendationMedia(
             media_url: publicUrl.publicUrl,
             storage_path: fileName,
           },
-        ]);
+        ])
+        .select();
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Database insert error:', dbError);
+        throw dbError;
+      }
+
+      console.log('Media saved to database:', dbData);
       mediaRecords.push(uploadData);
     }
 
+    console.log('All media uploaded successfully');
     return mediaRecords;
   } catch (error) {
     console.error('Error uploading media:', error);
@@ -205,6 +221,11 @@ export async function getRecommendationMedia(recommendationId: string) {
       .eq('recommendation_id', recommendationId);
 
     if (error) throw error;
+    
+    if (data && data.length > 0) {
+      console.log(`Found ${data.length} media files for recommendation ${recommendationId}:`, data);
+    }
+    
     return data || [];
   } catch (error) {
     console.error('Error fetching recommendation media:', error);
@@ -453,24 +474,63 @@ export async function deleteRecommendation(recommendationId: string) {
 
 /**
  * Get user info by ID
+ * First tries to load from profiles table, then falls back to auth metadata
  */
 export async function getUserInfo(userId: string) {
   try {
-    const { data, error } = await supabase.auth.admin.getUserById(userId);
-    if (error) throw error;
+    console.log('Fetching user info for:', userId);
+    
+    // Try to get user profile from profiles table first
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
 
-    return {
-      id: data.user.id,
-      email: data.user.email,
-      user_metadata: data.user.user_metadata,
-    };
-  } catch (error) {
-    console.error('Error fetching user info:', error);
-    // Return basic info if admin call fails
+    if (!profileError && profileData) {
+      console.log('Profile data found:', profileData);
+      return {
+        id: profileData.id,
+        email: profileData.email || undefined,
+        user_metadata: {
+          full_name: profileData.username || profileData.full_name || 'User',
+          avatar_url: profileData.avatar_url || undefined,
+        },
+      };
+    }
+
+    console.log('No profile found, trying auth metadata');
+
+    // Fall back to getting current user info for context
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user && user.id === userId) {
+      console.log('Current auth user found:', user.email);
+      return {
+        id: user.id,
+        email: user.email || undefined,
+        user_metadata: user.user_metadata || { full_name: 'User' },
+      };
+    }
+
+    // Last resort: return minimal info
+    console.log('Using fallback user info');
     return {
       id: userId,
       email: undefined,
-      user_metadata: {},
+      user_metadata: {
+        full_name: 'User',
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching user info:', error);
+    // Return basic info if call fails
+    return {
+      id: userId,
+      email: undefined,
+      user_metadata: {
+        full_name: 'User',
+      },
     };
   }
 }
