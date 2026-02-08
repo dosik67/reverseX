@@ -36,6 +36,7 @@ const products: Record<number, Product> = {
       '/video-for my success market/unnamed (1).jpg',
       '/video-for my success market/unnamed (2).jpg',
       'https://youtube.com/shorts/w3CnHs17lL8?feature=share',
+      'https://youtu.be/28ZOeN9OusQ',
     ],
     description: 'Мощный игровой компьютер для современных игр и приложений',
   },
@@ -240,6 +241,37 @@ export default function ShopDetail() {
               </div>
               <div className="px-3 py-2 bg-accent/10 rounded-lg text-sm font-medium">
                 🏦 Кредит
+              </div>
+            </div>
+          </div>
+
+          {/* FPS в играх */}
+          <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 gradient-text">🎮 FPS в играх</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center justify-between bg-card/50 rounded-lg p-3">
+                <span className="text-sm">Cyberpunk 2077</span>
+                <span className="font-bold text-accent">60+ FPS</span>
+              </div>
+              <div className="flex items-center justify-between bg-card/50 rounded-lg p-3">
+                <span className="text-sm">Starfield</span>
+                <span className="font-bold text-accent">50+ FPS</span>
+              </div>
+              <div className="flex items-center justify-between bg-card/50 rounded-lg p-3">
+                <span className="text-sm">GTA VI</span>
+                <span className="font-bold text-accent">45+ FPS</span>
+              </div>
+              <div className="flex items-center justify-between bg-card/50 rounded-lg p-3">
+                <span className="text-sm">Fortnite</span>
+                <span className="font-bold text-accent">100+ FPS</span>
+              </div>
+              <div className="flex items-center justify-between bg-card/50 rounded-lg p-3">
+                <span className="text-sm">Valorant</span>
+                <span className="font-bold text-accent">120+ FPS</span>
+              </div>
+              <div className="flex items-center justify-between bg-card/50 rounded-lg p-3">
+                <span className="text-sm">CS:GO</span>
+                <span className="font-bold text-accent">140+ FPS</span>
               </div>
             </div>
           </div>

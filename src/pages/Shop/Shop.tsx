@@ -35,6 +35,8 @@ const products: Product[] = [
   '/video-for my success market/IMG_20260208_033600.jpg.jpeg',
   '/video-for my success market/unnamed (1).jpg',
   '/video-for my success market/unnamed (2).jpg',
+  'https://youtube.com/shorts/w3CnHs17lL8?feature=share',
+  'https://youtu.be/28ZOeN9OusQ',
 ],
 },
 ];
