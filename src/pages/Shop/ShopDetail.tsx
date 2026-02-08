@@ -98,13 +98,20 @@ export default function ShopDetail() {
         {/* Images Section */}
         <div className="flex flex-col gap-4">
           {/* Main Image/Video */}
-          <div className="aspect-square bg-muted rounded-lg overflow-hidden border border-border">
+          <div className="aspect-square bg-muted rounded-lg overflow-hidden border border-border relative">
             {isVideo(product.images[mainImage]) ? (
-              <video
-                src={product.images[mainImage]}
-                controls
-                className="w-full h-full object-cover"
-              />
+              <div className="w-full h-full flex flex-col items-center justify-center bg-black/80">
+                <a 
+                  href={product.images[mainImage]} 
+                  download
+                  className="flex flex-col items-center gap-4 hover:opacity-80 transition"
+                >
+                  <Play className="w-16 h-16 text-accent fill-accent" />
+                  <span className="text-white text-center px-4">
+                    Нажми чтобы скачать видео
+                  </span>
+                </a>
+              </div>
             ) : (
               <img
                 src={product.images[mainImage]}
