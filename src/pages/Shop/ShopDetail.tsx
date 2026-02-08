@@ -36,6 +36,7 @@ const products: Record<number, Product> = {
       '/video-for my success market/unnamed (1).jpg',
       '/video-for my success market/vid.mp4',
       '/video-for my success market/unnamed (2).jpg',
+      'https://youtube.com/shorts/w3CnHs17lL8?feature=share',
     ],
     description: 'Мощный игровой компьютер для современных игр и приложений',
   },
@@ -82,6 +83,14 @@ export default function ShopDetail() {
 
   const isVideo = (url: string) => url.toLowerCase().endsWith('.mp4');
 
+  const isYouTube = (url: string) => url.includes('youtube.com') || url.includes('youtu.be');
+
+  const extractYouTubeId = (url: string) => {
+    const youtubeRegex = /(?:youtube\.com\/(?:shorts\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]+)/;
+    const match = url.match(youtubeRegex);
+    return match ? match[1] : null;
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Back Button */}
@@ -99,7 +108,17 @@ export default function ShopDetail() {
         <div className="flex flex-col gap-4">
           {/* Main Image/Video */}
           <div className="aspect-square bg-muted rounded-lg overflow-hidden border border-border relative">
-            {isVideo(product.images[mainImage]) ? (
+            {isYouTube(product.images[mainImage]) ? (
+              <iframe
+                width="100%"
+                height="100%"
+                src={`https://www.youtube.com/embed/${extractYouTubeId(product.images[mainImage])}`}
+                title="YouTube video"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : isVideo(product.images[mainImage]) ? (
               <div className="w-full h-full flex flex-col items-center justify-center bg-black/80">
                 <a 
                   href={product.images[mainImage]} 
@@ -134,7 +153,18 @@ export default function ShopDetail() {
                       : 'border-border hover:border-muted-foreground'
                   }`}
                 >
-                  {isVideo(image) ? (
+                  {isYouTube(image) ? (
+                    <>
+                      <img
+                        src={`https://img.youtube.com/vi/${extractYouTubeId(image)}/default.jpg`}
+                        alt={`YouTube thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/60 transition">
+                        <Play className="w-6 h-6 text-white fill-white" />
+                      </div>
+                    </>
+                  ) : isVideo(image) ? (
                     <>
                       <div className="w-full h-full bg-muted flex items-center justify-center">
                         <Play className="w-6 h-6 text-primary fill-primary" />
