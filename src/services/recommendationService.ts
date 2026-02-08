@@ -11,6 +11,7 @@ export async function getRecommendations(page = 1, pageSize = 10) {
   const to = from + pageSize - 1;
 
   try {
+    console.log('📋 Loading recommendations, page:', page);
     // Get recommendations
     const { data: recommendations, error, count } = await supabase
       .from('recommendations')
@@ -19,10 +20,13 @@ export async function getRecommendations(page = 1, pageSize = 10) {
       .range(from, to);
 
     if (error) throw error;
+    
+    console.log('✅ Fetched', recommendations?.length || 0, 'recommendations');
 
     // Get full data with media and author info
     const enrichedRecommendations = await Promise.all(
       (recommendations || []).map(async (rec) => {
+        console.log('  Loading data for recommendation:', rec.id);
         const [media, author, likes, replies] = await Promise.all([
           getRecommendationMedia(rec.id),
           getUserInfo(rec.user_id),
@@ -30,6 +34,8 @@ export async function getRecommendations(page = 1, pageSize = 10) {
           getRecommendationRepliesCount(rec.id),
         ]);
 
+        console.log(`  Enriched ${rec.id}: media=${media.length}, author=${author?.user_metadata?.full_name}`);
+        
         return {
           ...rec,
           media,
@@ -40,6 +46,8 @@ export async function getRecommendations(page = 1, pageSize = 10) {
       })
     );
 
+    console.log('✅ All recommendations enriched, total:', enrichedRecommendations.length);
+    
     return {
       data: enrichedRecommendations,
       total: count || 0,
@@ -314,15 +322,27 @@ export async function uploadRecommendationMedia(
  */
 export async function getRecommendationMedia(recommendationId: string) {
   try {
+    console.log('🔍 Loading media for recommendation:', recommendationId);
+    
     const { data, error } = await supabase
       .from('recommendation_media')
       .select('*')
       .eq('recommendation_id', recommendationId);
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error fetching media:', error);
+      throw error;
+    }
     
+    console.log('✅ Media fetched:');
+    console.log('  Count:', data?.length || 0);
     if (data && data.length > 0) {
-      console.log(`Found ${data.length} media files for recommendation ${recommendationId}:`, data);
+      console.log('  Files found:');
+      data.forEach((m, idx) => {
+        console.log(`    [${idx}] ID: ${m.id}, URL: ${m.media_url}, Type: ${m.media_type}`);
+      });
+    } else {
+      console.log('  ⚠️ No media found in database for this recommendation');
     }
     
     return data || [];

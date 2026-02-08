@@ -24,6 +24,24 @@ export function RecommendationCard({
   const [likeLoading, setLikeLoading] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
+  // Debug logging for media
+  if (recommendation.media && recommendation.media.length > 0) {
+    console.log('📸 RecommendationCard media found:');
+    console.log('  ID:', recommendation.id);
+    console.log('  Media count:', recommendation.media.length);
+    recommendation.media.forEach((m, idx) => {
+      console.log(`  Media[${idx}]:`, {
+        id: m.id,
+        type: m.media_type,
+        url: m.media_url,
+        path: m.storage_path,
+      });
+    });
+  } else {
+    console.log('⚠️ RecommendationCard NO media for:', recommendation.id);
+    console.log('  Media array:', recommendation.media);
+  }
+
   const handleLike = async () => {
     try {
       setLikeLoading(true);

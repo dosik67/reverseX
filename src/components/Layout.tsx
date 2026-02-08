@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Film, Home, Tv, Gamepad, Music, Book, Bookmark, Bell, MessageSquare, User, LogOut, Settings, Crown, ChevronRight, ChevronLeft, Lightbulb } from "lucide-react";
+import { Film, Home, Tv, Gamepad, Music, Book, Bookmark, Bell, MessageSquare, User, LogOut, Settings, Crown, ChevronRight, ChevronLeft, Lightbulb, ShoppingBag } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +34,7 @@ const Layout = () => {
     { icon: Crown, label: 'Tier Lists', path: '/tier-lists' },
     { icon: Music, label: 'Music', path: '/music' },
     { icon: Book, label: 'Books', path: '/books' },
+    { icon: ShoppingBag, label: 'Shop', path: '/shop' },
   ];
 
   useEffect(() => {
@@ -143,6 +144,10 @@ const Layout = () => {
               <Link to="/books" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
                 <Book className="w-4 h-4" />
                 Books
+              </Link>
+              <Link to="/shop" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
+                <ShoppingBag className="w-4 h-4" />
+                Shop
               </Link>
             </div>
 
