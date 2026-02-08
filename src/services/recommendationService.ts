@@ -106,6 +106,17 @@ export async function createRecommendation(
     }
 
     console.log('Creating recommendation for user:', user.id);
+    console.log('User email:', user.email);
+    console.log('User metadata:', user.user_metadata);
+    
+    // Debug: Check current session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log('Current session exists:', !!session);
+    console.log('Session user ID:', session?.user?.id);
+    
+    if (!session) {
+      console.warn('WARNING: No session found, attempting to use auth.getUser() result');
+    }
 
     // Create recommendation
     const { data: recommendation, error: createError } = await supabase
@@ -124,12 +135,33 @@ export async function createRecommendation(
       console.error('Insert error:', createError);
       console.error('Error code:', createError.code);
       console.error('Error message:', createError.message);
+      console.error('Error details:', createError.details);
+      console.error('Error hint:', createError.hint);
+      
+      // Provide helpful error message for RLS violations
+      if (createError.code === 'PGRST' && createError.message?.includes('new row violates row-level security policy')) {
+        throw new Error(
+          'Ошибка RLS: Не удалось создать рекомендацию. ' +
+          'Убедись что:\n' +
+          '1. Ты залогирован (проверь F12 → Console → "Current session exists: true")\n' +
+          '2. Сессия активна (перезагрузи страницу, если долго не пользовался)\n' +
+          '3. Auth.uid() возвращает корректный ID'
+        );
+      }
+      
       throw new Error(createError.message || 'Failed to create recommendation');
     }
+    
+    console.log('Recommendation created successfully:', recommendation.id);
 
     // Upload media files if provided
     if (files && files.length > 0) {
-      await uploadRecommendationMedia(recommendation.id, files);
+      try {
+        await uploadRecommendationMedia(recommendation.id, files);
+      } catch (mediaError) {
+        console.error('Media upload failed, but recommendation was created:', mediaError);
+        // Don't throw - recommendation is already created, media is optional
+      }
     }
 
     return recommendation;
@@ -165,6 +197,13 @@ export async function uploadRecommendationMedia(
 
       if (uploadError) {
         console.error('Storage upload error:', uploadError);
+        console.error('Error code:', uploadError.code);
+        
+        // Check if bucket exists
+        if (uploadError.message?.includes('Bucket not found') || uploadError.code === 'NotFound') {
+          throw new Error(`Storage bucket "${STORAGE_BUCKET}" not found. Please create it in Supabase Dashboard and make it PUBLIC.`);
+        }
+        
         throw uploadError;
       }
 
@@ -195,7 +234,12 @@ export async function uploadRecommendationMedia(
 
       if (dbError) {
         console.error('Database insert error:', dbError);
-        throw dbError;
+        console.error('Error code:', dbError.code);
+        console.error('Error message:', dbError.message);
+        // Don't throw - file is uploaded, just metadata failed
+        // This might be RLS issue
+        console.warn('Could not save media metadata, but file is uploaded. Continuing...');
+        continue;
       }
 
       console.log('Media saved to database:', dbData);

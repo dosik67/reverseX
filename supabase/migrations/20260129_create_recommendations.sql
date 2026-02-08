@@ -103,3 +103,21 @@ CREATE INDEX idx_recommendation_media_recommendation_id ON recommendation_media(
 CREATE INDEX idx_recommendation_replies_recommendation_id ON recommendation_replies(recommendation_id);
 CREATE INDEX idx_recommendation_likes_recommendation_id ON recommendation_likes(recommendation_id);
 CREATE INDEX idx_recommendation_likes_user_id ON recommendation_likes(user_id);
+-- Storage bucket RLS policies (for recommendations bucket)
+-- Note: Storage bucket must be created in Supabase Dashboard as PUBLIC
+-- To enable storage RLS, uncomment the policies below after bucket is created
+
+-- CREATE POLICY "Public access for images" ON storage.objects
+--   FOR SELECT USING (bucket_id = 'recommendations');
+
+-- CREATE POLICY "Users can upload to recommendations" ON storage.objects
+--   FOR INSERT WITH CHECK (
+--     bucket_id = 'recommendations' AND 
+--     auth.uid() IS NOT NULL
+--   );
+
+-- CREATE POLICY "Users can delete their files" ON storage.objects
+--   FOR DELETE USING (
+--     bucket_id = 'recommendations' AND
+--     auth.uid()::text = (storage.foldername(name))[1]
+--   );
