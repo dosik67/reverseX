@@ -34,6 +34,8 @@ const products: Record<number, Product> = {
       '/video-for my success market/IMG_20260208_033311.jpg.jpeg',
       '/video-for my success market/IMG_20260208_033600.jpg.jpeg',
       '/video-for my success market/unnamed (1).jpg',
+      '/video-for my success market/vid.mp4',
+      '/video-for my success market/unnamed (2).jpg',
     ],
     description: 'Мощный игровой компьютер для современных игр и приложений',
   },
