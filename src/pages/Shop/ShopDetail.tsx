@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Phone, MessageCircle, Mail, ArrowLeft, Play } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ShoppingCart, Phone, MessageCircle, Mail, ArrowLeft, Play, Send } from 'lucide-react';
 
 interface Product {
   id: number;
@@ -47,6 +53,7 @@ export default function ShopDetail() {
   const navigate = useNavigate();
   const [cart, setCart] = useState(0);
   const [mainImage, setMainImage] = useState(0);
+  const [showOrderDialog, setShowOrderDialog] = useState(false);
 
   const productId = parseInt(id || '1');
   const product = products[productId];
@@ -78,7 +85,7 @@ export default function ShopDetail() {
   };
 
   const handleOrder = () => {
-    alert('📦 Оформление заказа\n\nСкоро функция заказа будет доступна!');
+    setShowOrderDialog(true);
   };
 
   const isVideo = (url: string) => url.toLowerCase().endsWith('.mp4');
@@ -374,6 +381,90 @@ export default function ShopDetail() {
           </div>
         </div>
       </div>
+
+      {/* Order Dialog */}
+      <Dialog open={showOrderDialog} onOpenChange={setShowOrderDialog}>
+        <DialogContent className="border-primary/30 bg-gradient-to-b from-card to-card/80">
+          <DialogHeader>
+            <DialogTitle className="text-2xl gradient-text text-center mb-2">
+              🎮 Оформить заказ
+            </DialogTitle>
+            <p className="text-center text-muted-foreground text-sm mt-2">
+              Выбери удобный способ связи с нами
+            </p>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 gap-3 mt-6">
+            {/* WhatsApp */}
+            <Button
+              size="lg"
+              onClick={() => {
+                window.open('https://wa.me/87752570646', '_blank');
+                setShowOrderDialog(false);
+              }}
+              className="h-auto py-4 gap-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg transition-all hover:scale-105 active:scale-95"
+            >
+              <MessageCircle className="w-6 h-6" />
+              <div className="flex flex-col items-start">
+                <span>WhatsApp</span>
+                <span className="text-xs font-normal opacity-90">Быстрый ответ</span>
+              </div>
+            </Button>
+
+            {/* Telegram */}
+            <Button
+              size="lg"
+              onClick={() => {
+                window.open('https://t.me/dosikedit', '_blank');
+                setShowOrderDialog(false);
+              }}
+              className="h-auto py-4 gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg transition-all hover:scale-105 active:scale-95"
+            >
+              <Send className="w-6 h-6" />
+              <div className="flex flex-col items-start">
+                <span>Telegram</span>
+                <span className="text-xs font-normal opacity-90">@dosikedit</span>
+              </div>
+            </Button>
+
+            {/* Instagram */}
+            <Button
+              size="lg"
+              onClick={() => {
+                window.open('https://instagram.com/dosikte', '_blank');
+                setShowOrderDialog(false);
+              }}
+              className="h-auto py-4 gap-3 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white font-semibold rounded-lg transition-all hover:scale-105 active:scale-95"
+            >
+              <span className="text-xl">📸</span>
+              <div className="flex flex-col items-start">
+                <span>Instagram</span>
+                <span className="text-xs font-normal opacity-90">@dosikte</span>
+              </div>
+            </Button>
+
+            {/* Phone */}
+            <Button
+              size="lg"
+              onClick={() => {
+                window.location.href = 'tel:+87752570646';
+                setShowOrderDialog(false);
+              }}
+              className="h-auto py-4 gap-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold rounded-lg transition-all hover:scale-105 active:scale-95"
+            >
+              <Phone className="w-6 h-6" />
+              <div className="flex flex-col items-start">
+                <span>Позвонить</span>
+                <span className="text-xs font-normal opacity-90">+7 (775) 257-06-46</span>
+              </div>
+            </Button>
+          </div>
+
+          <p className="text-xs text-center text-muted-foreground mt-4">
+            Мы ответим быстро и поможем с заказом! 💚
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
