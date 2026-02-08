@@ -179,15 +179,52 @@ export async function uploadRecommendationMedia(
   files: File[]
 ) {
   try {
+    console.log('=== MEDIA UPLOAD START ===');
+    console.log('Recommendation ID:', recommendationId);
+    console.log('Files to upload:', files.length);
+    console.log('Storage bucket:', STORAGE_BUCKET);
+    
+    // Check current user session
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    console.log('Current user:', user?.id);
+    console.log('User email:', user?.email);
+    if (userError) console.error('User error:', userError);
+    
+    // Try to get session
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('Session exists:', !!session);
+    console.log('Session user:', session?.user?.id);
+    
     const mediaRecords = [];
 
     for (const file of files) {
+      console.log('\n--- Uploading file ---');
+      console.log('File name:', file.name);
+      console.log('File size:', file.size, 'bytes');
+      console.log('File type:', file.type);
+      
       const fileExt = file.name.split('.').pop();
       const fileName = `${recommendationId}/${Date.now()}.${fileExt}`;
+      console.log('Storage path:', fileName);
 
-      console.log('Uploading file:', file.name, 'size:', file.size, 'type:', file.type);
+      // List existing files in bucket (for debugging)
+      try {
+        console.log('Checking bucket contents...');
+        const { data: bucketContents, error: listError } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .list(recommendationId);
+        
+        if (listError) {
+          console.warn('Could not list bucket contents:', listError);
+        } else {
+          console.log('Files in recommendation folder:', bucketContents);
+        }
+      } catch (listErr) {
+        console.warn('Exception listing bucket:', listErr);
+      }
 
       // Upload to storage
+      console.log('Starting upload...');
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from(STORAGE_BUCKET)
         .upload(fileName, file, {
@@ -196,18 +233,29 @@ export async function uploadRecommendationMedia(
         });
 
       if (uploadError) {
-        console.error('Storage upload error:', uploadError);
+        console.error('❌ UPLOAD FAILED');
         console.error('Error code:', uploadError.code);
+        console.error('Error message:', uploadError.message);
+        console.error('Error status:', uploadError.statusCode);
+        console.error('Full error:', uploadError);
         
         // Check if bucket exists
-        if (uploadError.message?.includes('Bucket not found') || uploadError.code === 'NotFound') {
-          throw new Error(`Storage bucket "${STORAGE_BUCKET}" not found. Please create it in Supabase Dashboard and make it PUBLIC.`);
+        if (uploadError.message?.includes('Bucket not found') || uploadError.code === 'NotFound' || uploadError.statusCode === 404) {
+          console.error(`Storage bucket "${STORAGE_BUCKET}" not found!`);
+          throw new Error(`❌ Storage bucket "${STORAGE_BUCKET}" not found in Supabase.\n\nCreate it in Supabase Dashboard:\nStorage → New bucket → Name: "recommendations" → Public\n\nThen refresh the page and try again.`);
+        }
+        
+        // Check if RLS is blocking
+        if (uploadError.statusCode === 403) {
+          console.error('RLS Policy is blocking upload!');
+          throw new Error(`❌ RLS Policy blocked upload.\n\nMake sure:\n1. RLS policies are created on storage.objects\n2. You are logged in (session exists: ${!!session})\n3. Bucket is PUBLIC`);
         }
         
         throw uploadError;
       }
 
-      console.log('File uploaded successfully:', uploadData);
+      console.log('✅ File uploaded successfully');
+      console.log('Upload data:', uploadData);
 
       // Get public URL
       const { data: publicUrl } = supabase.storage
@@ -220,6 +268,10 @@ export async function uploadRecommendationMedia(
       const mediaType = file.type.startsWith('image/') ? 'image' : 'drawing';
 
       // Save metadata to database
+      console.log('Saving metadata to database...');
+      console.log('Media URL:', publicUrl.publicUrl);
+      console.log('Storage path:', fileName);
+      
       const { data: dbData, error: dbError } = await supabase
         .from('recommendation_media')
         .insert([
@@ -233,20 +285,23 @@ export async function uploadRecommendationMedia(
         .select();
 
       if (dbError) {
-        console.error('Database insert error:', dbError);
+        console.error('❌ DATABASE INSERT FAILED');
         console.error('Error code:', dbError.code);
         console.error('Error message:', dbError.message);
+        console.error('Error details:', dbError.details);
+        console.error('Full error:', dbError);
         // Don't throw - file is uploaded, just metadata failed
-        // This might be RLS issue
-        console.warn('Could not save media metadata, but file is uploaded. Continuing...');
+        console.warn('Could not save metadata, but file is uploaded in storage. Continuing...');
         continue;
       }
 
-      console.log('Media saved to database:', dbData);
+      console.log('✅ Metadata saved to database');
+      console.log('Database data:', dbData);
       mediaRecords.push(uploadData);
     }
 
-    console.log('All media uploaded successfully');
+    console.log('=== MEDIA UPLOAD COMPLETE ===');
+    console.log('Total files uploaded:', mediaRecords.length);
     return mediaRecords;
   } catch (error) {
     console.error('Error uploading media:', error);
