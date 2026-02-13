@@ -186,7 +186,6 @@ const PinkGlassApp: React.FC = () => {
                    className="h-40 md:h-52 w-auto drop-shadow-[0_0_20px_rgba(var(--theme-rgb),0.5)] transition-transform duration-500 group-hover:scale-110"
                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
                  />
-                 />
              </a>
           </div>
           
