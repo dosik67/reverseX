@@ -178,16 +178,16 @@ const App: React.FC = () => {
 
         <main className="flex-1 flex flex-col items-center justify-center -mt-8 px-4 w-full">
           {/* Logo */}
-          <div className="mb-8 animate-fade-in-down flex justify-center">
+          <div className="mb-12 animate-fade-in-down flex justify-center">
              <a 
                href="https://reversex.vercel.app/" 
                className="cursor-pointer block group"
                title="ReverseX"
              >
                  <img 
-                   src="./logo.png" 
+                   src="./logo%20br%20(1).png" 
                    alt="Logo" 
-                   className="h-24 md:h-28 w-auto drop-shadow-[0_0_15px_rgba(var(--theme-rgb),0.4)] transition-transform duration-500 group-hover:scale-105"
+                   className="h-40 md:h-52 w-auto drop-shadow-[0_0_20px_rgba(var(--theme-rgb),0.5)] transition-transform duration-500 group-hover:scale-110"
                  />
              </a>
           </div>
