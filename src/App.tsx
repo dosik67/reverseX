@@ -54,6 +54,9 @@ import WorkspaceProject from "./pages/WorkspaceProject";
 import WorkspaceSettings from "./pages/WorkspaceSettings";
 import WorkspaceInvite from "./pages/WorkspaceInvite";
 
+// Pink Glass Start Page
+import PinkGlassPage from "./pages/PinkGlassPage";
+
 import supabase from "@/lib/supabase";
 import "./App.css";
 
@@ -115,6 +118,7 @@ const App = () => {
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/qr-auth" element={<QRAuthPage />} />
+                <Route path="/br" element={<PinkGlassPage />} />
 
                 {/* Task Pages Routes */}
                 <Route path="/tasks/20" element={<Task20 />} />
