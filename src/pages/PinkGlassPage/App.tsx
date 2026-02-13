@@ -109,6 +109,15 @@ const PinkGlassApp: React.FC = () => {
         .theme-border { border-color: rgba(var(--theme-rgb), 0.25); }
         .theme-hover:hover { background-color: rgba(var(--theme-rgb), 0.2); }
         .theme-ring-focus { border-color: var(--theme-color) !important; }
+        .glass-input {
+            background: rgba(0, 0, 0, 0.2) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(var(--theme-rgb), 0.3) !important;
+        }
+        .glass-input::placeholder {
+            color: rgba(var(--theme-rgb), 0.6) !important;
+        }
         
         @keyframes gradient-xy {
             0% { background-position: 0% 50%; }
@@ -172,10 +181,11 @@ const PinkGlassApp: React.FC = () => {
                title="ReverseX"
              >
                  <img 
-                   src="./logo%20br%20(1).png" 
+                   src="/logo%20br%20(1).png" 
                    alt="Logo" 
                    className="h-40 md:h-52 w-auto drop-shadow-[0_0_20px_rgba(var(--theme-rgb),0.5)] transition-transform duration-500 group-hover:scale-110"
                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                 />
                  />
              </a>
           </div>
