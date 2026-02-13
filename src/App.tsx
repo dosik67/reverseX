@@ -35,6 +35,7 @@ import YouTubeDownloader from "./pages/YouTubeDownloader";
 import Shop from "./pages/Shop/Shop";
 import ShopDetail from "./pages/Shop/ShopDetail";
 import ShopAdmin from "./pages/Shop/ShopAdmin";
+import ProfileCard from "./pages/ProfileCard";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AppProvider } from "@/context/AppContext";
 
@@ -135,6 +136,7 @@ const App = () => {
                 <Route path="/download/file2" element={<FileDownload2 />} />
                 <Route path="/download/file3" element={<FileDownload3 />} />
                 <Route path="/youtube-downloader" element={<YouTubeDownloader />} />
+                <Route path="/de" element={<ProfileCard />} />
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/shop/:id" element={<ShopDetail />} />
                 <Route path="/shop/admin" element={<ShopAdmin />} />
