@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 import { SEARCH_ENGINES, TRANSLATIONS } from '../constants';
-import { AppSettings } from '../types';
-
 interface SearchBarProps {
-  engine: AppSettings['searchEngine'];
+  engine: keyof typeof SEARCH_ENGINES;
   language: 'en' | 'ru';
 }
 

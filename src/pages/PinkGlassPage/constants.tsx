@@ -25,7 +25,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   language: 'ru'
 };
 
-export const SEARCH_ENGINES: Record<AppSettings['searchEngine'], string> = {
+export const SEARCH_ENGINES = {
   google: "https://www.google.com/search?q=",
   yandex: "https://yandex.ru/search/?text=",
   bing: "https://www.bing.com/search?q=",
