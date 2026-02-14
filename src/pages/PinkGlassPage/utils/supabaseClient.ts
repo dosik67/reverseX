@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = import.meta.env.VITE_PINKGLASS_SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_PINKGLASS_SUPABASE_ANON_KEY || '';
+// Use PinkGlass-specific env first, fallback to main app Supabase so Google OAuth works
+const SUPABASE_URL = import.meta.env.VITE_PINKGLASS_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_PINKGLASS_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 const isConfigured = SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL !== 'https://placeholder.supabase.co';
 

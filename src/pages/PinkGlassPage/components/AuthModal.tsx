@@ -16,13 +16,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ language, onClose }) => {
   const t = TRANSLATIONS[language];
 
   const handleGoogleLogin = async () => {
+    const redirectTo = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : undefined;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         queryParams: { access_type: 'offline', prompt: 'consent' },
+        redirectTo: redirectTo || undefined,
       },
     });
-    if (error) console.error('Google Auth Error:', error.message);
+    if (error) {
+      console.error('Google Auth Error:', error.message);
+      alert(error.message);
+    }
   };
 
   const handleAuth = async (e: React.FormEvent) => {
