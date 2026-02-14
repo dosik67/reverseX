@@ -1,6 +1,31 @@
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = import.meta.env.VITE_PINKGLASS_SUPABASE_URL || 'https://thhefxrmnejoxcftdpvq.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_PINKGLASS_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoaGVmeHJtbmVqb3hjZnRkcHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NjM2ODUsImV4cCI6MjA3ODEzOTY4NX0.rH2IK94T09cnWAMm00PtH0jvUTCnLqKLbTpdZ8FSX0k';
+const SUPABASE_URL = import.meta.env.VITE_PINKGLASS_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_PINKGLASS_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const isConfigured = SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL !== 'https://placeholder.supabase.co';
+
+export const supabase = isConfigured
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : ({
+      auth: {
+        getUser: async () => ({ data: { user: null }, error: null }),
+        getSession: async () => ({ data: { session: null }, error: null }),
+        signInWithOAuth: async () => ({ error: { message: 'Supabase not configured.' } }),
+        signInWithPassword: async () => ({ error: { message: 'Supabase not configured.' } }),
+        signUp: async () => ({ error: { message: 'Supabase not configured.' } }),
+        signOut: async () => ({ error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      },
+      from: () => ({
+        select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }),
+        upsert: async () => ({ error: null }),
+        update: () => ({ eq: async () => ({ error: null }) }),
+      }),
+      storage: {
+        from: () => ({
+          upload: async () => ({ error: { message: 'Storage not configured' } }),
+          getPublicUrl: () => ({ data: { publicUrl: '' } }),
+        }),
+      },
+    } as ReturnType<typeof createClient>);

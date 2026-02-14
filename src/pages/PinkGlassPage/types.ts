@@ -4,7 +4,7 @@ export interface Bookmark {
   id: string;
   title: string;
   url: string;
-  icon?: React.ReactNode; 
+  icon?: React.ReactNode;
   initials?: string;
 }
 
@@ -17,18 +17,24 @@ export interface AppItem {
 
 export interface BackgroundTheme {
   name: string;
-  value: string; // CSS background value (color or gradient)
+  value: string;
   textColor: string;
 }
 
+export interface Profile {
+  id: string;
+  full_name: string;
+  avatar_url: string;
+}
+
 export interface AppSettings {
-  blurAmount: number; // px
+  blurAmount: number;
   isAnimationEnabled: boolean;
   timeFormat: '12h' | '24h';
-  searchEngine: 'google' | 'bing' | 'duckduckgo' | 'yahoo';
+  searchEngine: 'google' | 'yandex' | 'bing' | 'duckduckgo' | 'yahoo';
   lockBackground: boolean;
-  customBackground: string | null; // Base64 string of uploaded image
+  customBackground: string | null;
   customVideo: boolean;
-  themeColor: string; // Hex color
+  themeColor: string;
   language: 'en' | 'ru';
 }

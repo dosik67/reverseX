@@ -1,11 +1,5 @@
-import React from 'react';
-import PinkGlassApp from './App';
-import { GlobalProvider } from './context/GlobalContext';
+import App from './App';
 
-const PinkGlassPage = () => (
-  <GlobalProvider>
-    <PinkGlassApp />
-  </GlobalProvider>
-);
+const PinkGlassPage = () => <App />;
 
 export default PinkGlassPage;

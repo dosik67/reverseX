@@ -1,47 +1,16 @@
+
 import React from 'react';
 import { BackgroundTheme, AppItem, Bookmark, AppSettings } from './types';
 
 export const BACKGROUNDS: BackgroundTheme[] = [
-  {
-    name: "Deep Space Mesh",
-    value: "linear-gradient(-45deg, #09090b, #1e1b4b, #312e81, #18181b)",
-    textColor: "text-white"
-  },
-  {
-    name: "Midnight Magenta",
-    value: "linear-gradient(135deg, #2a0845 0%, #6441A5 50%, #fe5196 100%)",
-    textColor: "text-white"
-  },
-  {
-    name: "Deep Rose",
-    value: "#9f1239", 
-    textColor: "text-white"
-  },
-  {
-    name: "Cotton Candy",
-    value: "linear-gradient(to right, #ffc3a0 0%, #ffafbd 100%)",
-    textColor: "text-gray-900"
-  },
-  {
-    name: "Neon City",
-    value: "radial-gradient(circle at center, #f50057 0%, #1a1a2e 100%)",
-    textColor: "text-white"
-  },
-  {
-    name: "Soft Lilac",
-    value: "#e879f9", 
-    textColor: "text-white"
-  },
-  {
-    name: "Sunset Vibes",
-    value: "linear-gradient(to top, #09203f 0%, #537895 100%)", 
-    textColor: "text-white"
-  },
-  {
-    name: "Dark Velvet",
-    value: "#1a1a1a", 
-    textColor: "text-white"
-  }
+  { name: "Deep Space Mesh", value: "linear-gradient(-45deg, #09090b, #1e1b4b, #312e81, #18181b)", textColor: "text-white" },
+  { name: "Midnight Magenta", value: "linear-gradient(135deg, #2a0845 0%, #6441A5 50%, #fe5196 100%)", textColor: "text-white" },
+  { name: "Deep Rose", value: "#9f1239", textColor: "text-white" },
+  { name: "Cotton Candy", value: "linear-gradient(to right, #ffc3a0 0%, #ffafbd 100%)", textColor: "text-gray-900" },
+  { name: "Neon City", value: "radial-gradient(circle at center, #f50057 0%, #1a1a2e 100%)", textColor: "text-white" },
+  { name: "Soft Lilac", value: "#e879f9", textColor: "text-white" },
+  { name: "Sunset Vibes", value: "linear-gradient(to top, #09203f 0%, #537895 100%)", textColor: "text-white" },
+  { name: "Dark Velvet", value: "#1a1a1a", textColor: "text-white" }
 ];
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -52,12 +21,13 @@ export const DEFAULT_SETTINGS: AppSettings = {
   lockBackground: false,
   customBackground: null,
   customVideo: false,
-  themeColor: '#ff69b4', // Hot Pink default
-  language: 'ru' // Default to Russian as requested
+  themeColor: '#ff69b4',
+  language: 'ru'
 };
 
-export const SEARCH_ENGINES = {
+export const SEARCH_ENGINES: Record<AppSettings['searchEngine'], string> = {
   google: "https://www.google.com/search?q=",
+  yandex: "https://yandex.ru/search/?text=",
   bing: "https://www.bing.com/search?q=",
   duckduckgo: "https://duckduckgo.com/?q=",
   yahoo: "https://search.yahoo.com/search?p="
@@ -69,6 +39,7 @@ export const TRANSLATIONS = {
     settings: "Settings",
     appearance: "Appearance",
     functionality: "Functionality",
+    profile: "Profile",
     lockBackground: "Lock Background",
     customWallpaper: "Custom Wallpaper (Image)",
     customVideo: "Live Wallpaper (Video)",
@@ -92,23 +63,19 @@ export const TRANSLATIONS = {
     images: "Images",
     dropFavorites: "Drop Favorites Here",
     googleApps: "Google Apps",
-    dataManagement: "Data Management",
-    login: "Login",
-    logout: "Logout",
-    email: "Email",
-    password: "Password",
-    authTitle: "Cloud Sync",
-    downloadSettings: "Download Settings (JSON)",
-    uploadSettings: "Import Settings (JSON)",
-    syncSuccess: "Data synced with Cloud",
-    importSuccess: "Settings imported successfully!",
-    importError: "Invalid JSON file",
+    login: "Log In",
+    logout: "Log Out",
+    signInWithGoogle: "Sign in with Google",
+    save: "Save",
+    fullName: "Full Name",
+    changePhoto: "Change Photo"
   },
   ru: {
     searchPlaceholder: "Поиск или URL...",
     settings: "Настройки",
     appearance: "Внешний вид",
     functionality: "Функционал",
+    profile: "Профиль",
     lockBackground: "Зафиксировать фон",
     customWallpaper: "Свой фон (Картинка)",
     customVideo: "Живые обои (Видео)",
@@ -132,27 +99,15 @@ export const TRANSLATIONS = {
     images: "Картинки",
     dropFavorites: "Перетащите сюда",
     googleApps: "Приложения",
-    dataManagement: "Управление данными",
     login: "Войти",
     logout: "Выйти",
-    email: "Email",
-    password: "Пароль",
-    authTitle: "Синхронизация",
-    downloadSettings: "Скачать настройки (JSON)",
-    uploadSettings: "Загрузить настройки (JSON)",
-    syncSuccess: "Данные синхронизированы",
-    importSuccess: "Настройки успешно загружены!",
-    importError: "Неверный файл JSON",
+    signInWithGoogle: "Войти через Google",
+    save: "Сохранить",
+    fullName: "Полное имя",
+    changePhoto: "Изменить фото"
   }
 };
 
-export const DEFAULT_TOP_LINKS: Bookmark[] = [
-  { id: 't1', title: 'News', url: 'https://news.google.com', initials: 'N' },
-  { id: 't2', title: 'Twitter', url: 'https://twitter.com', initials: 'X' },
-  { id: 't3', title: 'Instagram', url: 'https://instagram.com', initials: 'IG' },
-];
-
-// --- Official Colored SVG Icons (2024/2025 Modern) ---
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-10 h-10">
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -192,7 +147,7 @@ const MapsIcon = () => (
   <svg viewBox="0 0 24 24" className="w-10 h-10">
     <path fill="#34A853" d="M18.5 11.5c-1.3 0-2.6-.4-3.7-1L18.6 4c.6.4 1.2.9 1.7 1.5 2 2.4 2.3 5.3 1.2 8.2l-3-2.2z" />
     <path fill="#EA4335" d="M12.4 1.6C10.7.6 8.8 0 6.9 0 4.1 0 1.6 1.2 0 3.3l5.8 4.8 6.6-6.5z" />
-    <path fill="#4285F4" d="M6.9 0c-1.9 0-3.8.6-5.5 1.6l6.6 5.5L14.8 10.5c1.1.7 2.4 1 3.7 1 2.3 0 4.5-1.2 5.7-3.2-1.7-4.1-5.1-7.3-9.2-8.3C13.8.5 12.4 0 10.9 0H6.9z" opacity=".2"/> 
+    <path fill="#4285F4" d="M6.9 0c-1.9 0-3.8.6-5.5 1.6l6.6 5.5L14.8 10.5c1.1.7 2.4 1 3.7 1 2.3 0 4.5-1.2 5.7-3.2-1.7-4.1-5.1-7.3-9.2-8.3C13.8.5 12.4 0 10.9 0H6.9z" opacity=".2"/>
     <path fill="#FBBC05" d="M5.8 8.1l-5.8-4.8C-.9 6 .3 9.4 2.6 12.1c1.5 1.7 3.5 3 5.8 3.5l3.5-4.1c-1.2.7-2.6 1.1-3.9 1.1-2.3 0-4.4-1.2-5.5-3.1L5.8 8.1z" />
     <path fill="#4285F4" d="M11.9 15.6c1.3 0 2.7-.4 3.9-1.1l3 2.2c-.8 2.2-2.5 3.9-4.7 4.9L8.4 15.6c1.1 0 2.3 0 3.5 0z" />
     <path fill="#EA4335" d="M14.1 21.6c2.2-1 3.9-2.7 4.7-4.9l-3.5-2.6c-1.1 1.9-3.2 3.1-5.5 3.1-1.3 0-2.6-.4-3.8-1.1L2.6 12.1c.5 5.5 4.8 10 10 10.4v-.9z" />
@@ -222,6 +177,7 @@ const CalendarIcon = () => (
   <svg viewBox="0 0 24 24" className="w-10 h-10">
     <path fill="#4285F4" d="M21.33 4H18V1.33h-2.67V4H8.67V1.33H6V4H2.67C1.2 4 0 5.2 0 6.67V21.33C0 22.8 1.2 24 2.67 24H21.33C22.8 24 24 22.8 24 21.33V6.67C24 5.2 22.8 4 21.33 4z" />
     <path fill="#FFF" d="M5 20h14v-9H5v9zm0-11h14V7H5v2z" />
+    <text x="12" y="19" fontSize="10" fontWeight="bold" fill="#4285F4" textAnchor="middle">31</text>
   </svg>
 );
 
@@ -276,6 +232,7 @@ const TranslateIcon = () => (
     <path fill="#4285F4" d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
     <path fill="#FFF" d="M10 14.5l-1.5-1.5L11 10.5h1.5l1.5 1.5-1.5 1.5H10zM12.8 6h-2.6l-1 2H8L6.5 6H4v12h2.5v-2.5h2L9.5 18h2.6l-2-4H11l1.8 4z"/>
     <path fill="#FFF" d="M7 6h10v2H7z" opacity="0.5"/>
+    <text x="12" y="16" fontSize="10" fill="white" textAnchor="middle" fontWeight="bold">G</text>
   </svg>
 );
 
