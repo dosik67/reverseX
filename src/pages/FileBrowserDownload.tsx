@@ -1,7 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, FileText, ArrowLeft, Folder } from "lucide-react";
+import { Download, ArrowLeft, Folder } from "lucide-react";
 import { Link } from "react-router-dom";
+
+// Прямая ссылка на скачивание с Google Drive (сразу начинает загрузку)
+const GOOGLE_DRIVE_FILE_ID = "1Wo0CDLYIjeUZE7WmoDUNHdfaDDOQopLJ";
+const DIRECT_DOWNLOAD_URL = `https://drive.google.com/uc?export=download&id=${GOOGLE_DRIVE_FILE_ID}`;
 
 const FileBrowserDownload = () => {
   const fileName = "ReverseBrowser File Manager";
@@ -9,8 +13,8 @@ const FileBrowserDownload = () => {
   const fileDescription = "Advanced File Browser Tool";
 
   const handleDownload = () => {
-    // Скачивание через API или прямую ссылку
-    window.location.href = `/api/download/file-browser`;
+    // Сразу открываем прямую ссылку Google Drive — файл начнёт скачиваться
+    window.location.href = DIRECT_DOWNLOAD_URL;
   };
 
   return (
