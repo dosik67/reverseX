@@ -1,114 +1,77 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Settings } from 'lucide-react';
-import { BACKGROUNDS, DEFAULT_SETTINGS } from './constants';
-import { AppSettings, Profile } from './types';
+import { Settings, User, LogOut, Cloud, CloudUpload, CheckCircle2 } from 'lucide-react';
+import { BACKGROUNDS } from './constants';
+import { useGlobal } from './context/GlobalContext';
 import SearchBar from './components/SearchBar';
 import AppMenu from './components/AppMenu';
 import BookmarkGrid from './components/BookmarkGrid';
 import InfiniteBar from './components/InfiniteBar';
 import BackgroundSwitcher from './components/BackgroundSwitcher';
 import SettingsModal from './components/SettingsModal';
+import AuthModal from './components/AuthModal';
 import TopNav from './components/TopNav';
 import Clock from './components/Clock';
 import { getVideo } from './utils/db';
 import { supabase } from './utils/supabaseClient';
 
+// Helper to convert hex to RGB
 const hexToRgb = (hex: string) => {
-  let c: number;
-  if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
-    const parts = hex.substring(1).split('');
-    const hexStr = parts.length === 3 ? [parts[0], parts[0], parts[1], parts[1], parts[2], parts[2]].join('') : parts.join('');
-    c = parseInt(hexStr, 16);
-    return [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',');
-  }
-  return '255,105,180';
-};
+    let c: any;
+    if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+        c= hex.substring(1).split('');
+        if(c.length== 3){
+            c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+        }
+        c= '0x'+c.join('');
+        return [(c>>16)&255, (c>>8)&255, c&255].join(',');
+    }
+    return '255,105,180'; // fallback pink
+}
 
 const App: React.FC = () => {
-  const [settings, setSettings] = useState<AppSettings>(() => {
-    try {
-      const saved = localStorage.getItem('pink_glass_settings');
-      return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
-    } catch { return DEFAULT_SETTINGS; }
-  });
-
-  const [bgIndex, setBgIndex] = useState(() => {
-    const saved = localStorage.getItem('pink_glass_bg_index');
-    return saved ? parseInt(saved, 10) : 0;
-  });
+  const { settings, updateSettings, bgIndex, setBgIndex, user, isSyncing } = useGlobal();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  useEffect(() => {
-    localStorage.setItem('pink_glass_bg_index', bgIndex.toString());
-  }, [bgIndex]);
-
-  useEffect(() => {
-    localStorage.setItem('pink_glass_settings', JSON.stringify(settings));
-  }, [settings]);
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        if (data) setProfile(data);
-      }
-    };
-    checkUser();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-        if (data) setProfile(data);
-      } else setProfile(null);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
+  // Handle Video Loading from IDB
   useEffect(() => {
     let active = true;
-    let blobUrl: string | null = null;
     if (settings.customVideo) {
-      getVideo().then((blob) => {
-        if (active && blob) {
-          blobUrl = URL.createObjectURL(blob);
-          setVideoUrl(blobUrl);
-        } else if (active && !blob) updateSettings({ customVideo: false });
-      }).catch(() => updateSettings({ customVideo: false }));
-    } else setVideoUrl(null);
+        getVideo().then((blob) => {
+            if (active && blob) {
+                const url = URL.createObjectURL(blob);
+                setVideoUrl(url);
+            } else if (active && !blob) {
+                // Fallback: settings say video, but DB is empty
+                updateSettings({ customVideo: false });
+            }
+        }).catch(err => {
+            console.error("Failed to load video", err);
+            updateSettings({ customVideo: false });
+        });
+    } else {
+        setVideoUrl(null);
+    }
+    
     return () => {
-      active = false;
-      if (blobUrl) URL.revokeObjectURL(blobUrl);
+        active = false;
+        if (videoUrl) URL.revokeObjectURL(videoUrl);
     };
   }, [settings.customVideo]);
 
+  // Ensure video plays when URL updates
   useEffect(() => {
     if (videoRef.current && videoUrl) {
       videoRef.current.load();
-      videoRef.current.play().catch(() => {});
+      videoRef.current.play().catch(e => console.log("Auto-play blocked", e));
     }
   }, [videoUrl]);
 
-  const updateSettings = (newSettings: Partial<AppSettings>) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
-  };
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    const name = profile?.full_name || (settings.language === 'ru' ? 'Гость' : 'Guest');
-    if (settings.language === 'ru') {
-      if (hour < 6) return `Доброй ночи, ${name}`;
-      if (hour < 12) return `Доброе утро, ${name}`;
-      if (hour < 18) return `Добрый день, ${name}`;
-      return `Добрый вечер, ${name}`;
-    }
-    if (hour < 6) return `Good night, ${name}`;
-    if (hour < 12) return `Good morning, ${name}`;
-    if (hour < 18) return `Good afternoon, ${name}`;
-    return `Good evening, ${name}`;
+  const handleLogout = async () => {
+      await supabase.auth.signOut();
   };
 
   const currentBgValue = settings.customBackground || BACKGROUNDS[bgIndex].value;
@@ -116,9 +79,19 @@ const App: React.FC = () => {
 
   return (
     <div className={`relative w-full h-screen overflow-hidden text-white selection:bg-[rgba(var(--theme-rgb),0.4)] selection:text-white ${settings.isAnimationEnabled ? '' : 'disable-animations'}`}>
+      
+      {/* Dynamic CSS Variables & Animation Styles */}
       <style>{`
-        :root { --glass-blur: ${settings.blurAmount}px; --theme-color: ${settings.themeColor}; --theme-rgb: ${themeRgb}; }
-        .glass-panel { backdrop-filter: blur(var(--glass-blur)) !important; -webkit-backdrop-filter: blur(var(--glass-blur)) !important; }
+        :root {
+            --glass-blur: ${settings.blurAmount}px;
+            --theme-color: ${settings.themeColor};
+            --theme-rgb: ${themeRgb};
+        }
+        .glass-panel {
+            backdrop-filter: blur(var(--glass-blur)) !important;
+            -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+        }
+        /* Utility Classes for Theme */
         .theme-text { color: var(--theme-color); }
         .theme-text-accent { color: rgba(var(--theme-rgb), 0.8); }
         .theme-bg { background-color: var(--theme-color); }
@@ -126,68 +99,174 @@ const App: React.FC = () => {
         .theme-bg-glass { background-color: rgba(var(--theme-rgb), 0.15); }
         .theme-border { border-color: rgba(var(--theme-rgb), 0.25); }
         .theme-hover:hover { background-color: rgba(var(--theme-rgb), 0.2); }
-        .glass-input { background: rgba(0, 0, 0, 0.2) !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(var(--theme-rgb), 0.3); }
-        .glass-hover:hover { background: rgba(var(--theme-rgb), 0.2); border-color: rgba(var(--theme-rgb), 0.4); }
-        @keyframes gradient-xy { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .animate-gradient-slow { background-size: 400% 400%; animation: gradient-xy 20s ease infinite; }
-        ${!settings.isAnimationEnabled ? `*, *::before, *::after { animation: none !important; transition: none !important; }` : ''}
+        
+        @keyframes gradient-xy {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animate-gradient-slow {
+            background-size: 400% 400%;
+            animation: gradient-xy 20s ease infinite;
+        }
+
+        ${!settings.isAnimationEnabled ? `
+            *, *::before, *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+        ` : ''}
       `}</style>
 
+      {/* Background Layer System */}
       <div className="absolute inset-0 overflow-hidden z-0 bg-[#000]">
-        <video ref={videoRef} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${videoUrl ? 'opacity-100' : 'opacity-0'}`} src={videoUrl || ''} autoPlay muted loop playsInline />
+        
+        {/* Layer 1: Video (Persistent) */}
+        <video 
+           ref={videoRef}
+           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${videoUrl ? 'opacity-100' : 'opacity-0'}`}
+           src={videoUrl || ''}
+           autoPlay
+           muted
+           loop
+           playsInline
+        />
+        
+        {/* Layer 2: Video Overlay (Darken) */}
         <div className={`absolute inset-0 bg-black/40 transition-opacity duration-1000 ${videoUrl ? 'opacity-100' : 'opacity-0'}`} />
-        <div className={`absolute inset-0 transition-opacity duration-1000 ${videoUrl ? 'opacity-0' : 'opacity-100'}`} style={{ background: settings.customBackground ? `url(${settings.customBackground}) center/cover no-repeat` : currentBgValue }}>
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay" />
-          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none ${!settings.customBackground && settings.isAnimationEnabled ? 'animate-gradient-slow' : ''}`} />
+
+        {/* Layer 3: Static/Gradient Background (Fades out when video is active) */}
+        <div 
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${videoUrl ? 'opacity-0' : 'opacity-100'}`}
+            style={{ 
+                background: settings.customBackground ? `url(${settings.customBackground}) center/cover no-repeat` : currentBgValue 
+            }}
+        >
+             {/* Noise & Vignette only for static/gradient */}
+             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay" />
+             <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none ${!settings.customBackground && settings.isAnimationEnabled ? 'animate-gradient-slow' : ''}`} />
         </div>
       </div>
 
+      {/* Fixed Infinite Bar at absolute top */}
       <InfiniteBar language={settings.language} />
 
+      {/* Main Content Area - Reduced top padding to pt-12 */}
       <div className="relative z-10 w-full h-full flex flex-col pt-12">
+        
         <Clock format={settings.timeFormat} />
 
         <header className="flex justify-end items-center p-4 pr-6 gap-2 mt-2">
-          <TopNav language={settings.language} onOpenSettings={() => setIsSettingsOpen(true)} />
-          <AppMenu language={settings.language} />
+            <TopNav language={settings.language} />
+            
+            {/* Auth Button & Sync Status */}
+            {user ? (
+                <div className="flex items-center gap-3">
+                    {/* Sync Indicator */}
+                    <div className="text-white/50" title={isSyncing ? "Syncing..." : "Synced"}>
+                        {isSyncing ? (
+                            <CloudUpload size={18} className="animate-pulse text-[var(--theme-color)]" />
+                        ) : (
+                            <Cloud size={18} />
+                        )}
+                    </div>
+
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/20 border border-white/5 glass-panel">
+                        <div className="w-6 h-6 rounded-full theme-bg flex items-center justify-center text-xs font-bold text-white shadow-lg">
+                            {user.email?.charAt(0).toUpperCase()}
+                        </div>
+                        <button 
+                            onClick={handleLogout}
+                            title="Logout"
+                            className="text-white/70 hover:text-white transition-colors"
+                        >
+                            <LogOut size={16} />
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <button
+                    onClick={() => setIsAuthOpen(true)}
+                    className="p-3 rounded-full hover:bg-white/10 text-white/90 hover:text-white transition-colors"
+                    title="Login"
+                >
+                    <User size={20} />
+                </button>
+            )}
+
+            <AppMenu language={settings.language} />
         </header>
 
         <main className="flex-1 flex flex-col items-center justify-center -mt-8 px-4 w-full">
-          <div className="mb-4 animate-fade-in-down">
-            <h2 className="text-3xl font-light text-white/90 tracking-tight drop-shadow-md">{getGreeting()}</h2>
-          </div>
-
+          {/* Logo */}
           <div className="mb-8 animate-fade-in-down flex justify-center">
-            <a href="https://reversex.vercel.app/" className="cursor-pointer block group" title="ReverseX">
-              <img src="/pink-glass-start-page/logo%20br%20(1).png" alt="Logo" className="h-24 md:h-28 w-auto drop-shadow-[0_0_15px_rgba(var(--theme-rgb),0.4)] transition-transform duration-500 group-hover:scale-105" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-            </a>
+             <a 
+               href="https://reversex.vercel.app/" 
+               className="cursor-pointer block group"
+               title="ReverseX"
+             >
+                 <img 
+                   src="/pink-glass-start-page/logo%20br%20(1).png" 
+                   alt="Logo" 
+                   className="h-24 md:h-28 w-auto drop-shadow-[0_0_15px_rgba(var(--theme-rgb),0.4)] transition-transform duration-500 group-hover:scale-105"
+                 />
+             </a>
           </div>
-
+          
           <SearchBar engine={settings.searchEngine} language={settings.language} />
-
+          
+          {/* Center Area: Speed Dial Grid */}
           <div className="animate-fade-in-up w-full flex justify-center">
-            <BookmarkGrid language={settings.language} />
+             <BookmarkGrid language={settings.language} />
           </div>
         </main>
 
         <footer className="p-8 flex justify-center animate-fade-in-up pb-12 relative">
           {!settings.lockBackground && !settings.customBackground && !settings.customVideo && (
-            <BackgroundSwitcher currentIndex={bgIndex} onSwitch={setBgIndex} />
+              <BackgroundSwitcher 
+                currentIndex={bgIndex}
+                onSwitch={setBgIndex}
+              />
           )}
         </footer>
       </div>
 
-      <button onClick={() => setIsSettingsOpen(true)} className="fixed bottom-6 right-6 p-4 rounded-[1.5rem] bg-black/20 hover:bg-[rgba(var(--theme-rgb),0.4)] backdrop-blur-md text-white/70 hover:text-white transition-all duration-300 z-40 border border-white/5 hover:rotate-90 shadow-xl" title="Settings">
-        <Settings size={22} />
+      <button 
+        onClick={() => setIsSettingsOpen(true)}
+        className="fixed bottom-6 right-6 p-3 rounded-full bg-black/20 hover:bg-[rgba(var(--theme-rgb),0.4)] backdrop-blur-md text-white/70 hover:text-white transition-all duration-300 z-40 border border-white/5 hover:rotate-90"
+        title="Settings"
+      >
+        <Settings size={20} />
       </button>
 
-      {isSettingsOpen && <SettingsModal settings={settings} updateSettings={updateSettings} onClose={() => setIsSettingsOpen(false)} />}
+      {isSettingsOpen && (
+        <SettingsModal 
+            onClose={() => setIsSettingsOpen(false)} 
+        />
+      )}
+
+      {isAuthOpen && (
+          <AuthModal 
+            language={settings.language}
+            onClose={() => setIsAuthOpen(false)}
+          />
+      )}
 
       <style>{`
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in-down { animation: fadeInDown 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-        .animate-fade-in-up { animation: fadeInUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        @keyframes fadeInDown {
+          from { opacity: 0; transform: translateY(-30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-down {
+          animation: fadeInDown 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
       `}</style>
     </div>
   );

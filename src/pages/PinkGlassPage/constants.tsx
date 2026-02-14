@@ -1,16 +1,48 @@
-
 import React from 'react';
 import { BackgroundTheme, AppItem, Bookmark, AppSettings } from './types';
 
+// New Pink/Gradient Backgrounds
 export const BACKGROUNDS: BackgroundTheme[] = [
-  { name: "Deep Space Mesh", value: "linear-gradient(-45deg, #09090b, #1e1b4b, #312e81, #18181b)", textColor: "text-white" },
-  { name: "Midnight Magenta", value: "linear-gradient(135deg, #2a0845 0%, #6441A5 50%, #fe5196 100%)", textColor: "text-white" },
-  { name: "Deep Rose", value: "#9f1239", textColor: "text-white" },
-  { name: "Cotton Candy", value: "linear-gradient(to right, #ffc3a0 0%, #ffafbd 100%)", textColor: "text-gray-900" },
-  { name: "Neon City", value: "radial-gradient(circle at center, #f50057 0%, #1a1a2e 100%)", textColor: "text-white" },
-  { name: "Soft Lilac", value: "#e879f9", textColor: "text-white" },
-  { name: "Sunset Vibes", value: "linear-gradient(to top, #09203f 0%, #537895 100%)", textColor: "text-white" },
-  { name: "Dark Velvet", value: "#1a1a1a", textColor: "text-white" }
+  {
+    name: "Deep Space Mesh",
+    value: "linear-gradient(-45deg, #09090b, #1e1b4b, #312e81, #18181b)",
+    textColor: "text-white"
+  },
+  {
+    name: "Midnight Magenta",
+    value: "linear-gradient(135deg, #2a0845 0%, #6441A5 50%, #fe5196 100%)",
+    textColor: "text-white"
+  },
+  {
+    name: "Deep Rose",
+    value: "#9f1239", 
+    textColor: "text-white"
+  },
+  {
+    name: "Cotton Candy",
+    value: "linear-gradient(to right, #ffc3a0 0%, #ffafbd 100%)",
+    textColor: "text-gray-900"
+  },
+  {
+    name: "Neon City",
+    value: "radial-gradient(circle at center, #f50057 0%, #1a1a2e 100%)",
+    textColor: "text-white"
+  },
+  {
+    name: "Soft Lilac",
+    value: "#e879f9", 
+    textColor: "text-white"
+  },
+  {
+    name: "Sunset Vibes",
+    value: "linear-gradient(to top, #09203f 0%, #537895 100%)", 
+    textColor: "text-white"
+  },
+  {
+    name: "Dark Velvet",
+    value: "#1a1a1a", 
+    textColor: "text-white"
+  }
 ];
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -21,13 +53,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
   lockBackground: false,
   customBackground: null,
   customVideo: false,
-  themeColor: '#ff69b4',
-  language: 'ru'
+  themeColor: '#ff69b4', // Hot Pink default
+  language: 'ru' // Default to Russian as requested
 };
 
 export const SEARCH_ENGINES = {
   google: "https://www.google.com/search?q=",
-  yandex: "https://yandex.ru/search/?text=",
   bing: "https://www.bing.com/search?q=",
   duckduckgo: "https://duckduckgo.com/?q=",
   yahoo: "https://search.yahoo.com/search?p="
@@ -37,9 +68,10 @@ export const TRANSLATIONS = {
   en: {
     searchPlaceholder: "Search or type a URL...",
     settings: "Settings",
+    profile: "Profile",
     appearance: "Appearance",
     functionality: "Functionality",
-    profile: "Profile",
+    dataManagement: "Data Management",
     lockBackground: "Lock Background",
     customWallpaper: "Custom Wallpaper (Image)",
     customVideo: "Live Wallpaper (Video)",
@@ -63,19 +95,28 @@ export const TRANSLATIONS = {
     images: "Images",
     dropFavorites: "Drop Favorites Here",
     googleApps: "Google Apps",
-    login: "Log In",
-    logout: "Log Out",
-    signInWithGoogle: "Sign in with Google",
-    save: "Save",
-    fullName: "Full Name",
-    changePhoto: "Change Photo"
+    login: "Login",
+    logout: "Logout",
+    email: "Email",
+    password: "Password",
+    authTitle: "Cloud Sync",
+    downloadSettings: "Download Settings (JSON)",
+    uploadSettings: "Import Settings (JSON)",
+    syncSuccess: "Data synced with Cloud",
+    importSuccess: "Settings imported successfully!",
+    importError: "Invalid JSON file",
+    lastSynced: "Last Synced",
+    notLoggedIn: "You are not logged in",
+    loginDescription: "Log in to sync your settings and bookmarks across devices.",
+    never: "Never",
   },
   ru: {
     searchPlaceholder: "Поиск или URL...",
     settings: "Настройки",
+    profile: "Профиль",
     appearance: "Внешний вид",
     functionality: "Функционал",
-    profile: "Профиль",
+    dataManagement: "Управление данными",
     lockBackground: "Зафиксировать фон",
     customWallpaper: "Свой фон (Картинка)",
     customVideo: "Живые обои (Видео)",
@@ -101,13 +142,22 @@ export const TRANSLATIONS = {
     googleApps: "Приложения",
     login: "Войти",
     logout: "Выйти",
-    signInWithGoogle: "Войти через Google",
-    save: "Сохранить",
-    fullName: "Полное имя",
-    changePhoto: "Изменить фото"
+    email: "Email",
+    password: "Пароль",
+    authTitle: "Синхронизация",
+    downloadSettings: "Скачать настройки (JSON)",
+    uploadSettings: "Загрузить настройки (JSON)",
+    syncSuccess: "Данные синхронизированы",
+    importSuccess: "Настройки успешно загружены!",
+    importError: "Неверный файл JSON",
+    lastSynced: "Последняя синхронизация",
+    notLoggedIn: "Вы не вошли в систему",
+    loginDescription: "Войдите, чтобы синхронизировать настройки между устройствами.",
+    never: "Никогда",
   }
 };
 
+// --- Official Colored SVG Icons (2024/2025 Modern) ---
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-10 h-10">
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -147,7 +197,7 @@ const MapsIcon = () => (
   <svg viewBox="0 0 24 24" className="w-10 h-10">
     <path fill="#34A853" d="M18.5 11.5c-1.3 0-2.6-.4-3.7-1L18.6 4c.6.4 1.2.9 1.7 1.5 2 2.4 2.3 5.3 1.2 8.2l-3-2.2z" />
     <path fill="#EA4335" d="M12.4 1.6C10.7.6 8.8 0 6.9 0 4.1 0 1.6 1.2 0 3.3l5.8 4.8 6.6-6.5z" />
-    <path fill="#4285F4" d="M6.9 0c-1.9 0-3.8.6-5.5 1.6l6.6 5.5L14.8 10.5c1.1.7 2.4 1 3.7 1 2.3 0 4.5-1.2 5.7-3.2-1.7-4.1-5.1-7.3-9.2-8.3C13.8.5 12.4 0 10.9 0H6.9z" opacity=".2"/>
+    <path fill="#4285F4" d="M6.9 0c-1.9 0-3.8.6-5.5 1.6l6.6 5.5L14.8 10.5c1.1.7 2.4 1 3.7 1 2.3 0 4.5-1.2 5.7-3.2-1.7-4.1-5.1-7.3-9.2-8.3C13.8.5 12.4 0 10.9 0H6.9z" opacity=".2"/> 
     <path fill="#FBBC05" d="M5.8 8.1l-5.8-4.8C-.9 6 .3 9.4 2.6 12.1c1.5 1.7 3.5 3 5.8 3.5l3.5-4.1c-1.2.7-2.6 1.1-3.9 1.1-2.3 0-4.4-1.2-5.5-3.1L5.8 8.1z" />
     <path fill="#4285F4" d="M11.9 15.6c1.3 0 2.7-.4 3.9-1.1l3 2.2c-.8 2.2-2.5 3.9-4.7 4.9L8.4 15.6c1.1 0 2.3 0 3.5 0z" />
     <path fill="#EA4335" d="M14.1 21.6c2.2-1 3.9-2.7 4.7-4.9l-3.5-2.6c-1.1 1.9-3.2 3.1-5.5 3.1-1.3 0-2.6-.4-3.8-1.1L2.6 12.1c.5 5.5 4.8 10 10 10.4v-.9z" />
@@ -263,6 +313,13 @@ const KeepIcon = () => (
     </svg>
 );
 
+export const DEFAULT_TOP_LINKS: Bookmark[] = [
+    { id: 't1', title: 'News', url: 'https://news.google.com', initials: 'N' },
+    { id: 't2', title: 'Twitter', url: 'https://twitter.com', initials: 'X' },
+    { id: 't3', title: 'Instagram', url: 'https://instagram.com', initials: 'IG' },
+];
+
+// Expanded Google Apps List
 export const INITIAL_FAVORITES: AppItem[] = [
   { id: 'g-search', name: 'Search', url: 'https://google.com', icon: <GoogleIcon /> },
   { id: 'g-youtube', name: 'YouTube', url: 'https://youtube.com', icon: <YoutubeIcon /> },

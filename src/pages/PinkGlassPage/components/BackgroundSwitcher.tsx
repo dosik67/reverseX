@@ -1,4 +1,4 @@
-import React from 'lucide-react';
+import React from 'react';
 import { ChevronLeft, ChevronRight, Palette } from 'lucide-react';
 import { BACKGROUNDS } from '../constants';
 
