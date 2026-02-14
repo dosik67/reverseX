@@ -104,10 +104,13 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   // --- Auth Listener ---
   useEffect(() => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-          setUser(session?.user ?? null);
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
           if (session?.user) {
-              fetchCloudData(session.user.id);
+              setUser(session.user);
+              // Trigger sync immediately upon login
+              await fetchCloudData(session.user.id);
+          } else {
+              setUser(null);
           }
       });
       return () => subscription.unsubscribe();
@@ -120,18 +123,28 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   // --- Cloud Sync Logic ---
-  const fetchCloudData = async (userId: string) => {
+  const fetchCloudData = async (userId: string, retries = 3) => {
       setIsSyncing(true);
       try {
+          // Attempt to fetch user profile data
           const { data, error } = await supabase
               .from('user_profiles')
               .select('data')
               .eq('id', userId)
               .single();
 
+          // Retry Logic: If profile is missing (common with new Google Auth users), wait and retry.
+          // This allows the Database Trigger time to create the row.
+          if ((!data || error) && retries > 0) {
+              console.log(`Profile not found yet. Retrying sync... (${retries} attempts left)`);
+              await new Promise(resolve => setTimeout(resolve, 1500)); // Wait 1.5 seconds
+              return fetchCloudData(userId, retries - 1);
+          }
+
           if (data && data.data) {
               const cloudData = data.data as GlobalState;
-              setSettingsState(prev => ({ ...prev, ...cloudData.settings }));
+              // Only overwrite if cloud data exists, otherwise keep local defaults
+              if (cloudData.settings) setSettingsState(prev => ({ ...prev, ...cloudData.settings }));
               if (cloudData.bookmarks) setBookmarks(cloudData.bookmarks);
               if (cloudData.topLinks) setTopLinks(cloudData.topLinks);
               if (cloudData.favorites) setFavorites(hydrateApps(cloudData.favorites));
