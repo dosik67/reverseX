@@ -1,46 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { INITIAL_FAVORITES, INITIAL_OTHERS, ALL_APPS, TRANSLATIONS } from '../constants';
+import { TRANSLATIONS } from '../constants';
 import { AppItem } from '../types';
+import { useGlobal } from '../context/GlobalContext';
 
 interface AppMenuProps {
     language: 'en' | 'ru';
 }
 
 const AppMenu: React.FC<AppMenuProps> = ({ language }) => {
+  const { favorites, setFavorites, others, setOthers } = useGlobal();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const t = TRANSLATIONS[language];
-  
-  const hydrateApps = (items: any[]): AppItem[] => {
-    return items.map(savedItem => {
-        const original = ALL_APPS.find(a => a.id === savedItem.id);
-        return original || null;
-    }).filter((item): item is AppItem => item !== null);
-  };
-
-  const [favorites, setFavorites] = useState<AppItem[]>(() => {
-    try {
-        const saved = localStorage.getItem('pink_glass_favorites');
-        return saved ? hydrateApps(JSON.parse(saved)) : INITIAL_FAVORITES;
-    } catch { return INITIAL_FAVORITES; }
-  });
-
-  const [others, setOthers] = useState<AppItem[]>(() => {
-    try {
-        const saved = localStorage.getItem('pink_glass_others');
-        return saved ? hydrateApps(JSON.parse(saved)) : INITIAL_OTHERS;
-    } catch { return INITIAL_OTHERS; }
-  });
-
-  useEffect(() => {
-    const replacer = (key: string, value: any) => {
-        if (key === 'icon') return undefined;
-        return value;
-    };
-    localStorage.setItem('pink_glass_favorites', JSON.stringify(favorites, replacer));
-    localStorage.setItem('pink_glass_others', JSON.stringify(others, replacer));
-  }, [favorites, others]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

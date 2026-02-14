@@ -1,19 +1,33 @@
 import React, { useRef } from 'react';
-import { X, Upload, Zap, Eye, Clock, Monitor, Image, Globe, Palette, Film } from 'lucide-react';
-import { AppSettings } from '../types';
+import { X, Upload, Zap, Eye, Clock, Monitor, Image, Globe, Palette, Film, Download, Database } from 'lucide-react';
+import { useGlobal } from '../context/GlobalContext';
 import { TRANSLATIONS } from '../constants';
 import { saveVideo, deleteVideo } from '../utils/db';
 
 interface SettingsModalProps {
-  settings: AppSettings;
-  updateSettings: (newSettings: Partial<AppSettings>) => void;
   onClose: () => void;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ settings, updateSettings, onClose }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
+  const { settings, updateSettings, importData, exportData } = useGlobal();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const jsonInputRef = useRef<HTMLInputElement>(null);
   const t = TRANSLATIONS[settings.language];
+
+  const handleJsonImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        const success = importData(event.target.result as string);
+        if (success) alert(t.importSuccess);
+        else alert(t.importError);
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -68,9 +82,32 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ settings, updateSettings,
         </div>
         
         <div className="space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2">
-            
-            {/* Appearance */}
+            {/* Data Management */}
             <section className="space-y-3">
+              <h3 className="theme-text-accent text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                <Database size={12}/> {t.dataManagement}
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={exportData}
+                  className="p-3 rounded-xl bg-black/20 hover:bg-black/30 border border-white/5 transition-colors flex flex-col items-center gap-2 text-center"
+                >
+                  <Download size={20} className="text-white/70" />
+                  <span className="text-xs text-white/80">{t.downloadSettings}</span>
+                </button>
+                <button
+                  onClick={() => jsonInputRef.current?.click()}
+                  className="p-3 rounded-xl bg-black/20 hover:bg-black/30 border border-white/5 transition-colors flex flex-col items-center gap-2 text-center"
+                >
+                  <Upload size={20} className="text-white/70" />
+                  <span className="text-xs text-white/80">{t.uploadSettings}</span>
+                  <input type="file" accept=".json" ref={jsonInputRef} className="hidden" onChange={handleJsonImport}/>
+                </button>
+              </div>
+            </section>
+
+            {/* Appearance */}
+            <section className="space-y-3 pt-4 border-t border-white/5">
                 <h3 className="theme-text-accent text-xs font-bold uppercase tracking-widest flex items-center gap-2">
                     <Image size={12}/> {t.appearance}
                 </h3>

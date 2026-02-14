@@ -1,30 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, X, Globe, Link } from 'lucide-react';
-import { Bookmark } from '../types';
-import { DEFAULT_BOOKMARKS, TRANSLATIONS } from '../constants';
+import React, { useState } from 'react';
+import { Plus, X, Link } from 'lucide-react';
+import { TRANSLATIONS } from '../constants';
+import { useGlobal } from '../context/GlobalContext';
 
 interface BookmarkGridProps {
     language: 'en' | 'ru';
 }
 
 const BookmarkGrid: React.FC<BookmarkGridProps> = ({ language }) => {
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => {
-    try {
-        const saved = localStorage.getItem('pink_glass_bookmarks');
-        return saved ? JSON.parse(saved) : DEFAULT_BOOKMARKS;
-    } catch {
-        return DEFAULT_BOOKMARKS;
-    }
-  });
-
+  const { bookmarks, setBookmarks } = useGlobal();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newUrl, setNewUrl] = useState('');
   const t = TRANSLATIONS[language];
-
-  useEffect(() => {
-    localStorage.setItem('pink_glass_bookmarks', JSON.stringify(bookmarks));
-  }, [bookmarks]);
 
   const addBookmark = (e: React.FormEvent) => {
     e.preventDefault();

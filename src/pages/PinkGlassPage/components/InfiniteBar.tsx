@@ -1,28 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Plus, X, Globe, Star } from 'lucide-react';
 import { Bookmark } from '../types';
 import { TRANSLATIONS } from '../constants';
+import { useGlobal } from '../context/GlobalContext';
 
 interface InfiniteBarProps {
     language: 'en' | 'ru';
 }
 
-const DEFAULT_TOP_LINKS: Bookmark[] = [
-    { id: 't1', title: 'News', url: 'https://news.google.com', initials: 'N' },
-    { id: 't2', title: 'Twitter', url: 'https://twitter.com', initials: 'X' },
-    { id: 't3', title: 'Instagram', url: 'https://instagram.com', initials: 'IG' },
-];
-
 const InfiniteBar: React.FC<InfiniteBarProps> = ({ language }) => {
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => {
-    try {
-        const saved = localStorage.getItem('pink_glass_top_bar');
-        return saved ? JSON.parse(saved) : DEFAULT_TOP_LINKS;
-    } catch {
-        return DEFAULT_TOP_LINKS;
-    }
-  });
-
+  const { topLinks: bookmarks, setTopLinks: setBookmarks } = useGlobal();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newUrl, setNewUrl] = useState('');
@@ -37,10 +24,6 @@ const InfiniteBar: React.FC<InfiniteBarProps> = ({ language }) => {
   const lastX = useRef(0);
   const rafId = useRef<number | null>(null);
   const [hasMoved, setHasMoved] = useState(false);
-
-  useEffect(() => {
-    localStorage.setItem('pink_glass_top_bar', JSON.stringify(bookmarks));
-  }, [bookmarks]);
 
   const stopMomentum = () => {
     if (rafId.current) {

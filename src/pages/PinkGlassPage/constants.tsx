@@ -91,7 +91,18 @@ export const TRANSLATIONS = {
     gmail: "Gmail",
     images: "Images",
     dropFavorites: "Drop Favorites Here",
-    googleApps: "Google Apps"
+    googleApps: "Google Apps",
+    dataManagement: "Data Management",
+    login: "Login",
+    logout: "Logout",
+    email: "Email",
+    password: "Password",
+    authTitle: "Cloud Sync",
+    downloadSettings: "Download Settings (JSON)",
+    uploadSettings: "Import Settings (JSON)",
+    syncSuccess: "Data synced with Cloud",
+    importSuccess: "Settings imported successfully!",
+    importError: "Invalid JSON file",
   },
   ru: {
     searchPlaceholder: "Поиск или URL...",
@@ -120,9 +131,26 @@ export const TRANSLATIONS = {
     gmail: "Почта",
     images: "Картинки",
     dropFavorites: "Перетащите сюда",
-    googleApps: "Приложения"
+    googleApps: "Приложения",
+    dataManagement: "Управление данными",
+    login: "Войти",
+    logout: "Выйти",
+    email: "Email",
+    password: "Пароль",
+    authTitle: "Синхронизация",
+    downloadSettings: "Скачать настройки (JSON)",
+    uploadSettings: "Загрузить настройки (JSON)",
+    syncSuccess: "Данные синхронизированы",
+    importSuccess: "Настройки успешно загружены!",
+    importError: "Неверный файл JSON",
   }
 };
+
+export const DEFAULT_TOP_LINKS: Bookmark[] = [
+  { id: 't1', title: 'News', url: 'https://news.google.com', initials: 'N' },
+  { id: 't2', title: 'Twitter', url: 'https://twitter.com', initials: 'X' },
+  { id: 't3', title: 'Instagram', url: 'https://instagram.com', initials: 'IG' },
+];
 
 // --- Official Colored SVG Icons (2024/2025 Modern) ---
 const GoogleIcon = () => (
