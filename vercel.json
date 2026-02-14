@@ -6,7 +6,7 @@
   },
   "functions": {
     "api/**/*.js": {
-      "runtime": "node-20.x"
+      "runtime": "nodejs20.x"
     }
   },
   "routes": [
