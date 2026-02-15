@@ -32,6 +32,7 @@ interface GlobalContextType extends GlobalState {
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
+// Helper to hydrate Apps from JSON (restore React Components for icons)
 const hydrateApps = (items: any[]): AppItem[] => {
     return items.map(savedItem => {
         const original = ALL_APPS.find(a => a.id === savedItem.id);
@@ -40,6 +41,7 @@ const hydrateApps = (items: any[]): AppItem[] => {
 };
 
 export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // --- Local State Initialization ---
   const [settings, setSettingsState] = useState<AppSettings>(() => {
     try {
         const saved = localStorage.getItem('pink_glass_settings');
@@ -84,34 +86,42 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
 
+  // --- Helpers for cleaner updates ---
   const setSettings = (s: AppSettings) => setSettingsState(s);
   const updateSettings = (partial: Partial<AppSettings>) => setSettingsState(prev => ({ ...prev, ...partial }));
   
   const updateBookmark = (id: string, updates: Partial<Bookmark>) => {
+      // Check Top Links
       if (topLinks.some(b => b.id === id)) {
           setTopLinks(topLinks.map(b => b.id === id ? { ...b, ...updates } : b));
           return;
       }
+      // Check Center Bookmarks
       if (bookmarks.some(b => b.id === id)) {
           setBookmarks(bookmarks.map(b => b.id === id ? { ...b, ...updates } : b));
           return;
       }
   };
 
+  // --- Persistence to LocalStorage ---
   useEffect(() => {
     localStorage.setItem('pink_glass_settings', JSON.stringify(settings));
     localStorage.setItem('pink_glass_bookmarks', JSON.stringify(bookmarks));
     localStorage.setItem('pink_glass_top_bar', JSON.stringify(topLinks));
     localStorage.setItem('pink_glass_bg_index', bgIndex.toString());
+    
     const replacer = (key: string, value: any) => (key === 'icon' ? undefined : value);
     localStorage.setItem('pink_glass_favorites', JSON.stringify(favorites, replacer));
     localStorage.setItem('pink_glass_others', JSON.stringify(others, replacer));
   }, [settings, bookmarks, topLinks, favorites, others, bgIndex]);
 
+
+  // --- Auth Listener ---
   useEffect(() => {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
           if (session?.user) {
               setUser(session.user);
+              // Trigger sync immediately upon login
               await fetchCloudData(session.user.id);
           } else {
               setUser(null);
@@ -126,16 +136,28 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       setLastSynced(null);
   };
 
+  // --- Cloud Sync Logic ---
   const fetchCloudData = async (userId: string, retries = 3) => {
       setIsSyncing(true);
       try {
-          const { data, error } = await supabase.from('user_profiles').select('data').eq('id', userId).single();
+          // Attempt to fetch user profile data
+          const { data, error } = await supabase
+              .from('user_profiles')
+              .select('data')
+              .eq('id', userId)
+              .single();
+
+          // Retry Logic: If profile is missing (common with new Google Auth users), wait and retry.
+          // This allows the Database Trigger time to create the row.
           if ((!data || error) && retries > 0) {
-              await new Promise(resolve => setTimeout(resolve, 1500));
+              console.log(`Profile not found yet. Retrying sync... (${retries} attempts left)`);
+              await new Promise(resolve => setTimeout(resolve, 1500)); // Wait 1.5 seconds
               return fetchCloudData(userId, retries - 1);
           }
+
           if (data && data.data) {
               const cloudData = data.data as GlobalState;
+              // Only overwrite if cloud data exists, otherwise keep local defaults
               if (cloudData.settings) setSettingsState(prev => ({ ...prev, ...cloudData.settings }));
               if (cloudData.bookmarks) setBookmarks(cloudData.bookmarks);
               if (cloudData.topLinks) setTopLinks(cloudData.topLinks);
@@ -150,24 +172,45 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       }
   };
 
+  // Debounced Save to Cloud
   useEffect(() => {
       if (!user) return;
+      
       setIsSyncing(true);
+
       const timeoutId = setTimeout(async () => {
           const payload = {
-              settings, bookmarks, topLinks,
-              favorites: favorites.map(f => ({ id: f.id, name: f.name, url: f.url })),
+              settings,
+              bookmarks,
+              topLinks,
+              favorites: favorites.map(f => ({ id: f.id, name: f.name, url: f.url })), 
               others: others.map(o => ({ id: o.id, name: o.name, url: o.url }))
           };
-          await supabase.from('user_profiles').upsert({ id: user.id, data: payload, updated_at: new Date().toISOString() });
+
+          await supabase.from('user_profiles').upsert({
+              id: user.id,
+              data: payload,
+              updated_at: new Date().toISOString()
+          });
+          
           setIsSyncing(false);
           setLastSynced(new Date());
-      }, 2000);
+      }, 2000); 
+
       return () => clearTimeout(timeoutId);
   }, [settings, bookmarks, topLinks, favorites, others, user]);
 
+
+  // --- Export / Import ---
   const exportData = () => {
-      const dataToExport = { settings, bookmarks, topLinks, bgIndex, favorites: favorites.map(f => ({ id: f.id, name: f.name, url: f.url })), others: others.map(o => ({ id: o.id, name: o.name, url: o.url })) };
+      const dataToExport = {
+          settings,
+          bookmarks,
+          topLinks,
+          favorites: favorites.map(f => ({ id: f.id, name: f.name, url: f.url })),
+          others: others.map(o => ({ id: o.id, name: o.name, url: o.url })),
+          bgIndex
+      };
       const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -182,12 +225,15 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       try {
           const parsed = JSON.parse(jsonString);
           if (!parsed.settings || !parsed.bookmarks) return false;
+
           localStorage.setItem('pink_glass_settings', JSON.stringify(parsed.settings));
           localStorage.setItem('pink_glass_bookmarks', JSON.stringify(parsed.bookmarks));
-          if (parsed.topLinks) localStorage.setItem('pink_glass_top_bar', JSON.stringify(parsed.topLinks));
-          if (parsed.bgIndex !== undefined) localStorage.setItem('pink_glass_bg_index', parsed.bgIndex.toString());
-          if (parsed.favorites) localStorage.setItem('pink_glass_favorites', JSON.stringify(parsed.favorites));
-          if (parsed.others) localStorage.setItem('pink_glass_others', JSON.stringify(parsed.others));
+          if(parsed.topLinks) localStorage.setItem('pink_glass_top_bar', JSON.stringify(parsed.topLinks));
+          if(parsed.bgIndex !== undefined) localStorage.setItem('pink_glass_bg_index', parsed.bgIndex.toString());
+          
+          if(parsed.favorites) localStorage.setItem('pink_glass_favorites', JSON.stringify(parsed.favorites));
+          if(parsed.others) localStorage.setItem('pink_glass_others', JSON.stringify(parsed.others));
+
           window.location.reload();
           return true;
       } catch (e) {
@@ -198,9 +244,18 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   return (
     <GlobalContext.Provider value={{
-      settings, setSettings, updateSettings, bookmarks, setBookmarks, topLinks, setTopLinks,
-      favorites, setFavorites, others, setOthers, user, bgIndex, setBgIndex,
-      importData, exportData, isSyncing, lastSynced, logout, updateBookmark
+      settings, setSettings, updateSettings,
+      bookmarks, setBookmarks,
+      topLinks, setTopLinks,
+      favorites, setFavorites,
+      others, setOthers,
+      user,
+      bgIndex, setBgIndex,
+      importData, exportData,
+      isSyncing,
+      lastSynced,
+      logout,
+      updateBookmark
     }}>
       {children}
     </GlobalContext.Provider>
@@ -209,6 +264,8 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
 export const useGlobal = () => {
   const context = useContext(GlobalContext);
-  if (context === undefined) throw new Error('useGlobal must be used within a GlobalProvider');
+  if (context === undefined) {
+    throw new Error('useGlobal must be used within a GlobalProvider');
+  }
   return context;
 };

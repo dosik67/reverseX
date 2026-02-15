@@ -31,10 +31,12 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
   });
 
   const style: React.CSSProperties = {
+    // CRITICAL FIX: Ensure transform is stringified correctly
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.4 : 1,
     zIndex: isDragging ? 999 : 'auto',
+    // CRITICAL FIX: Prevent browser scrolling/gestures while dragging
     touchAction: 'none', 
     position: 'relative',
   };
@@ -46,8 +48,10 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
     } catch { return null; }
   };
 
+  // Logic to determine icon source: Custom > Google Favicon > Fallback Globe
   const iconSrc = bookmark.customIconUrl || getFaviconUrl(bookmark.url, variant === 'pill' ? 32 : 64);
 
+  // --- Variant: TOP BAR PILL ---
   if (variant === 'pill') {
     return (
       <div
@@ -61,6 +65,7 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
       >
         {!isOverlay && (
              <>
+                 {/* Delete Button (Top Right) */}
                  <button 
                     onPointerDown={(e) => { e.stopPropagation(); onRemove(bookmark.id); }}
                     className="absolute -top-1 -right-1 p-0.5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity z-20 scale-75 hover:scale-110"
@@ -68,6 +73,8 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
                 >
                     <X size={8} />
                 </button>
+                
+                {/* Edit Button (Top Left) */}
                 <button 
                     onPointerDown={(e) => { e.stopPropagation(); if (onEdit) onEdit(bookmark); }}
                     className="absolute -top-1 -left-1 p-0.5 rounded-full bg-white text-black opacity-0 group-hover:opacity-100 transition-opacity z-20 scale-75 hover:scale-110"
@@ -82,7 +89,7 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
             <img 
                 src={iconSrc || ''} 
                 alt="" 
-                draggable={false}
+                draggable={false} // Prevent native drag conflict
                 className="w-3.5 h-3.5 object-contain pointer-events-none"
                 onError={(e) => {
                     e.currentTarget.style.display = 'none';
@@ -96,7 +103,7 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
         
         <a 
           href={bookmark.url} 
-          draggable={false}
+          draggable={false} // Prevent native drag conflict
           onClick={(e) => { if(isDragging || isOverlay) e.preventDefault(); }} 
           className="text-[11px] font-medium text-white/80 whitespace-nowrap group-hover:text-white drop-shadow-sm transition-colors pointer-events-none"
         >
@@ -106,6 +113,7 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
     );
   }
 
+  // --- Variant: CENTER GRID CARD ---
   return (
     <div 
         ref={setNodeRef}
@@ -115,11 +123,13 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
         className={`group relative flex flex-col items-center cursor-grab active:cursor-grabbing ${isOverlay ? 'scale-110 z-50' : ''}`}
     >
         <div className="flex flex-col items-center gap-3 transition-transform duration-300 group-hover:scale-105">
+            {/* Icon Box */}
             <div className={`w-16 h-16 md:w-20 md:h-20 rounded-[2rem] glass-panel flex items-center justify-center relative overflow-hidden transition-all duration-300 shadow-lg border border-white/10
                             ${isOverlay ? 'bg-white/20 border-white/40 shadow-2xl' : 'group-hover:bg-white/20 group-hover:shadow-[0_0_20px_rgba(var(--theme-rgb),0.3)] group-hover:border-white/30'}`}>
                 
                 {!isOverlay && (
                     <>
+                        {/* Delete Button */}
                         <button 
                             onPointerDown={(e) => { e.stopPropagation(); onRemove(bookmark.id); }}
                             className="absolute top-1 right-1 p-1 rounded-full bg-black/40 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all z-20"
@@ -127,6 +137,8 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
                         >
                             <X size={12} />
                         </button>
+
+                         {/* Edit Button */}
                          <button 
                             onPointerDown={(e) => { e.stopPropagation(); if (onEdit) onEdit(bookmark); }}
                             className="absolute top-1 left-1 p-1 rounded-full bg-black/40 hover:bg-white hover:text-black text-white opacity-0 group-hover:opacity-100 transition-all z-20"
@@ -140,7 +152,7 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
                 <img 
                     src={iconSrc || ''} 
                     alt={bookmark.title}
-                    draggable={false}
+                    draggable={false} // Prevent native drag conflict
                     className="w-8 h-8 md:w-10 md:h-10 object-contain drop-shadow-md z-10 pointer-events-none"
                     onError={(e) => {
                         e.currentTarget.style.display = 'none';
@@ -156,7 +168,7 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
             
             <a 
               href={bookmark.url} 
-              draggable={false}
+              draggable={false} // Prevent native drag conflict
               onClick={(e) => { if(isDragging || isOverlay) e.preventDefault(); }} 
               className="text-sm font-medium text-white/80 group-hover:text-white text-shadow-sm truncate max-w-[100px] text-center pointer-events-none"
             >
