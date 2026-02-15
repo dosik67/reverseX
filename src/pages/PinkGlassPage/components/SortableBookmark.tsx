@@ -103,9 +103,9 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
         
         <a 
           href={bookmark.url} 
-          draggable={false} // Prevent native drag conflict
+          draggable={false}
           onClick={(e) => { if(isDragging || isOverlay) e.preventDefault(); }} 
-          className="text-[11px] font-medium text-white/80 whitespace-nowrap group-hover:text-white drop-shadow-sm transition-colors pointer-events-none"
+          className="text-[11px] font-medium text-white/80 whitespace-nowrap group-hover:text-white drop-shadow-sm transition-colors"
         >
             {bookmark.title}
         </a>
@@ -123,56 +123,55 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
         className={`group relative flex flex-col items-center cursor-grab active:cursor-grabbing ${isOverlay ? 'scale-110 z-50' : ''}`}
     >
         <div className="flex flex-col items-center gap-3 transition-transform duration-300 group-hover:scale-105">
-            {/* Icon Box */}
-            <div className={`w-16 h-16 md:w-20 md:h-20 rounded-[2rem] glass-panel flex items-center justify-center relative overflow-hidden transition-all duration-300 shadow-lg border border-white/10
-                            ${isOverlay ? 'bg-white/20 border-white/40 shadow-2xl' : 'group-hover:bg-white/20 group-hover:shadow-[0_0_20px_rgba(var(--theme-rgb),0.3)] group-hover:border-white/30'}`}>
-                
-                {!isOverlay && (
-                    <>
-                        {/* Delete Button */}
-                        <button 
-                            onPointerDown={(e) => { e.stopPropagation(); onRemove(bookmark.id); }}
-                            className="absolute top-1 right-1 p-1 rounded-full bg-black/40 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all z-20"
-                            title="Remove"
-                        >
-                            <X size={12} />
-                        </button>
-
-                         {/* Edit Button */}
-                         <button 
-                            onPointerDown={(e) => { e.stopPropagation(); if (onEdit) onEdit(bookmark); }}
-                            className="absolute top-1 left-1 p-1 rounded-full bg-black/40 hover:bg-white hover:text-black text-white opacity-0 group-hover:opacity-100 transition-all z-20"
-                            title="Edit"
-                        >
-                            <Pencil size={12} />
-                        </button>
-                    </>
-                )}
-
-                <img 
-                    src={iconSrc || ''} 
-                    alt={bookmark.title}
-                    draggable={false} // Prevent native drag conflict
-                    className="w-8 h-8 md:w-10 md:h-10 object-contain drop-shadow-md z-10 pointer-events-none"
-                    onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                    }}
-                />
-                <div className="hidden w-8 h-8 md:w-10 md:h-10 flex items-center justify-center">
-                    <span className="text-xl font-bold text-white/80">{bookmark.initials}</span>
-                </div>
-                
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
-            </div>
-            
+            {/* Icon Box + Title as one link */}
             <a 
               href={bookmark.url} 
-              draggable={false} // Prevent native drag conflict
+              draggable={false}
               onClick={(e) => { if(isDragging || isOverlay) e.preventDefault(); }} 
-              className="text-sm font-medium text-white/80 group-hover:text-white text-shadow-sm truncate max-w-[100px] text-center pointer-events-none"
+              className="flex flex-col items-center gap-3 no-underline outline-none"
             >
-                {bookmark.title}
+                <div className={`w-16 h-16 md:w-20 md:h-20 rounded-[2rem] glass-panel flex items-center justify-center relative overflow-hidden transition-all duration-300 shadow-lg border border-white/10
+                                ${isOverlay ? 'bg-white/20 border-white/40 shadow-2xl' : 'group-hover:bg-white/20 group-hover:shadow-[0_0_20px_rgba(var(--theme-rgb),0.3)] group-hover:border-white/30'}`}>
+                    {!isOverlay && (
+                        <>
+                            <button 
+                                type="button"
+                                onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); onRemove(bookmark.id); }}
+                                onClick={(e) => e.preventDefault()}
+                                className="absolute top-1 right-1 p-1 rounded-full bg-black/40 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all z-20"
+                                title="Remove"
+                            >
+                                <X size={12} />
+                            </button>
+                            <button 
+                                type="button"
+                                onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); if (onEdit) onEdit(bookmark); }}
+                                onClick={(e) => e.preventDefault()}
+                                className="absolute top-1 left-1 p-1 rounded-full bg-black/40 hover:bg-white hover:text-black text-white opacity-0 group-hover:opacity-100 transition-all z-20"
+                                title="Edit"
+                            >
+                                <Pencil size={12} />
+                            </button>
+                        </>
+                    )}
+                    <img 
+                        src={iconSrc || ''} 
+                        alt={bookmark.title}
+                        draggable={false}
+                        className="w-8 h-8 md:w-10 md:h-10 object-contain drop-shadow-md z-10 pointer-events-none"
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                    />
+                    <div className="hidden w-8 h-8 md:w-10 md:h-10 flex items-center justify-center">
+                        <span className="text-xl font-bold text-white/80">{bookmark.initials}</span>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
+                </div>
+                <span className="text-sm font-medium text-white/80 group-hover:text-white text-shadow-sm truncate max-w-[100px] text-center">
+                    {bookmark.title}
+                </span>
             </a>
         </div>
     </div>
