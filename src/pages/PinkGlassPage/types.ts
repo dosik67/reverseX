@@ -13,13 +13,7 @@ export interface AppItem {
   id: string;
   name: string;
   url: string;
-  icon: React.ReactNode;
-}
-
-export interface BackgroundTheme {
-  name: string;
-  value: string; // CSS background value (color or gradient)
-  textColor: string;
+  icon: string; // Changed to string for URL
 }
 
 export interface AppSettings {
@@ -32,4 +26,10 @@ export interface AppSettings {
   customVideo: boolean; // Flag to indicate if a video from IDB should be used
   themeColor: string; // Hex color
   language: 'en' | 'ru';
+}
+
+export interface BackgroundTheme {
+  name: string;
+  value: string; // CSS background value (color or gradient)
+  textColor: string;
 }

@@ -8,6 +8,59 @@ interface AppMenuProps {
     language: 'en' | 'ru';
 }
 
+// Sub-component to handle image state and errors individually
+const GoogleAppItem: React.FC<{
+    app: AppItem;
+    source: 'favorites' | 'others';
+    isOpen: boolean;
+    onDragStart: (e: React.DragEvent, id: string, source: 'favorites' | 'others') => void;
+}> = ({ app, source, isOpen, onDragStart }) => {
+    const [imgSrc, setImgSrc] = useState(app.icon);
+
+    const handleError = () => {
+        // Fallback Strategy: Use Google's official Favicon Service
+        try {
+            const hostname = new URL(app.url).hostname;
+            // sz=128 requests a high-res icon
+            setImgSrc(`https://www.google.com/s2/favicons?domain=${hostname}&sz=128`);
+        } catch {
+            // Ultimate fallback if URL parsing fails
+            setImgSrc('https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png');
+        }
+    };
+
+    return (
+        <div
+            data-app-id={app.id}
+            draggable
+            onDragStart={(e) => onDragStart(e, app.id, source)}
+            className="flex flex-col items-center justify-center p-3 rounded-2xl
+                     glass-hover transition-all duration-200 cursor-move
+                     group relative active:scale-95 active:opacity-80"
+        >
+            <a href={app.url} 
+               onClick={(e) => { if(isOpen) e.stopPropagation(); }} 
+               className="flex flex-col items-center w-full h-full text-decoration-none pointer-events-none" 
+               style={{ pointerEvents: 'auto' }} 
+            >
+                <div className="mb-2 transform group-hover:scale-110 transition-transform duration-300 drop-shadow-md flex items-center justify-center w-10 h-10">
+                    <img 
+                        src={imgSrc} 
+                        alt={app.name} 
+                        className="w-full h-full object-contain" 
+                        draggable="false" 
+                        onError={handleError}
+                        loading="lazy"
+                    />
+                </div>
+                <span className="text-sm text-white/90 group-hover:text-white font-light tracking-wide truncate max-w-[80px]">
+                    {app.name}
+                </span>
+            </a>
+        </div>
+    );
+};
+
 const AppMenu: React.FC<AppMenuProps> = ({ language }) => {
   const { favorites, setFavorites, others, setOthers } = useGlobal();
   const [isOpen, setIsOpen] = useState(false);
@@ -85,31 +138,6 @@ const AppMenu: React.FC<AppMenuProps> = ({ language }) => {
     }
   };
 
-  const renderAppItem = (app: AppItem, source: 'favorites' | 'others') => (
-    <div
-      key={app.id}
-      data-app-id={app.id}
-      draggable
-      onDragStart={(e) => handleDragStart(e, app.id, source)}
-      className="flex flex-col items-center justify-center p-3 rounded-2xl
-                 glass-hover transition-all duration-200 cursor-move
-                 group relative active:scale-95 active:opacity-80"
-    >
-        <a href={app.url} 
-           onClick={(e) => { if(isOpen) e.stopPropagation(); }} 
-           className="flex flex-col items-center w-full h-full text-decoration-none pointer-events-none" 
-           style={{ pointerEvents: 'auto' }} 
-        >
-            <div className="mb-2 transform group-hover:scale-110 transition-transform duration-300 drop-shadow-md">
-                {app.icon}
-            </div>
-            <span className="text-sm text-white/90 group-hover:text-white font-light tracking-wide truncate max-w-[80px]">
-                {app.name}
-            </span>
-        </a>
-    </div>
-  );
-
   return (
     <div className="relative z-50" ref={menuRef}>
       <button
@@ -149,7 +177,15 @@ const AppMenu: React.FC<AppMenuProps> = ({ language }) => {
                 onDrop={(e) => handleDrop(e, 'favorites')}
             >
                 <div className="grid grid-cols-3 gap-2">
-                    {favorites.map((app) => renderAppItem(app, 'favorites'))}
+                    {favorites.map((app) => (
+                        <GoogleAppItem 
+                            key={app.id} 
+                            app={app} 
+                            source="favorites" 
+                            isOpen={isOpen} 
+                            onDragStart={handleDragStart} 
+                        />
+                    ))}
                 </div>
                 {favorites.length === 0 && (
                     <div className="text-center text-white/30 text-xs py-8 pointer-events-none">{t.dropFavorites}</div>
@@ -163,7 +199,15 @@ const AppMenu: React.FC<AppMenuProps> = ({ language }) => {
             >
                 <h4 className="text-xs font-semibold theme-text-accent uppercase tracking-widest mb-3 pl-2 mt-1 pointer-events-none">{t.moreApps}</h4>
                 <div className="grid grid-cols-3 gap-2">
-                    {others.map((app) => renderAppItem(app, 'others'))}
+                    {others.map((app) => (
+                        <GoogleAppItem 
+                            key={app.id} 
+                            app={app} 
+                            source="others" 
+                            isOpen={isOpen} 
+                            onDragStart={handleDragStart} 
+                        />
+                    ))}
                 </div>
             </div>
         </div>

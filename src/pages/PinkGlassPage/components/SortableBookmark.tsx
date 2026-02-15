@@ -123,7 +123,6 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
         className={`group relative flex flex-col items-center cursor-grab active:cursor-grabbing ${isOverlay ? 'scale-110 z-50' : ''}`}
     >
         <div className="flex flex-col items-center gap-3 transition-transform duration-300 group-hover:scale-105">
-            {/* Icon Box + Title as one link */}
             <a 
               href={bookmark.url} 
               draggable={false}
