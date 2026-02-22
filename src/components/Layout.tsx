@@ -28,6 +28,7 @@ const Layout = () => {
     { icon: Film, label: 'Movies', path: '/movies' },
     { icon: Film, label: 'Explore', path: '/explore-movies' },
     { icon: Tv, label: 'Series', path: '/series' },
+    { icon: Tv, label: 'Watch', path: '/ws' },
     { icon: Gamepad, label: 'Games', path: '/games' },
     { icon: Bookmark, label: 'Bookmarks', path: '/bookmarks' },
     { icon: Lightbulb, label: 'Recommendations', path: '/recommendations' },
@@ -120,6 +121,10 @@ const Layout = () => {
               <Link to="/series" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
                 <Tv className="w-4 h-4" />
                 Series
+              </Link>
+              <Link to="/ws" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
+                <Tv className="w-4 h-4" />
+                Watch
               </Link>
               <Link to="/games" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors">
                 <Gamepad className="w-4 h-4" />
