@@ -3,11 +3,13 @@ import { motion } from 'framer-motion';
 import { Play, Star, ArrowLeft, Info, ListVideo } from 'lucide-react';
 import { showsData } from './data/shows';
 import { useTMDB } from './hooks/useTMDB';
+import { useTMDBEpisodes } from './hooks/useTMDBEpisodes';
 
 export default function WSShowPage() {
   const { id } = useParams();
   const show = showsData.find(s => s.id === Number(id));
   const { posterUrl, backdropUrl, overview, rating, loading } = useTMDB(show?.title || '');
+  const { episodes, loading: episodesLoading } = useTMDBEpisodes(show?.title || '');
 
   if (!show) {
     return (
@@ -124,8 +126,19 @@ export default function WSShowPage() {
             <ListVideo className="w-6 h-6 text-pink-500" />
             Список серий
           </h2>
+          {episodesLoading ? (
+            <div className="py-12 text-center">
+              <div className="inline-block w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full animate-spin mb-4" />
+              <p className="text-gray-400">Загрузка серий...</p>
+            </div>
+          ) : episodes.length === 0 ? (
+            <div className="py-12 text-center bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl">
+              <ListVideo className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+              <p className="text-gray-400">Список серий недоступен</p>
+            </div>
+          ) : (
           <div className="space-y-4">
-            {show.episodes.map((ep) => (
+            {episodes.map((ep) => (
               <div
                 key={ep.id}
                 className="p-6 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 hover:bg-white/10 transition-colors shadow-[0_4px_30px_rgba(0,0,0,0.5)] flex flex-col md:flex-row md:items-center gap-6"
@@ -148,6 +161,7 @@ export default function WSShowPage() {
               </div>
             ))}
           </div>
+          )}
         </motion.div>
       </div>
     </div>

@@ -14,32 +14,6 @@ export interface Show {
   episodes: Episode[];
 }
 
-const generateMockEpisodes = (showId: number): Episode[] => {
-  return [
-    {
-      id: `${showId}-e1`,
-      season: 1,
-      episode: 1,
-      title: "Пилотная серия",
-      plot: "Знакомство с главными героями и завязка основного конфликта. Мир уже никогда не будет прежним после событий этого дня."
-    },
-    {
-      id: `${showId}-e2`,
-      season: 2,
-      episode: 5,
-      title: "Точка невозврата",
-      plot: "Напряжение достигает предела. Героям предстоит принять самое сложное решение в их жизни, которое изменит всё."
-    },
-    {
-      id: `${showId}-e3`,
-      season: 3,
-      episode: 8,
-      title: "Откровение",
-      plot: "Тайны прошлого выходят наружу. То, что казалось правдой, оказывается ложью, а настоящие враги снимают маски."
-    }
-  ];
-};
-
 const rawShowsData = [
   { id: 1, title: "Во все тяжкие", genre: "Драма", link: "https://www.mirabreakingbad.com/?utm_referrer=https%3A%2F%2Fwww.google.com%2F" },
   { id: 2, title: "Лучше звоните Солу", genre: "Драма", link: "https://call-saul.net/" },
@@ -84,5 +58,5 @@ const rawShowsData = [
 
 export const showsData: Show[] = rawShowsData.map(show => ({
   ...show,
-  episodes: generateMockEpisodes(show.id)
+  episodes: [] // Загружаются из TMDB API на странице сериала
 }));
