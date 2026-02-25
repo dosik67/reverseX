@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Bookmark, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Bookmark, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -39,8 +39,29 @@ export default function AddToBookmarksButton({
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<ContentStatus | null>(null);
 
   const statuses: ContentStatus[] = ['watching', 'planned', 'watched', 'postponed', 'dropped', 'favorite'];
+
+  // Check if already bookmarked on mount
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user?.id || cancelled) return;
+        const existing = await bookmarkService.checkBookmarkExists(userData.user.id, contentId, contentType);
+        if (!cancelled && existing) {
+          setIsAdded(true);
+          setCurrentStatus(existing.status);
+        }
+      } catch {
+        // silently fail
+      }
+    };
+    check();
+    return () => { cancelled = true; };
+  }, [contentId, contentType]);
 
   const handleAddToBookmarks = async (status: ContentStatus) => {
     try {
@@ -52,6 +73,7 @@ export default function AddToBookmarksButton({
         return;
       }
 
+      // Upsert handles duplicates automatically
       await bookmarkService.addToBookmarks(userData.user.id, {
         contentType,
         contentId,
@@ -70,11 +92,11 @@ export default function AddToBookmarksButton({
       });
 
       setIsAdded(true);
+      setCurrentStatus(status);
       setIsOpen(false);
-      toast.success(`Добавлено в "${CONTENT_STATUS_CONFIG[status].label}"`);
 
-      // Reset after 2 seconds
-      setTimeout(() => setIsAdded(false), 2000);
+      const action = currentStatus ? 'Обновлено' : 'Добавлено';
+      toast.success(`${action} → "${CONTENT_STATUS_CONFIG[status].label}"`);
     } catch (error) {
       console.error('Error adding to bookmarks:', error);
       toast.error('Ошибка при добавлении');
@@ -89,17 +111,29 @@ export default function AddToBookmarksButton({
         <Button
           size="sm"
           variant={isAdded ? 'default' : 'outline'}
-          className={`gap-2 ${isAdded ? 'bg-purple-600 hover:bg-purple-700' : ''}`}
+          className={`gap-2 transition-all duration-300 ${isAdded
+              ? 'bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 shadow-lg shadow-purple-500/25'
+              : 'hover:border-purple-500/50'
+            }`}
           disabled={loading}
         >
-          <Bookmark className="w-4 h-4" />
-          {isAdded ? 'Добавлено' : 'В закладки'}
-          {isAdded && <Check className="w-4 h-4" />}
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : isAdded ? (
+            <Check className="w-4 h-4" />
+          ) : (
+            <Bookmark className="w-4 h-4" />
+          )}
+          {isAdded
+            ? currentStatus
+              ? CONTENT_STATUS_CONFIG[currentStatus].label
+              : 'Добавлено'
+            : 'В закладки'}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <div className="px-2 py-2 text-sm font-semibold text-muted-foreground">
-          Выбери статус:
+          {isAdded ? 'Изменить статус:' : 'Выбери статус:'}
         </div>
         <DropdownMenuSeparator />
         {statuses.map((status) => (
@@ -107,7 +141,7 @@ export default function AddToBookmarksButton({
             key={status}
             onClick={() => handleAddToBookmarks(status)}
             disabled={loading}
-            className="cursor-pointer"
+            className={`cursor-pointer ${currentStatus === status ? 'bg-purple-500/15' : ''}`}
           >
             <div
               className={`w-3 h-3 rounded-full mr-2 ${CONTENT_STATUS_CONFIG[status].bgColor}`}
@@ -115,6 +149,7 @@ export default function AddToBookmarksButton({
             <span className={CONTENT_STATUS_CONFIG[status].color}>
               {CONTENT_STATUS_CONFIG[status].label}
             </span>
+            {currentStatus === status && <Check className="w-3 h-3 ml-auto text-purple-400" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
