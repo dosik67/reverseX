@@ -20,37 +20,43 @@ export const addToBookmarks = async (
       });
     }
 
-    // Insert new
+    // Build insert data — only include defined, non-empty values
+    const insertData: Record<string, any> = {
+      user_id: userId,
+      content_type: bookmark.contentType,
+      content_id: String(bookmark.contentId),
+      title: bookmark.title,
+      status: bookmark.status,
+      is_favorite: bookmark.isFavorite || false,
+      user_rating: bookmark.userRating || 0,
+      progress: bookmark.progress || 0,
+      total_items: bookmark.totalItems || 0,
+    };
+
+    // Optional fields — only add if they have values
+    if (bookmark.posterUrl) insertData.poster_url = bookmark.posterUrl;
+    if (bookmark.externalRating) insertData.external_rating = bookmark.externalRating;
+    if (bookmark.notes) insertData.notes = bookmark.notes;
+    if (bookmark.synopsis) insertData.synopsis = bookmark.synopsis;
+    if (bookmark.genre) insertData.genre = bookmark.genre;
+    if (bookmark.releaseYear) insertData.release_year = bookmark.releaseYear;
+
+    console.log('📌 Inserting bookmark:', insertData);
+
     const { data, error } = await supabase
       .from('content_bookmarks')
-      .insert([
-        {
-          user_id: userId,
-          content_type: bookmark.contentType,
-          content_id: bookmark.contentId,
-          title: bookmark.title,
-          poster_url: bookmark.posterUrl,
-          status: bookmark.status,
-          user_rating: bookmark.userRating,
-          external_rating: bookmark.externalRating,
-          progress: bookmark.progress,
-          total_items: bookmark.totalItems,
-          is_favorite: bookmark.isFavorite,
-          notes: bookmark.notes,
-          synopsis: bookmark.synopsis,
-          genre: bookmark.genre,
-          release_year: bookmark.releaseYear,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ])
+      .insert([insertData])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Supabase insert error:', error.code, error.message, error.details, error.hint);
+      throw error;
+    }
 
+    console.log('✅ Bookmark inserted:', data);
     return data ? transformBookmark(data) : null;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error adding to bookmarks:', error);
     throw error;
   }
@@ -167,7 +173,6 @@ export const updateBookmark = async (
   try {
     const updateData: any = { updated_at: new Date().toISOString() };
 
-    // Map field names from ContentBookmark to database columns
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.userRating !== undefined) updateData.user_rating = updates.userRating;
     if (updates.progress !== undefined) updateData.progress = updates.progress;
@@ -241,6 +246,7 @@ export const deleteBookmark = async (bookmarkId: string): Promise<boolean> => {
 
 /**
  * Check if content is already bookmarked
+ * Uses .maybeSingle() to avoid 406 error when no rows found
  */
 export const checkBookmarkExists = async (
   userId: string,
@@ -252,13 +258,14 @@ export const checkBookmarkExists = async (
       .from('content_bookmarks')
       .select('*')
       .eq('user_id', userId)
-      .eq('content_id', contentId)
+      .eq('content_id', String(contentId))
       .eq('content_type', contentType)
-      .single();
+      .maybeSingle();
 
-    if (error?.code === 'PGRST116') return null; // Not found is not an error
-
-    if (error) throw error;
+    if (error) {
+      console.error('Error checking bookmark:', error.code, error.message);
+      return null;
+    }
 
     return data ? transformBookmark(data) : null;
   } catch (error) {
