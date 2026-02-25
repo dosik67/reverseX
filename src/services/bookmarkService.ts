@@ -1,20 +1,29 @@
 import supabase from '@/lib/supabase';
 import { ContentBookmark, ContentStatus, ContentType } from '@/types/anime';
 
-// Select only needed columns for performance
-const BOOKMARK_COLUMNS = 'id,user_id,content_type,content_id,title,poster_url,status,user_rating,external_rating,progress,total_items,is_favorite,notes,synopsis,genre,release_year,created_at,updated_at';
-
 /**
- * Add content to bookmarks (upsert — updates if already exists)
+ * Add content to bookmarks — checks for duplicates first, updates if exists
  */
 export const addToBookmarks = async (
   userId: string,
   bookmark: Omit<ContentBookmark, 'id' | 'createdAt' | 'updatedAt' | 'userId'>
 ): Promise<ContentBookmark | null> => {
   try {
+    // Check if already exists
+    const existing = await checkBookmarkExists(userId, bookmark.contentId, bookmark.contentType);
+
+    if (existing) {
+      // Update existing bookmark's status
+      return await updateBookmark(existing.id, {
+        status: bookmark.status,
+        isFavorite: bookmark.status === 'favorite',
+      });
+    }
+
+    // Insert new
     const { data, error } = await supabase
       .from('content_bookmarks')
-      .upsert(
+      .insert([
         {
           user_id: userId,
           content_type: bookmark.contentType,
@@ -31,14 +40,15 @@ export const addToBookmarks = async (
           synopsis: bookmark.synopsis,
           genre: bookmark.genre,
           release_year: bookmark.releaseYear,
+          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
-        { onConflict: 'user_id,content_id,content_type' }
-      )
-      .select(BOOKMARK_COLUMNS)
+      ])
+      .select()
       .single();
 
     if (error) throw error;
+
     return data ? transformBookmark(data) : null;
   } catch (error) {
     console.error('Error adding to bookmarks:', error);
@@ -47,7 +57,7 @@ export const addToBookmarks = async (
 };
 
 /**
- * Get bookmarks for user with optional filters — optimized single query
+ * Get bookmarks for user with optional filters
  */
 export const getUserBookmarks = async (
   userId: string,
@@ -57,19 +67,22 @@ export const getUserBookmarks = async (
   try {
     let query = supabase
       .from('content_bookmarks')
-      .select(BOOKMARK_COLUMNS)
+      .select('*')
       .eq('user_id', userId)
       .order('updated_at', { ascending: false });
 
     if (contentType) {
       query = query.eq('content_type', contentType);
     }
+
     if (status) {
       query = query.eq('status', status);
     }
 
     const { data, error } = await query;
+
     if (error) throw error;
+
     return (data || []).map(transformBookmark);
   } catch (error) {
     console.error('Error getting bookmarks:', error);
@@ -87,12 +100,13 @@ export const getBookmarksByStatus = async (
   try {
     const { data, error } = await supabase
       .from('content_bookmarks')
-      .select(BOOKMARK_COLUMNS)
+      .select('*')
       .eq('user_id', userId)
       .eq('status', status)
       .order('updated_at', { ascending: false });
 
     if (error) throw error;
+
     return (data || []).map(transformBookmark);
   } catch (error) {
     console.error('Error getting bookmarks by status:', error);
@@ -101,7 +115,7 @@ export const getBookmarksByStatus = async (
 };
 
 /**
- * Get bookmark count by status — lightweight query
+ * Get bookmark count by status
  */
 export const getBookmarkStats = async (
   userId: string
@@ -153,6 +167,7 @@ export const updateBookmark = async (
   try {
     const updateData: any = { updated_at: new Date().toISOString() };
 
+    // Map field names from ContentBookmark to database columns
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.userRating !== undefined) updateData.user_rating = updates.userRating;
     if (updates.progress !== undefined) updateData.progress = updates.progress;
@@ -163,10 +178,11 @@ export const updateBookmark = async (
       .from('content_bookmarks')
       .update(updateData)
       .eq('id', bookmarkId)
-      .select(BOOKMARK_COLUMNS)
+      .select()
       .single();
 
     if (error) throw error;
+
     return data ? transformBookmark(data) : null;
   } catch (error) {
     console.error('Error updating bookmark:', error);
@@ -215,6 +231,7 @@ export const deleteBookmark = async (bookmarkId: string): Promise<boolean> => {
       .eq('id', bookmarkId);
 
     if (error) throw error;
+
     return true;
   } catch (error) {
     console.error('Error deleting bookmark:', error);
@@ -233,14 +250,16 @@ export const checkBookmarkExists = async (
   try {
     const { data, error } = await supabase
       .from('content_bookmarks')
-      .select(BOOKMARK_COLUMNS)
+      .select('*')
       .eq('user_id', userId)
       .eq('content_id', contentId)
       .eq('content_type', contentType)
       .single();
 
-    if (error?.code === 'PGRST116') return null;
+    if (error?.code === 'PGRST116') return null; // Not found is not an error
+
     if (error) throw error;
+
     return data ? transformBookmark(data) : null;
   } catch (error) {
     console.error('Error checking bookmark:', error);
@@ -259,7 +278,7 @@ export const searchBookmarks = async (
   try {
     let dbQuery = supabase
       .from('content_bookmarks')
-      .select(BOOKMARK_COLUMNS)
+      .select('*')
       .eq('user_id', userId)
       .ilike('title', `%${query}%`)
       .order('updated_at', { ascending: false });
@@ -269,7 +288,9 @@ export const searchBookmarks = async (
     }
 
     const { data, error } = await dbQuery;
+
     if (error) throw error;
+
     return (data || []).map(transformBookmark);
   } catch (error) {
     console.error('Error searching bookmarks:', error);
