@@ -83,6 +83,8 @@ const Layout = () => {
     setProfile(null);
   };
 
+  const hideMobileNav = location.pathname.startsWith('/tusau');
+
   const scroll = (direction: 'left' | 'right') => {
     const container = document.getElementById('mobile-nav-scroll');
     if (container) {
@@ -254,6 +256,7 @@ const Layout = () => {
       </main>
 
       {/* Mobile Bottom Navigation */}
+      {!hideMobileNav && (
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border z-50">
         <div className="flex items-center h-20">
           {/* Scroll Left Button */}
@@ -351,6 +354,7 @@ const Layout = () => {
           )}
         </div>
       </div>
+      )}
 
       {/* CSS для скрытия scrollbar */}
       <style>{`
