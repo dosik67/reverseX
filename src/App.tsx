@@ -39,6 +39,7 @@ import Shop from "./pages/Shop/Shop";
 import ShopDetail from "./pages/Shop/ShopDetail";
 import ShopAdmin from "./pages/Shop/ShopAdmin";
 import ProfileCard from "./pages/ProfileCard";
+import Tusau from "./pages/Tusau";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AppProvider } from "@/context/AppContext";
 
@@ -168,6 +169,7 @@ const App = () => {
                   <Route path="/game/:id" element={<GameDetail />} />
                   <Route path="/music" element={<PlaceholderPage title="Music" icon={Music} />} />
                   <Route path="/books" element={<PlaceholderPage title="Books" icon={Book} />} />
+                  <Route path="/tusau" element={<Tusau />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
