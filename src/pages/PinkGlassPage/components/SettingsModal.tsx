@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { X, Upload, Zap, Eye, Clock, Monitor, Image, Globe, Palette, Film, Download, Database, User, LogOut, Sliders } from 'lucide-react';
+import { X, Upload, Zap, Eye, Clock, Image, Globe, Palette, Film, Download, Database, User, LogOut, Sliders } from 'lucide-react';
 import { useGlobal } from '../context/GlobalContext';
 import { TRANSLATIONS } from '../constants';
 import { saveVideo, deleteVideo } from '../utils/db';

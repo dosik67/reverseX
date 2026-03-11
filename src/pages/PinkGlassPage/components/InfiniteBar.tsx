@@ -57,7 +57,7 @@ const InfiniteBar: React.FC<InfiniteBarProps> = ({ language }) => {
     <>
       {/* Droppable ID 'top-bar' is used in App.tsx to identify this zone */}
       <div 
-        className="fixed top-0 left-0 w-full h-10 z-[100] border-b border-white/5 shadow-sm select-none"
+        className="fixed top-0 left-0 w-full h-12 z-[100] border-b border-white/5 shadow-sm select-none"
         style={{
             background: 'rgba(var(--theme-rgb), 0.08)',
             backdropFilter: 'blur(20px)',
@@ -67,8 +67,7 @@ const InfiniteBar: React.FC<InfiniteBarProps> = ({ language }) => {
           <div 
               ref={scrollRef}
               onWheel={handleWheel}
-              className="w-full h-full flex items-center gap-2 px-4 overflow-x-auto custom-scrollbar-hide"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              className="w-full h-full flex items-center gap-2 px-4 overflow-x-auto custom-scrollbar pb-1"
           >
               <SortableContext items={bookmarks.map(b => b.id)} strategy={horizontalListSortingStrategy}>
                   {bookmarks.map((b) => (

@@ -240,6 +240,12 @@ const App: React.FC = () => {
                 backdrop-filter: blur(var(--glass-blur)) !important;
                 -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
             }
+            .glass-input {
+                background: rgba(0,0,0,0.25);
+                backdrop-filter: blur(var(--glass-blur));
+                -webkit-backdrop-filter: blur(var(--glass-blur));
+                border: 1px solid rgba(255,255,255,0.1);
+            }
             .theme-text { color: var(--theme-color); }
             .theme-text-accent { color: rgba(var(--theme-rgb), 0.8); }
             .theme-bg { background-color: var(--theme-color); }
@@ -340,7 +346,7 @@ const App: React.FC = () => {
                 title="ReverseX"
                 >
                     <img 
-                    src="./logo.png" 
+                    src="/logo.png" 
                     alt="Logo" 
                     className="h-24 md:h-28 w-auto drop-shadow-[0_0_15px_rgba(var(--theme-rgb),0.4)] transition-transform duration-500 group-hover:scale-105"
                     />
