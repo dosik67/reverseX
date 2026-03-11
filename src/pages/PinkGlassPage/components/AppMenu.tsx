@@ -48,7 +48,7 @@ const GoogleAppItem: React.FC<{
                         src={imgSrc} 
                         alt={app.name} 
                         className="w-full h-full object-contain" 
-                        draggable={false} 
+                        draggable="false" 
                         onError={handleError}
                         loading="lazy"
                     />

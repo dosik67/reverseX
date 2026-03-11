@@ -59,6 +59,11 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
         style={style}
         {...attributes}
         {...listeners}
+        onClick={(e) => {
+            if (!isDragging && !isOverlay && !(e.target as HTMLElement).closest('button')) {
+                window.location.href = bookmark.url;
+            }
+        }}
         className={`group relative flex items-center gap-2 px-3 py-1 rounded-full transition-all duration-200 shrink-0
                    cursor-grab active:cursor-grabbing border border-transparent 
                    ${isOverlay ? 'bg-white/20 border-white/30 scale-105 shadow-xl' : 'hover:bg-white/10 hover:border-white/5'}`}
@@ -87,7 +92,7 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
 
         <div className="w-3.5 h-3.5 flex items-center justify-center shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
             <img 
-                src={iconSrc || ''} 
+                src={iconSrc || undefined} 
                 alt="" 
                 draggable={false} // Prevent native drag conflict
                 className="w-3.5 h-3.5 object-contain pointer-events-none"
@@ -104,8 +109,8 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
         <a 
           href={bookmark.url} 
           draggable={false} // Prevent native drag conflict
-          onClick={(e) => { if(isDragging || isOverlay) e.preventDefault(); }} 
-          className="text-[11px] font-medium text-white/80 whitespace-nowrap group-hover:text-white drop-shadow-sm transition-colors pointer-events-none"
+          onClick={(e) => { if(isDragging || isOverlay) e.preventDefault(); e.stopPropagation(); }} 
+          className="text-[11px] font-medium text-white/80 whitespace-nowrap group-hover:text-white drop-shadow-sm transition-colors"
         >
             {bookmark.title}
         </a>
@@ -120,6 +125,11 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
         style={style}
         {...attributes}
         {...listeners}
+        onClick={(e) => {
+            if (!isDragging && !isOverlay && !(e.target as HTMLElement).closest('button')) {
+                window.location.href = bookmark.url;
+            }
+        }}
         className={`group relative flex flex-col items-center cursor-grab active:cursor-grabbing ${isOverlay ? 'scale-110 z-50' : ''}`}
     >
         <div className="flex flex-col items-center gap-3 transition-transform duration-300 group-hover:scale-105">
@@ -150,7 +160,7 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
                 )}
 
                 <img 
-                    src={iconSrc || ''} 
+                    src={iconSrc || undefined} 
                     alt={bookmark.title}
                     draggable={false} // Prevent native drag conflict
                     className="w-8 h-8 md:w-10 md:h-10 object-contain drop-shadow-md z-10 pointer-events-none"
@@ -169,8 +179,8 @@ const SortableBookmark: React.FC<SortableBookmarkProps> = ({ bookmark, variant, 
             <a 
               href={bookmark.url} 
               draggable={false} // Prevent native drag conflict
-              onClick={(e) => { if(isDragging || isOverlay) e.preventDefault(); }} 
-              className="text-sm font-medium text-white/80 group-hover:text-white text-shadow-sm truncate max-w-[100px] text-center pointer-events-none"
+              onClick={(e) => { if(isDragging || isOverlay) e.preventDefault(); e.stopPropagation(); }} 
+              className="text-sm font-medium text-white/80 group-hover:text-white text-shadow-sm truncate max-w-[100px] text-center"
             >
                 {bookmark.title}
             </a>

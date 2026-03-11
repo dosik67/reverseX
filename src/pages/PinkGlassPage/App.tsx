@@ -13,6 +13,7 @@ import TopNav from './components/TopNav';
 import Clock from './components/Clock';
 import { getVideo } from './utils/db';
 import { supabase } from './utils/supabaseClient';
+import { WhiteWaveSvg, DarkWaveSvg, DotWavesSvg, CarbonSvg, CircuitSvg } from './components/SvgBackgrounds';
 import { 
   DndContext, 
   DragOverlay, 
@@ -61,7 +62,8 @@ const App: React.FC = () => {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Must move 8px to start drag (allows clicking)
+        delay: 250,
+        tolerance: 5,
       },
     })
   );
@@ -217,6 +219,7 @@ const App: React.FC = () => {
   };
 
   const currentBgValue = settings.customBackground || BACKGROUNDS[bgIndex].value;
+  const currentSvgId = !settings.customBackground && !settings.customVideo ? BACKGROUNDS[bgIndex].svgId : null;
   const themeRgb = hexToRgb(settings.themeColor);
 
   return (
@@ -239,12 +242,6 @@ const App: React.FC = () => {
             .glass-panel {
                 backdrop-filter: blur(var(--glass-blur)) !important;
                 -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
-            }
-            .glass-input {
-                background: rgba(0,0,0,0.25);
-                backdrop-filter: blur(var(--glass-blur));
-                -webkit-backdrop-filter: blur(var(--glass-blur));
-                border: 1px solid rgba(255,255,255,0.1);
             }
             .theme-text { color: var(--theme-color); }
             .theme-text-accent { color: rgba(var(--theme-rgb), 0.8); }
@@ -276,7 +273,7 @@ const App: React.FC = () => {
             <video 
             ref={videoRef}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${videoUrl ? 'opacity-100' : 'opacity-0'}`}
-            src={videoUrl || ''}
+            src={videoUrl || undefined}
             autoPlay muted loop playsInline
             />
             <div className={`absolute inset-0 bg-black/40 transition-opacity duration-1000 ${videoUrl ? 'opacity-100' : 'opacity-0'}`} />
@@ -286,8 +283,13 @@ const App: React.FC = () => {
                     background: settings.customBackground ? `url(${settings.customBackground}) center/cover no-repeat` : currentBgValue 
                 }}
             >
+                {currentSvgId === 'white-wave' && <WhiteWaveSvg />}
+                {currentSvgId === 'dark-wave' && <DarkWaveSvg />}
+                {currentSvgId === 'dot-waves' && <DotWavesSvg />}
+                {currentSvgId === 'carbon' && <CarbonSvg />}
+                {currentSvgId === 'circuit' && <CircuitSvg />}
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay" />
-                <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none ${!settings.customBackground && settings.isAnimationEnabled ? 'animate-gradient-slow' : ''}`} />
+                <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none ${!settings.customBackground && settings.isAnimationEnabled && !currentSvgId ? 'animate-gradient-slow' : ''}`} />
             </div>
         </div>
 
@@ -346,7 +348,7 @@ const App: React.FC = () => {
                 title="ReverseX"
                 >
                     <img 
-                    src="/logo.png" 
+                    src="./logo.png" 
                     alt="Logo" 
                     className="h-24 md:h-28 w-auto drop-shadow-[0_0_15px_rgba(var(--theme-rgb),0.4)] transition-transform duration-500 group-hover:scale-105"
                     />

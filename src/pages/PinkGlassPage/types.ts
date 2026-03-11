@@ -24,6 +24,7 @@ export interface AppSettings {
   lockBackground: boolean;
   customBackground: string | null; // Base64 string of uploaded image
   customVideo: boolean; // Flag to indicate if a video from IDB should be used
+  customSvg: string | null; // ID of the SVG background
   themeColor: string; // Hex color
   language: 'en' | 'ru';
 }
@@ -32,4 +33,5 @@ export interface BackgroundTheme {
   name: string;
   value: string; // CSS background value (color or gradient)
   textColor: string;
+  svgId?: string; // Optional ID for SVG backgrounds
 }
