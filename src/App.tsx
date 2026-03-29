@@ -39,6 +39,7 @@ import Shop from "./pages/Shop/Shop";
 import ShopDetail from "./pages/Shop/ShopDetail";
 import ShopAdmin from "./pages/Shop/ShopAdmin";
 import ProfileCard from "./pages/ProfileCard";
+import AdminDashboard from "./pages/AdminDashboard";
 import Tusau from "./pages/Tusau";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AppProvider } from "@/context/AppContext";
@@ -62,7 +63,13 @@ import WorkspaceInvite from "./pages/WorkspaceInvite";
 import PinkGlassPage from "./pages/PinkGlassPage";
 
 import supabase from "@/lib/supabase";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import "./App.css";
+
+const AnalyticsTracker = () => {
+  useAnalytics();
+  return null;
+};
 
 const queryClient = new QueryClient();
 
@@ -119,6 +126,7 @@ const App = () => {
                 <Toaster />
                 <Sonner />
               <BrowserRouter>
+              <AnalyticsTracker />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/qr-auth" element={<QRAuthPage />} />
@@ -152,6 +160,7 @@ const App = () => {
 
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/movies" element={<Movies />} />
                   <Route path="/explore-movies" element={<ExploreMovies />} />
                   <Route path="/movie/:id" element={<MovieDetail />} />

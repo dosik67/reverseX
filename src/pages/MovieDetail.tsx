@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star, Play } from "lucide-react";
 import { useIMDbRating } from "@/hooks/useIMDbRating";
+import CommunityRating from "@/components/CommunityRating";
+import AddToBookmarksButton from "@/components/AddToBookmarksButton";
 
 interface MovieDetails {
   id: number;
@@ -54,7 +56,7 @@ const MovieDetail = () => {
   const [similarMovies, setSimilarMovies] = useState<SimilarMovie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const movieId = id ? parseInt(id) : undefined;
   const { rating: imdbRating, loading: imdbLoading } = useIMDbRating({
     tmdbId: movieId,
@@ -64,7 +66,7 @@ const MovieDetail = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!id) return;
-      
+
       try {
         setLoading(true);
         const movieId = parseInt(id);
@@ -129,11 +131,10 @@ const MovieDetail = () => {
       <div
         className="h-[500px] bg-cover bg-center relative overflow-hidden"
         style={{
-          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(15,15,28,1)), url(${
-            movie.backdrop_path 
+          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(15,15,28,1)), url(${movie.backdrop_path
               ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
               : 'https://placehold.co/1280x500/1a1a2e/ffffff'
-          })`,
+            })`,
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
