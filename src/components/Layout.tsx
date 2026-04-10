@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Film, Home, Tv, Gamepad, Music, Book, Bookmark, Bell, MessageSquare, User, LogOut, Settings, Crown, ChevronRight, ChevronLeft, Lightbulb, ShoppingBag } from "lucide-react";
+import { Film, Home, Tv, Gamepad, Music, Book, Bookmark, Bell, MessageSquare, User, LogOut, Settings, Crown, ChevronRight, ChevronLeft, Lightbulb, ShoppingBag, Sun, Moon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,8 +14,10 @@ import {
 import supabase from "@/utils/supabase";
 import NotificationsPanelComponent from "./NotificationsPanelComponent";
 import MessagesPanelComponent from "./MessagesPanelComponent";
+import { useTheme } from "@/context/ThemeContext";
 
 const Layout = () => {
+  const { isDark, toggleTheme } = useTheme();
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -159,6 +161,14 @@ const Layout = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                title={isDark ? "Светлая тема" : "Темная тема"}
+              >
+                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </Button>
               {session?.user ? (
                 <>
                   <Button 
@@ -306,8 +316,16 @@ const Layout = () => {
           </button>
 
           {/* Profile/Actions */}
-          {session ? (
-            <div className="flex-shrink-0 flex items-center gap-2 px-2">
+          <div className="flex-shrink-0 flex items-center gap-2 px-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="h-10 w-10 rounded-full"
+            >
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+            {session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
@@ -344,14 +362,12 @@ const Layout = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-          ) : (
-            <div className="flex-shrink-0 px-2">
+            ) : (
               <Button asChild size="sm" className="text-xs">
                 <Link to="/auth">Sign In</Link>
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
       )}
