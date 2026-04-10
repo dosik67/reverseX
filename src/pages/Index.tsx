@@ -8,33 +8,33 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <div className="min-h-screen">
-      <div className="relative h-[400px] bg-gradient-to-br from-primary/20 via-accent/10 to-background overflow-hidden">
+    <div className="container mx-auto px-4 py-8">
+      <div className="relative h-[400px] bg-gradient-to-br from-primary/20 via-accent/10 to-background overflow-hidden rounded-3xl border border-border mb-12 shadow-2xl">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1920')] bg-cover bg-center opacity-10" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-        <div className="container mx-auto px-4 h-full flex flex-col justify-center items-center relative z-10">
+        <div className="h-full flex flex-col justify-center items-center relative z-10 px-4">
           <img 
             src="/logo.png"
             alt="ReverseX"
-            className="h-48 w-auto mb-6"
+            className="h-32 md:h-40 w-auto mb-6 object-contain"
           />
-          <p className="text-xl text-muted-foreground mb-8 text-center max-w-2xl">
+          <p className="text-lg md:text-xl text-muted-foreground mb-8 text-center max-w-2xl bg-black/20 px-6 py-2 rounded-full backdrop-blur-sm border border-white/5">
             Персональный трекер и рекомендации
           </p>
           <div className="relative max-w-2xl w-full">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5 z-20" />
             <Input
               type="text"
               placeholder="Поиск фильмов, сериалов и игр..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-14 text-lg bg-card/80 backdrop-blur-sm"
+              className="pl-12 h-14 text-lg bg-card/80 backdrop-blur-md border-white/10 focus:border-primary/50 relative z-10 rounded-xl"
             />
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-12">
+      <div>
         <h2 className="text-3xl font-bold mb-8">Перейти к</h2>
         
         {/* Navigation Cards */}
