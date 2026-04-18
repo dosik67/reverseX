@@ -62,6 +62,9 @@ import WorkspaceInvite from "./pages/WorkspaceInvite";
 // Pink Glass Start Page
 import PinkGlassPage from "./pages/PinkGlassPage";
 
+// Batyrhan Start Page
+import BatrPage from "./pages/BatrPage";
+
 import supabase from "@/lib/supabase";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import "./App.css";
@@ -131,6 +134,7 @@ const App = () => {
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/qr-auth" element={<QRAuthPage />} />
                 <Route path="/br" element={<PinkGlassPage />} />
+                <Route path="/br-batyrhan" element={<BatrPage />} />
 
                 {/* Task Pages Routes */}
                 <Route path="/tasks/20" element={<Task20 />} />
