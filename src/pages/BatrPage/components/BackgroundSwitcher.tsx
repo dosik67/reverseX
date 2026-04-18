@@ -19,7 +19,7 @@ const BackgroundSwitcher: React.FC<BackgroundSwitcherProps> = ({ currentIndex, o
   };
 
   return (
-    <div className="flex items-center gap-4 glass-panel px-6 py-3 rounded-full transition-all duration-300 theme-hover">
+    <div className="flex items-center gap-4 bg-black/40 border border-white/10 px-6 py-3 rounded-full shadow-xl glass-panel transition-all duration-300 hover:bg-black/50">
       <button 
         onClick={handlePrev}
         className="p-2 rounded-full hover:bg-white/20 active:scale-90 transition-all text-white"
@@ -29,8 +29,8 @@ const BackgroundSwitcher: React.FC<BackgroundSwitcherProps> = ({ currentIndex, o
       </button>
       
       <div className="flex flex-col items-center px-4 min-w-[120px]">
-        <span className="text-xs font-medium uppercase tracking-wider theme-text-accent flex items-center gap-2">
-            <Palette size={14} className="theme-text-accent" />
+        <span className="text-xs font-bold uppercase tracking-wider text-white/90 flex items-center gap-2 drop-shadow-md">
+            <Palette size={14} className="text-white/80" />
             {BACKGROUNDS[currentIndex].name}
         </span>
       </div>

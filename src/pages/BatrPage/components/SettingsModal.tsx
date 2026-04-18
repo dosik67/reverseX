@@ -75,12 +75,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-md glass-panel rounded-3xl shadow-2xl relative flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="w-full max-w-md glass-panel bg-[#05050A]/70 rounded-3xl shadow-2xl relative flex flex-col max-h-[85vh] border border-white/10">
         
         {/* Header with Tabs */}
-        <div className="p-4 border-b theme-border flex justify-between items-center shrink-0">
-          <div className="flex gap-2 bg-black/20 p-1 rounded-xl">
+        <div className="p-4 border-b border-white/10 flex justify-between items-center shrink-0">
+          <div className="flex gap-2 bg-black/40 p-1 rounded-xl">
              <button 
                 onClick={() => setActiveTab('general')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${activeTab === 'general' ? 'theme-bg text-white shadow-md' : 'text-white/60 hover:text-white'}`}
@@ -111,12 +111,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                 <>
                 {/* Appearance */}
                 <section className="space-y-3">
-                    <h3 className="theme-text-accent text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                    <h3 className="text-white/70 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
                         <Image size={12}/> {t.appearance}
                     </h3>
                     
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-black/20 hover:bg-black/30 transition-colors">
-                        <span className="text-white text-sm">{t.lockBackground}</span>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                        <span className="text-white font-medium text-sm">{t.lockBackground}</span>
                         <div 
                             onClick={() => updateSettings({ lockBackground: !settings.lockBackground })}
                             className={`w-10 h-6 rounded-full p-1 cursor-pointer transition-colors duration-300 ${settings.lockBackground ? 'theme-bg' : 'bg-white/20'}`}
@@ -126,12 +126,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                     </div>
 
                     {/* Custom Image Wallpaper */}
-                    <div className="p-3 rounded-xl bg-black/20">
-                        <span className="text-white text-sm block mb-2">{t.customWallpaper}</span>
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                        <span className="text-white font-medium text-sm block mb-2">{t.customWallpaper}</span>
                         <div className="flex gap-2">
                             <button 
                                 onClick={() => fileInputRef.current?.click()}
-                                className="flex-1 py-2 px-3 theme-bg-accent hover:bg-white/10 theme-text-accent rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-all border theme-border"
+                                className="flex-1 py-2 px-3 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all border border-white/10"
                             >
                                 <Upload size={14}/> {t.uploadImage}
                             </button>
@@ -154,12 +154,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                     </div>
 
                     {/* Custom Video Wallpaper */}
-                    <div className="p-3 rounded-xl bg-black/20">
-                        <span className="text-white text-sm block mb-2">{t.customVideo}</span>
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                        <span className="text-white font-medium text-sm block mb-2">{t.customVideo}</span>
                         <div className="flex gap-2">
                             <button 
                                 onClick={() => videoInputRef.current?.click()}
-                                className="flex-1 py-2 px-3 theme-bg-accent hover:bg-white/10 theme-text-accent rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-all border theme-border"
+                                className="flex-1 py-2 px-3 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all border border-white/10"
                             >
                                 <Film size={14}/> {t.uploadVideo}
                             </button>
@@ -181,10 +181,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                         </div>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-black/20">
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/5">
                         <div className="flex justify-between mb-2">
-                            <span className="text-white text-sm flex items-center gap-2"><Eye size={14} className="theme-text-accent"/> {t.glassBlur}</span>
-                            <span className="text-white/50 text-xs">{settings.blurAmount}px</span>
+                            <span className="text-white font-medium text-sm flex items-center gap-2"><Eye size={14} className="text-white/70"/> {t.glassBlur}</span>
+                            <span className="text-white/60 text-xs font-medium">{settings.blurAmount}px</span>
                         </div>
                         <input 
                             type="range" 
@@ -197,8 +197,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                     </div>
                     
                     {/* Theme Color Picker */}
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-black/20 hover:bg-black/30 transition-colors">
-                        <span className="text-white text-sm flex items-center gap-2"><Palette size={14} className="theme-text-accent"/> {t.themeColor}</span>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                        <span className="text-white font-medium text-sm flex items-center gap-2"><Palette size={14} className="text-white/70"/> {t.themeColor}</span>
                         <input 
                             type="color" 
                             value={settings.themeColor} 
@@ -209,32 +209,34 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                 </section>
 
                 {/* Functionality */}
-                <section className="space-y-3 pt-4 border-t border-white/5">
-                    <h3 className="theme-text-accent text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                <section className="space-y-3 pt-4 border-t border-white/10">
+                    <h3 className="text-white/70 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
                         <Zap size={12}/> {t.functionality}
                     </h3>
                     
                     {/* Language Selector */}
-                    <div className="p-3 rounded-xl bg-black/20">
-                        <span className="text-white text-sm block mb-2 flex items-center gap-2"><Globe size={14} className="theme-text-accent"/> {t.language}</span>
-                        <div className="flex bg-black/30 rounded-lg p-1">
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                        <span className="text-white font-medium text-sm block mb-2 flex items-center gap-2">
+                            <Globe size={14} className="text-white/70"/> {t.language}
+                        </span>
+                        <div className="flex bg-black/40 rounded-lg p-1">
                             <button 
                                 onClick={() => updateSettings({ language: 'en' })}
-                                className={`flex-1 py-1 rounded-md text-xs font-medium transition-all ${settings.language === 'en' ? 'theme-bg text-white shadow-md' : 'text-white/50 hover:text-white'}`}
+                                className={`flex-1 py-1 rounded-md text-xs font-medium transition-all ${settings.language === 'en' ? 'theme-bg text-white shadow-md' : 'text-white/60 hover:text-white'}`}
                             >
                                 English
                             </button>
                             <button 
                                 onClick={() => updateSettings({ language: 'ru' })}
-                                className={`flex-1 py-1 rounded-md text-xs font-medium transition-all ${settings.language === 'ru' ? 'theme-bg text-white shadow-md' : 'text-white/50 hover:text-white'}`}
+                                className={`flex-1 py-1 rounded-md text-xs font-medium transition-all ${settings.language === 'ru' ? 'theme-bg text-white shadow-md' : 'text-white/60 hover:text-white'}`}
                             >
                                 Русский
                             </button>
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-black/20 hover:bg-black/30 transition-colors">
-                        <span className="text-white text-sm">{t.animations}</span>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                        <span className="text-white font-medium text-sm">{t.animations}</span>
                         <div 
                             onClick={() => updateSettings({ isAnimationEnabled: !settings.isAnimationEnabled })}
                             className={`w-10 h-6 rounded-full p-1 cursor-pointer transition-colors duration-300 ${settings.isAnimationEnabled ? 'theme-bg' : 'bg-white/20'}`}
@@ -243,30 +245,32 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                         </div>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-black/20 flex justify-between items-center">
-                        <span className="text-white text-sm flex items-center gap-2"><Clock size={14} className="theme-text-accent"/> {t.timeFormat}</span>
-                        <div className="flex bg-black/30 rounded-lg p-1">
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center">
+                        <span className="text-white font-medium text-sm flex items-center gap-2">
+                            <Clock size={14} className="text-white/70"/> {t.timeFormat}
+                        </span>
+                        <div className="flex bg-black/40 rounded-lg p-1">
                             <button 
                                 onClick={() => updateSettings({ timeFormat: '12h' })}
-                                className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${settings.timeFormat === '12h' ? 'theme-bg text-white shadow-md' : 'text-white/50 hover:text-white'}`}
+                                className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${settings.timeFormat === '12h' ? 'theme-bg text-white shadow-md' : 'text-white/60 hover:text-white'}`}
                             >
                                 12h
                             </button>
                             <button 
                                 onClick={() => updateSettings({ timeFormat: '24h' })}
-                                className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${settings.timeFormat === '24h' ? 'theme-bg text-white shadow-md' : 'text-white/50 hover:text-white'}`}
+                                className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${settings.timeFormat === '24h' ? 'theme-bg text-white shadow-md' : 'text-white/60 hover:text-white'}`}
                             >
                                 24h
                             </button>
                         </div>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-black/20">
-                        <span className="text-white text-sm block mb-2">{t.searchEngine}</span>
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                        <span className="text-white font-medium text-sm block mb-2">{t.searchEngine}</span>
                         <select 
                             value={settings.searchEngine}
                             onChange={(e) => updateSettings({ searchEngine: e.target.value as any })}
-                            className="w-full bg-black/30 text-white text-sm border border-white/10 rounded-lg p-2 focus:outline-none focus:border-[var(--theme-color)] transition-colors"
+                            className="w-full bg-black/50 text-white text-sm border border-white/10 rounded-lg p-2 focus:outline-none focus:border-[var(--theme-color)] transition-colors"
                         >
                             <option value="google">Google</option>
                             <option value="bing">Bing</option>
@@ -312,23 +316,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
                      {/* Data Management Section - Now inside Profile */}
                      <section className="space-y-3">
-                        <h3 className="theme-text-accent text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                        <h3 className="text-white/70 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
                             <Database size={12}/> {t.dataManagement}
                         </h3>
                         <div className="grid grid-cols-2 gap-3">
                             <button 
                                 onClick={exportData}
-                                className="p-3 rounded-xl bg-black/20 hover:bg-black/30 border border-white/5 transition-colors flex flex-col items-center gap-2 text-center"
+                                className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors flex flex-col items-center gap-2 text-center"
                             >
-                                <Download size={20} className="text-white/70" />
-                                <span className="text-xs text-white/80">{t.downloadSettings}</span>
+                                <Download size={20} className="text-white/80" />
+                                <span className="text-xs font-medium text-white">{t.downloadSettings}</span>
                             </button>
                             <button 
                                 onClick={() => jsonInputRef.current?.click()}
-                                className="p-3 rounded-xl bg-black/20 hover:bg-black/30 border border-white/5 transition-colors flex flex-col items-center gap-2 text-center"
+                                className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors flex flex-col items-center gap-2 text-center"
                             >
-                                <Upload size={20} className="text-white/70" />
-                                <span className="text-xs text-white/80">{t.uploadSettings}</span>
+                                <Upload size={20} className="text-white/80" />
+                                <span className="text-xs font-medium text-white">{t.uploadSettings}</span>
                                 <input type="file" accept=".json" ref={jsonInputRef} className="hidden" onChange={handleJsonImport}/>
                             </button>
                         </div>
