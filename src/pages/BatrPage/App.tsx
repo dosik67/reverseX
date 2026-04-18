@@ -545,11 +545,6 @@ const BatrLogo: React.FC<{ themeColor: string }> = ({ themeColor }) => {
           }}>batr</span>
       )}
 
-      {/* Subtitle */}
-      <p className="mt-3 text-xs font-medium tracking-[0.4em] uppercase"
-        style={{ color: `${themeColor}77`, fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '0.4em' }}>
-        personal space
-      </p>
     </div>
   );
 };
