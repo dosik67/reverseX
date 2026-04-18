@@ -72,9 +72,6 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({ language }) => {
                                 group-hover:bg-white/5 group-hover:border-white/40 transition-all duration-300">
                     <Plus size={24} className="text-white/40 group-hover:text-white/80" />
                 </div>
-                <span className="text-sm font-medium text-white/40 group-hover:text-white/80">
-                    {t.addShortcut}
-                </span>
             </button>
         </div>
       </div>
