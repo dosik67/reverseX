@@ -83,7 +83,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   customBackground: null,
   customVideo: false,
   customSvg: null,
-  themeColor: '#00e5ff', // Cyber Cyan — Batyrhan's signature color
+  themeColor: '#ff69b4', // Hot Pink — Batyrhan's signature color
   language: 'ru'
 };
 

@@ -48,86 +48,36 @@ void main() { gl_Position = vec4(a_position, 0.0, 1.0); }
 `;
 
 const FRAG_SHADER = `
-precision highp float;
+precision mediump float;
 uniform float u_time;
 uniform vec2  u_resolution;
 uniform vec3  u_color;
 uniform vec2  u_mouse;
 
-float hash21(vec2 p) { return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
-
-float noise(vec2 p) {
-  vec2 i=floor(p), f=fract(p);
-  f=f*f*(3.0-2.0*f);
-  return mix(mix(hash21(i),hash21(i+vec2(1,0)),f.x),
-             mix(hash21(i+vec2(0,1)),hash21(i+vec2(1,1)),f.x),f.y);
+float hash21(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){
+  vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
+  return mix(mix(hash21(i),hash21(i+vec2(1,0)),f.x),mix(hash21(i+vec2(0,1)),hash21(i+vec2(1,1)),f.x),f.y);
 }
+float fbm(vec2 p){float v=0.0,a=0.5;for(int i=0;i<5;i++){v+=a*noise(p);p=p*2.0+vec2(1.7,9.2);a*=0.5;}return v;}
 
-float fbm(vec2 p){
-  float v=0.0,a=0.5;
-  for(int i=0;i<7;i++){v+=a*noise(p);p=p*2.1+vec2(1.7,9.2);a*=0.48;}
-  return v;
-}
-
-// Star field
-float stars(vec2 uv, float density){
-  vec2 g=floor(uv*density);
-  float h=hash21(g);
-  vec2 offset=vec2(hash21(g+0.1),hash21(g+0.2))-0.5;
-  float d=length(fract(uv*density)-0.5+offset);
-  float twinkle=0.5+0.5*sin(u_time*2.0+h*6.28);
-  return smoothstep(0.05,0.0,d)*twinkle*h;
-}
-
-void main() {
-  vec2 uv = gl_FragCoord.xy / u_resolution;
-  uv.y = 1.0 - uv.y;
-  float t = u_time * 0.15;
-
-  // Mouse ripple
-  vec2 mp = u_mouse / u_resolution;
-  mp.y = 1.0 - mp.y;
-  float ripple = sin(length(uv - mp) * 30.0 - u_time * 4.0) * 0.5 + 0.5;
-  ripple *= exp(-length(uv - mp) * 5.0) * 0.08;
-
-  // Dual plasma layers
-  vec2 q = vec2(fbm(uv + t*0.4 + vec2(0.0,0.0)), fbm(uv + vec2(5.2,1.3) + t*0.3));
-  vec2 r = vec2(fbm(uv + q + vec2(1.7,9.2) + 0.15*t), fbm(uv + q + vec2(8.3,2.8) + 0.126*t));
-  float f = fbm(uv + r + ripple);
-
-  // Secondary swirl
-  vec2 q2 = vec2(fbm(uv*1.5 - t*0.25), fbm(uv*1.5 + vec2(3.1,7.4)));
-  float f2 = fbm(uv + q2*0.6);
-
-  // Colour mapping
-  vec3 dark   = vec3(0.02, 0.02, 0.08);
-  vec3 deep   = u_color * 0.25;
-  vec3 mid    = u_color * 0.65;
-  vec3 bright = u_color + 0.15;
-
-  vec3 col = mix(dark, deep, clamp(f*2.5,0.0,1.0));
-  col = mix(col, mid,    clamp(f*f*3.5,0.0,1.0));
-  col = mix(col, bright, clamp(length(q)*0.7,0.0,1.0));
-  col = mix(col, dark,   f*f*f*0.7);
-  col += u_color * f2 * 0.12;
-
-  // Mouse glow
-  col += u_color * ripple * 1.5;
-
-  // Star field on top
-  col += stars(uv, 60.0) * 0.9;
-  col += stars(uv + 0.3, 120.0) * 0.5;
-  col += stars(uv + 0.7, 200.0) * 0.3;
-
-  // Scanlines
-  float scan = sin(gl_FragCoord.y * 4.0) * 0.012;
-  col += scan;
-
-  // Vignette
-  float vig = uv.x*(1.0-uv.x)*uv.y*(1.0-uv.y)*18.0;
-  col *= pow(vig, 0.2);
-  col = clamp(col,0.0,1.0);
-  gl_FragColor = vec4(col, 1.0);
+void main(){
+  vec2 uv=gl_FragCoord.xy/u_resolution;
+  uv.y=1.0-uv.y;
+  float t=u_time*0.07;  // slow & calm
+  vec2 q=vec2(fbm(uv+t*0.3),fbm(uv+vec2(5.2,1.3)));
+  vec2 r=vec2(fbm(uv+q+vec2(1.7,9.2)+0.12*t),fbm(uv+q+vec2(8.3,2.8)+0.1*t));
+  float f=fbm(uv+r);
+  vec3 dark=vec3(0.05,0.02,0.06);
+  vec3 mid=u_color*0.5;
+  vec3 bright=u_color*0.85;
+  vec3 col=mix(dark,mid,clamp(f*f*3.5,0.0,1.0));
+  col=mix(col,bright,clamp(length(q)*0.5,0.0,1.0));
+  col=mix(col,dark,f*f*f*0.6);
+  // subtle vignette
+  float vig=uv.x*(1.0-uv.x)*uv.y*(1.0-uv.y)*16.0;
+  col*=pow(vig,0.18);
+  gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
 }
 `;
 
@@ -216,7 +166,7 @@ const WebGLBackground: React.FC<WebGLBgProps> = ({ themeColor, enabled }) => {
   );
 };
 
-// ─── Floating Particles ───────────────────────────────────────────────────────
+// ─── Floating Particles (disabled — was too heavy) ───────────────────────────
 const FloatingParticles: React.FC<{ themeColor: string; enabled: boolean }> = ({ themeColor, enabled }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
@@ -386,19 +336,19 @@ const DropZone: React.FC = () => {
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none"
           style={{
-            background: 'rgba(0,229,255,0.07)',
+            background: 'rgba(var(--theme-rgb),0.07)',
             backdropFilter: 'blur(3px)',
-            border: '3px dashed rgba(0,229,255,0.55)',
+            border: '3px dashed rgba(var(--theme-rgb),0.55)',
           }}
         >
           <div className="text-center">
             <div style={{ animation: 'bounceUp 0.8s ease infinite alternate' }}>
-              <Upload size={60} className="mx-auto mb-4" style={{ color: '#00e5ff', filter: 'drop-shadow(0 0 24px #00e5ff)' }} />
+              <Upload size={60} className="mx-auto mb-4" style={{ color: 'var(--theme-color)', filter: 'drop-shadow(0 0 24px var(--theme-color))' }} />
             </div>
             <p className="text-3xl font-black tracking-widest" style={{
-              color: '#00e5ff',
+              color: 'var(--theme-color)',
               fontFamily: "'Space Grotesk', sans-serif",
-              textShadow: '0 0 40px #00e5ff, 0 0 80px #00e5ff55',
+              textShadow: '0 0 40px var(--theme-color), 0 0 80px rgba(var(--theme-rgb),0.33)',
             }}>
               DROP FILES
             </p>
@@ -413,10 +363,10 @@ const DropZone: React.FC = () => {
         onClick={() => { setIsOpen(v => !v); }}
         className="fixed bottom-6 left-6 p-3 rounded-2xl backdrop-blur-md text-white/80 hover:text-white transition-all duration-300 z-40 border flex items-center gap-2 group"
         style={{
-          background: 'rgba(0,229,255,0.12)',
-          borderColor: 'rgba(0,229,255,0.30)',
+          background: 'rgba(var(--theme-rgb),0.12)',
+          borderColor: 'rgba(var(--theme-rgb),0.30)',
           boxShadow: files.length
-            ? '0 0 25px rgba(0,229,255,0.45), 0 0 50px rgba(0,229,255,0.15)'
+            ? '0 0 25px rgba(var(--theme-rgb),0.45), 0 0 50px rgba(var(--theme-rgb),0.15)'
             : '0 4px 20px rgba(0,0,0,0.4)',
         }}
         title="Drop Zone"
@@ -425,7 +375,7 @@ const DropZone: React.FC = () => {
         <span className="text-xs font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Drop Zone</span>
         {files.length > 0 && (
           <span className="text-xs font-black rounded-full w-5 h-5 flex items-center justify-center"
-            style={{ background: '#00e5ff', color: '#000' }}>
+            style={{ background: 'var(--theme-color)', color: '#000' }}>
             {files.length}
           </span>
         )}
@@ -444,20 +394,20 @@ const DropZone: React.FC = () => {
             maxHeight: 480,
             background: 'rgba(6,6,18,0.92)',
             backdropFilter: 'blur(24px)',
-            border: '1px solid rgba(0,229,255,0.22)',
-            boxShadow: '0 30px 80px rgba(0,0,0,0.7), 0 0 50px rgba(0,229,255,0.12)',
+            border: '1px solid rgba(var(--theme-rgb),0.22)',
+            boxShadow: '0 30px 80px rgba(0,0,0,0.7), 0 0 50px rgba(var(--theme-rgb),0.12)',
             animation: 'slideUp 0.25s cubic-bezier(0.16,1,0.3,1) forwards',
           }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'rgba(0,229,255,0.12)' }}>
+          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'rgba(var(--theme-rgb),0.12)' }}>
             <div className="flex items-center gap-2.5">
-              <Upload size={16} style={{ color: '#00e5ff' }} />
+              <Upload size={16} style={{ color: 'var(--theme-color)' }} />
               <span className="font-bold text-white text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '0.05em' }}>
                 Drop Zone
               </span>
               {files.length > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(0,229,255,0.18)', color: '#00e5ff' }}>
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(var(--theme-rgb),0.18)', color: 'var(--theme-color)' }}>
                   {files.length}
                 </span>
               )}
@@ -473,14 +423,14 @@ const DropZone: React.FC = () => {
             className="mx-4 mt-3 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200"
             style={{
               height: 80,
-              border: `2px dashed rgba(0,229,255,0.35)`,
-              background: 'rgba(0,229,255,0.04)',
+              border: `2px dashed rgba(var(--theme-rgb),0.35)`,
+              background: 'rgba(var(--theme-rgb),0.04)',
             }}
             onClick={() => inputRef.current?.click()}
           >
-            <Upload size={20} style={{ color: '#00e5ff', opacity: 0.7 }} />
+            <Upload size={20} style={{ color: 'var(--theme-color)', opacity: 0.7 }} />
             <p className="text-xs text-white/50 mt-1.5">
-              <span style={{ color: '#00e5ff', fontWeight: 700 }}>Click</span> or drag files here
+              <span style={{ color: 'var(--theme-color)', fontWeight: 700 }}>Click</span> or drag files here
             </p>
           </div>
 
@@ -495,7 +445,7 @@ const DropZone: React.FC = () => {
                     className="flex items-center gap-3 px-3 py-2 rounded-xl group transition-all"
                     style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
                   >
-                    <div style={{ color: '#00e5ff', opacity: 0.8, flexShrink: 0 }}>{getFileIcon(f.type)}</div>
+                    <div style={{ color: 'var(--theme-color)', opacity: 0.8, flexShrink: 0 }}>{getFileIcon(f.type)}</div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-white/90 truncate">{f.name}</p>
                       <p className="text-xs text-white/35">{formatSize(f.size)}</p>
@@ -527,103 +477,77 @@ const DropZone: React.FC = () => {
   );
 };
 
-// ─── BATR Logo (animated glitch + glow) ──────────────────────────────────────
+// ─── BATR Logo (clean shimmer, no glitch spam) ───────────────────────────────
 const BatrLogo: React.FC<{ themeColor: string }> = ({ themeColor }) => {
   const [glitch, setGlitch] = useState(false);
 
   useEffect(() => {
+    // Rare glitch — every 8-15s, very brief
     const schedule = () => {
-      const delay = 4000 + Math.random() * 6000;
+      const delay = 8000 + Math.random() * 7000;
       setTimeout(() => {
         setGlitch(true);
-        setTimeout(() => { setGlitch(false); schedule(); }, 350);
+        setTimeout(() => { setGlitch(false); schedule(); }, 120);
       }, delay);
     };
     schedule();
   }, []);
 
   return (
-    <div className="relative flex flex-col items-center justify-center select-none group cursor-default">
-      {/* Outer ring pulse */}
-      <div className="absolute rounded-full pointer-events-none"
-        style={{
-          width: '140%', height: '140%',
-          border: `1px solid ${themeColor}33`,
-          animation: 'ringPulse 3s ease-out infinite',
-        }}
-      />
-      <div className="absolute rounded-full pointer-events-none"
-        style={{
-          width: '120%', height: '120%',
-          border: `1px solid ${themeColor}22`,
-          animation: 'ringPulse 3s ease-out 1s infinite',
-        }}
-      />
-
-      {/* Glow blob */}
+    <div className="relative flex flex-col items-center justify-center select-none cursor-default">
+      {/* Soft glow — always on, not pulsing */}
       <div className="absolute blur-3xl rounded-full pointer-events-none"
         style={{
-          width: '120%', height: '200%',
-          background: `radial-gradient(ellipse, ${themeColor}40 0%, transparent 70%)`,
-          animation: 'glowPulse 4s ease-in-out infinite',
+          width: '160%', height: '220%',
+          background: `radial-gradient(ellipse, ${themeColor}28 0%, transparent 70%)`,
         }}
       />
 
-      {/* Main text */}
+      {/* Main text — shimmer gradient, hover scale */}
       <span
-        className="relative font-black uppercase tracking-widest"
+        className="relative font-black uppercase"
         style={{
           fontFamily: "'Orbitron', 'Space Grotesk', sans-serif",
           fontSize: 'clamp(3.5rem, 9vw, 7rem)',
           letterSpacing: '0.3em',
-          background: `linear-gradient(135deg, #ffffff 0%, ${themeColor} 40%, #ffffff 70%, ${themeColor} 100%)`,
-          backgroundSize: '200% auto',
+          background: `linear-gradient(135deg, #ffffff 0%, ${themeColor} 45%, #ffffff 70%, ${themeColor} 100%)`,
+          backgroundSize: '250% auto',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
-          animation: 'shimmerText 4s linear infinite',
-          filter: `drop-shadow(0 0 20px ${themeColor}bb) drop-shadow(0 0 60px ${themeColor}55)`,
-          ...(glitch ? {
-            textShadow: `4px 0 ${themeColor}, -4px 0 #ff0080`,
-            transform: 'skewX(-2deg)',
-          } : {}),
-          transition: 'transform 0.05s',
+          animation: 'shimmerText 6s linear infinite',
+          filter: `drop-shadow(0 0 16px ${themeColor}88)`,
+          transition: 'filter 0.3s, transform 0.3s',
+        }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLElement).style.filter = `drop-shadow(0 0 30px ${themeColor}cc) drop-shadow(0 0 60px ${themeColor}44)`;
+          (e.currentTarget as HTMLElement).style.transform = 'scale(1.04)';
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.filter = `drop-shadow(0 0 16px ${themeColor}88)`;
+          (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
         }}
       >
         batr
       </span>
 
-      {/* Glitch copies */}
+      {/* Rare glitch */}
       {glitch && (
-        <>
-          <span className="absolute font-black uppercase tracking-widest pointer-events-none"
-            style={{
-              fontFamily: "'Orbitron', sans-serif",
-              fontSize: 'clamp(3.5rem, 9vw, 7rem)',
-              letterSpacing: '0.3em',
-              color: themeColor,
-              opacity: 0.5,
-              transform: 'translate(6px, -2px) skewX(3deg)',
-              mixBlendMode: 'screen',
-              clipPath: 'inset(20% 0 60% 0)',
-            }}>batr</span>
-          <span className="absolute font-black uppercase tracking-widest pointer-events-none"
-            style={{
-              fontFamily: "'Orbitron', sans-serif",
-              fontSize: 'clamp(3.5rem, 9vw, 7rem)',
-              letterSpacing: '0.3em',
-              color: '#ff0080',
-              opacity: 0.4,
-              transform: 'translate(-4px, 3px) skewX(-2deg)',
-              mixBlendMode: 'screen',
-              clipPath: 'inset(50% 0 20% 0)',
-            }}>batr</span>
-        </>
+        <span className="absolute font-black uppercase pointer-events-none"
+          style={{
+            fontFamily: "'Orbitron', sans-serif",
+            fontSize: 'clamp(3.5rem, 9vw, 7rem)',
+            letterSpacing: '0.3em',
+            color: themeColor,
+            opacity: 0.35,
+            transform: 'translate(5px, -1px)',
+            mixBlendMode: 'screen',
+          }}>batr</span>
       )}
 
       {/* Subtitle */}
-      <p className="mt-3 text-xs font-medium tracking-[0.45em] uppercase"
-        style={{ color: `${themeColor}99`, fontFamily: "'Space Grotesk', sans-serif" }}>
+      <p className="mt-3 text-xs font-medium tracking-[0.4em] uppercase"
+        style={{ color: `${themeColor}77`, fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '0.4em' }}>
         personal space
       </p>
     </div>
@@ -758,54 +682,27 @@ const App: React.FC = () => {
           }
           .animate-gradient-slow { background-size:400% 400%; animation: gradient-xy 20s ease infinite; }
 
-          /* Entry animations — staggered */
-          @keyframes fadeSlideDown {
-            from { opacity:0; transform: translateY(-40px) scale(0.95); }
-            to   { opacity:1; transform: translateY(0)    scale(1); }
-          }
-          @keyframes fadeSlideUp {
-            from { opacity:0; transform: translateY(40px) scale(0.95); }
-            to   { opacity:1; transform: translateY(0)    scale(1); }
-          }
-          @keyframes fadeIn {
-            from { opacity:0; }
-            to   { opacity:1; }
-          }
-          .animate-fade-in-down { animation: fadeSlideDown 0.9s cubic-bezier(0.22,1,0.36,1) both; }
-          .animate-fade-in-down-2 { animation: fadeSlideDown 0.9s 0.15s cubic-bezier(0.22,1,0.36,1) both; }
-          .animate-fade-in-up   { animation: fadeSlideUp   0.9s 0.3s  cubic-bezier(0.22,1,0.36,1) both; }
-          .animate-fade-in      { animation: fadeIn         0.8s 0.1s  ease both; }
+          /* Entry — simple fade only, no bounce */
+          @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+          .animate-fade-in-down   { animation: fadeIn 0.7s ease both; }
+          .animate-fade-in-down-2 { animation: fadeIn 0.7s 0.1s ease both; }
+          .animate-fade-in-up     { animation: fadeIn 0.7s 0.2s ease both; }
+          .animate-fade-in        { animation: fadeIn 0.6s ease both; }
 
-          /* Logo animations */
+          /* Logo shimmer */
           @keyframes shimmerText {
-            0%   { background-position: 0%   50%; }
-            100% { background-position: 200% 50%; }
-          }
-          @keyframes glowPulse {
-            0%,100% { opacity:0.5; transform: scale(1); }
-            50%     { opacity:0.9; transform: scale(1.1); }
-          }
-          @keyframes ringPulse {
-            0%   { transform: scale(0.9); opacity:0.8; }
-            100% { transform: scale(1.5); opacity:0; }
+            0%   { background-position: 0% 50%; }
+            100% { background-position: 250% 50%; }
           }
 
-          /* Drop Zone slide-up */
+          /* Drop Zone */
           @keyframes slideUp {
-            from { opacity:0; transform: translateY(16px) scale(0.97); }
-            to   { opacity:1; transform: translateY(0)    scale(1); }
+            from { opacity:0; transform: translateY(12px); }
+            to   { opacity:1; transform: translateY(0); }
           }
-
-          /* Drop overlay bounce */
           @keyframes bounceUp {
-            from { transform: translateY(6px); }
-            to   { transform: translateY(-6px); }
-          }
-
-          /* Infinite bar hover pulse */
-          @keyframes subtlePulse {
-            0%,100% { opacity: 0.7; }
-            50%     { opacity: 1; }
+            from { transform: translateY(5px); }
+            to   { transform: translateY(-5px); }
           }
 
           ${!settings.isAnimationEnabled ? `*,*::before,*::after{animation:none!important;transition:none!important;}` : ''}
@@ -814,7 +711,6 @@ const App: React.FC = () => {
         {/* ── Background ── */}
         <div className="absolute inset-0 overflow-hidden z-0 bg-[#030310]">
           {useWebGL && <WebGLBackground themeColor={settings.themeColor} enabled={useWebGL} />}
-          {useWebGL && <FloatingParticles themeColor={settings.themeColor} enabled={settings.isAnimationEnabled} />}
 
           <video ref={videoRef}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none ${videoUrl ? 'opacity-100' : 'opacity-0'}`}
