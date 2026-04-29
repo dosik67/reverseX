@@ -95,16 +95,38 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
 
   return (
     <>
-      {isFocused && portalRoot && createPortal(
-        <div
-          onMouseDown={() => setIsFocused(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.35)',
-            zIndex: 999,
-          }}
-        />,
+      {/* Side blur overlay (never blurs the search itself) */}
+      {isFocused && anchorRect && portalRoot && createPortal(
+        <>
+          <div
+            onMouseDown={() => setIsFocused(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              bottom: 0,
+              left: 0,
+              width: Math.max(0, anchorRect.left),
+              background: 'rgba(0,0,0,0.25)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              zIndex: 999,
+            }}
+          />
+          <div
+            onMouseDown={() => setIsFocused(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              bottom: 0,
+              right: 0,
+              width: Math.max(0, window.innerWidth - anchorRect.right),
+              background: 'rgba(0,0,0,0.25)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              zIndex: 999,
+            }}
+          />
+        </>,
         portalRoot
       )}
 
