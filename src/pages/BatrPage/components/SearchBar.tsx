@@ -167,7 +167,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
                      glass-input
                      focus:outline-none focus:ring-2 theme-ring-focus focus:bg-[rgba(var(--theme-rgb),0.1)]
                      transition-all duration-300
-                     ${isFocused && history.length > 0 ? 'rounded-t-3xl rounded-b-none border-b-0' : 'rounded-full'}`}
+                     rounded-full`}
           style={{
             backdropFilter: 'none',
             WebkitBackdropFilter: 'none',
