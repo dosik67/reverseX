@@ -12,6 +12,11 @@ interface GlobalState {
   others: AppItem[];
 }
 
+type SpaceWallpaper = {
+  customBackground: string | null;
+  customVideo: boolean;
+};
+
 interface GlobalContextType extends GlobalState {
   setSettings: (settings: AppSettings) => void;
   setBookmarks: (bookmarks: Bookmark[]) => void;
@@ -25,6 +30,9 @@ interface GlobalContextType extends GlobalState {
   setBgIndex: (index: number) => void;
   bgSpace: number;
   setBgSpace: (space: number) => void;
+  spaceWallpaper: SpaceWallpaper;
+  setSpaceCustomBackground: (value: string | null) => void;
+  setSpaceCustomVideo: (value: boolean) => void;
   updateSettings: (newSettings: Partial<AppSettings>) => void;
   updateBookmark: (id: string, updates: Partial<Bookmark>) => void;
   isSyncing: boolean;
@@ -48,6 +56,7 @@ const LS = {
   topBar: 'batr_top_bar',
   bgIndex: 'batr_bg_index',
   bgSpace: 'batr_bg_space',
+  spaceWallpapers: 'batr_space_wallpapers',
   favorites: 'batr_favorites',
   others: 'batr_others',
 };
@@ -98,6 +107,17 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return saved ? parseInt(saved) : 0; // 0 = first space, 1 = second space
   });
 
+  const [spaceWallpapers, setSpaceWallpapers] = useState<Record<number, SpaceWallpaper>>(() => {
+    try {
+      const saved = localStorage.getItem(LS.spaceWallpapers);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      0: { customBackground: null, customVideo: false },
+      1: { customBackground: null, customVideo: false },
+    };
+  });
+
   const [user, setUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
@@ -122,11 +142,12 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     localStorage.setItem(LS.topBar, JSON.stringify(topLinks));
     localStorage.setItem(LS.bgIndex, bgIndex.toString());
     localStorage.setItem(LS.bgSpace, bgSpace.toString());
+    localStorage.setItem(LS.spaceWallpapers, JSON.stringify(spaceWallpapers));
     
     const replacer = (key: string, value: any) => (key === 'icon' ? undefined : value);
     localStorage.setItem(LS.favorites, JSON.stringify(favorites, replacer));
     localStorage.setItem(LS.others, JSON.stringify(others, replacer));
-  }, [settings, bookmarks, topLinks, favorites, others, bgIndex, bgSpace]);
+  }, [settings, bookmarks, topLinks, favorites, others, bgIndex, bgSpace, spaceWallpapers]);
 
   useEffect(() => {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -184,6 +205,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
               settings,
               bookmarks,
               topLinks,
+              spaceWallpapers,
               favorites: favorites.map(f => ({ id: f.id, name: f.name, url: f.url })), 
               others: others.map(o => ({ id: o.id, name: o.name, url: o.url }))
           };
@@ -196,10 +218,11 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           setLastSynced(new Date());
       }, 2000); 
       return () => clearTimeout(timeoutId);
-  }, [settings, bookmarks, topLinks, favorites, others, user]);
+  }, [settings, bookmarks, topLinks, favorites, others, user, spaceWallpapers]);
 
   const exportData = () => {
       const dataToExport = { settings, bookmarks, topLinks,
+          spaceWallpapers,
           favorites: favorites.map(f => ({ id: f.id, name: f.name, url: f.url })),
           others: others.map(o => ({ id: o.id, name: o.name, url: o.url })), bgIndex
       };
@@ -221,6 +244,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           localStorage.setItem(LS.bookmarks, JSON.stringify(parsed.bookmarks));
           if(parsed.topLinks) localStorage.setItem(LS.topBar, JSON.stringify(parsed.topLinks));
           if(parsed.bgIndex !== undefined) localStorage.setItem(LS.bgIndex, parsed.bgIndex.toString());
+          if(parsed.spaceWallpapers) localStorage.setItem(LS.spaceWallpapers, JSON.stringify(parsed.spaceWallpapers));
           if(parsed.favorites) localStorage.setItem(LS.favorites, JSON.stringify(parsed.favorites));
           if(parsed.others) localStorage.setItem(LS.others, JSON.stringify(parsed.others));
           window.location.reload();
@@ -241,6 +265,15 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       user,
       bgIndex, setBgIndex,
       bgSpace, setBgSpace,
+      spaceWallpaper: spaceWallpapers[bgSpace] ?? { customBackground: null, customVideo: false },
+      setSpaceCustomBackground: (value) => setSpaceWallpapers(prev => ({
+        ...prev,
+        [bgSpace]: { ...(prev[bgSpace] ?? { customBackground: null, customVideo: false }), customBackground: value }
+      })),
+      setSpaceCustomVideo: (value) => setSpaceWallpapers(prev => ({
+        ...prev,
+        [bgSpace]: { ...(prev[bgSpace] ?? { customBackground: null, customVideo: false }), customVideo: value }
+      })),
       importData, exportData,
       isSyncing,
       lastSynced,

@@ -12,7 +12,7 @@ interface SettingsModalProps {
 type Tab = 'general' | 'profile';
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
-  const { settings, updateSettings, importData, exportData, user, logout, lastSynced } = useGlobal();
+  const { settings, updateSettings, importData, exportData, user, logout, lastSynced, bgSpace, spaceWallpaper, setSpaceCustomBackground, setSpaceCustomVideo } = useGlobal();
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [showLogin, setShowLogin] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -29,7 +29,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        updateSettings({ customBackground: reader.result as string, customVideo: false });
+        setSpaceCustomBackground(reader.result as string);
+        setSpaceCustomVideo(false);
       };
       reader.readAsDataURL(file);
     }
@@ -39,8 +40,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
       const file = e.target.files?.[0];
       if (!file) return;
       try {
-          await saveVideo(file);
-          updateSettings({ customVideo: true, customBackground: null });
+          await saveVideo(file, bgSpace);
+          setSpaceCustomVideo(true);
+          setSpaceCustomBackground(null);
       } catch (err) {
           console.error("Video save failed", err);
           alert("Failed to save video.");
@@ -63,8 +65,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
   const clearVideo = async () => {
       try {
-          await deleteVideo();
-          updateSettings({ customVideo: false });
+          await deleteVideo(bgSpace);
+          setSpaceCustomVideo(false);
       } catch (err) {
           console.error("Failed to delete video", err);
       }
@@ -135,9 +137,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                             >
                                 <Upload size={14}/> {t.uploadImage}
                             </button>
-                            {settings.customBackground && (
+                            {spaceWallpaper.customBackground && (
                                 <button 
-                                    onClick={() => updateSettings({ customBackground: null })}
+                                    onClick={() => setSpaceCustomBackground(null)}
                                     className="py-2 px-3 bg-red-500/20 hover:bg-red-500/30 text-red-100 rounded-lg text-xs transition-all border border-red-500/20"
                                 >
                                     {t.reset}
@@ -163,7 +165,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                             >
                                 <Film size={14}/> {t.uploadVideo}
                             </button>
-                            {settings.customVideo && (
+                            {spaceWallpaper.customVideo && (
                                 <button 
                                     onClick={clearVideo}
                                     className="py-2 px-3 bg-red-500/20 hover:bg-red-500/30 text-red-100 rounded-lg text-xs transition-all border border-red-500/20"

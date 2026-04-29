@@ -583,7 +583,7 @@ const BatrLogo: React.FC<{ themeColor: string }> = ({ themeColor }) => {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 const App: React.FC = () => {
-  const { settings, updateSettings, bgIndex, setBgIndex, bgSpace, setBgSpace, user, isSyncing, topLinks, setTopLinks, bookmarks, setBookmarks } = useGlobal();
+  const { settings, updateSettings, bgIndex, setBgIndex, bgSpace, setBgSpace, spaceWallpaper, setSpaceCustomVideo, user, isSyncing, topLinks, setTopLinks, bookmarks, setBookmarks } = useGlobal();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -655,16 +655,17 @@ const App: React.FC = () => {
 
   useEffect(() => {
     let active = true;
-    if (settings.customVideo) {
-      getVideo().then(blob => {
-        if (active && blob) setVideoUrl(URL.createObjectURL(blob));
-        else if (active && !blob) updateSettings({ customVideo: false });
-      }).catch(() => updateSettings({ customVideo: false }));
+    if (spaceWallpaper.customVideo) {
+      getVideo(bgSpace).then(blob => {
+        if (!active) return;
+        if (blob) setVideoUrl(URL.createObjectURL(blob));
+        else setSpaceCustomVideo(false);
+      }).catch(() => setSpaceCustomVideo(false));
     } else {
       setVideoUrl(null);
     }
     return () => { active = false; };
-  }, [settings.customVideo]);
+  }, [spaceWallpaper.customVideo, bgSpace]);
 
   useEffect(() => {
     if (videoRef.current && videoUrl) {
@@ -677,10 +678,10 @@ const App: React.FC = () => {
 
   // Get the correct background array based on current space
   const currentBackgrounds = bgSpace === 0 ? BACKGROUNDS : BACKGROUNDS_SPACE2;
-  const currentBgValue = settings.customBackground || currentBackgrounds[bgIndex].value;
-  const currentSvgId = !settings.customBackground && !settings.customVideo ? currentBackgrounds[bgIndex].svgId : null;
+  const currentBgValue = spaceWallpaper.customBackground || currentBackgrounds[bgIndex].value;
+  const currentSvgId = !spaceWallpaper.customBackground && !spaceWallpaper.customVideo ? currentBackgrounds[bgIndex].svgId : null;
   const themeRgb = hexToRgb(settings.themeColor);
-  const useWebGL = !settings.customBackground && !settings.customVideo && !currentSvgId && settings.isAnimationEnabled;
+  const useWebGL = !spaceWallpaper.customBackground && !spaceWallpaper.customVideo && !currentSvgId && settings.isAnimationEnabled;
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter}
@@ -748,14 +749,14 @@ const App: React.FC = () => {
           <div className={`absolute inset-0 bg-black/40 pointer-events-none transition-opacity duration-1000 ${videoUrl ? 'opacity-100' : 'opacity-0'}`} />
 
           <div className={`absolute inset-0 transition-opacity duration-1000 pointer-events-none ${(videoUrl || useWebGL) ? 'opacity-0' : 'opacity-100'}`}
-            style={{ background: settings.customBackground ? `url(${settings.customBackground}) center/cover no-repeat` : currentBgValue }}>
+            style={{ background: spaceWallpaper.customBackground ? `url(${spaceWallpaper.customBackground}) center/cover no-repeat` : currentBgValue }}>
             {currentSvgId === 'white-wave' && <WhiteWaveSvg />}
             {currentSvgId === 'dark-wave'  && <DarkWaveSvg  />}
             {currentSvgId === 'dot-waves'  && <DotWavesSvg  />}
             {currentSvgId === 'carbon'     && <CarbonSvg    />}
             {currentSvgId === 'circuit'    && <CircuitSvg   />}
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay" />
-            <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none ${!settings.customBackground && settings.isAnimationEnabled && !currentSvgId ? 'animate-gradient-slow' : ''}`} />
+            <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none ${!spaceWallpaper.customBackground && settings.isAnimationEnabled && !currentSvgId ? 'animate-gradient-slow' : ''}`} />
           </div>
         </div>
 
