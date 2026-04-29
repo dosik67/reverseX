@@ -107,8 +107,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
               left: 0,
               width: Math.max(0, anchorRect.left),
               background: 'rgba(0,0,0,0.25)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
               zIndex: 999,
             }}
           />
@@ -121,8 +119,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
               right: 0,
               width: Math.max(0, window.innerWidth - anchorRect.right),
               background: 'rgba(0,0,0,0.25)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
               zIndex: 999,
             }}
           />
