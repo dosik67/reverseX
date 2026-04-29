@@ -824,17 +824,8 @@ const App: React.FC = () => {
           </footer>
         </div>
 
-        {/* ── Settings button ── */}
-        <button
-          onClick={() => setIsSettingsOpen(true)}
-          className="fixed bottom-6 right-6 p-3 rounded-full bg-black/20 hover:bg-[rgba(var(--theme-rgb),0.4)] backdrop-blur-md text-white/70 hover:text-white transition-all duration-300 z-40 border border-white/8 hover:rotate-90"
-          title="Settings"
-        >
-          <Settings size={20} />
-        </button>
-
-        {/* ── Wallpaper Skip Button (Bottom Right) ── */}
-        {!settings.lockBackground && (
+        {/* ── Bottom-right controls (Skip + Settings) ── */}
+        <div className="fixed bottom-6 right-6 flex items-center gap-3 z-40">
           <button
             onClick={() => {
               const nextSpace = bgSpace === 0 ? 1 : 0;
@@ -842,7 +833,7 @@ const App: React.FC = () => {
               setBgSpace(nextSpace);
               setBgIndex(prev => Math.min(prev, nextBackgrounds.length - 1));
             }}
-            className="fixed bottom-6 right-20 p-3 rounded-full bg-black/40 hover:bg-[rgba(var(--theme-rgb),0.5)] backdrop-blur-md text-white/80 hover:text-white transition-all duration-300 z-40 border border-white/10 hover:scale-110 group"
+            className="p-3 rounded-full bg-black/40 hover:bg-[rgba(var(--theme-rgb),0.5)] backdrop-blur-md text-white/80 hover:text-white transition-all duration-300 border border-white/10 hover:scale-110 group"
             title={bgSpace === 0 ? "Go to Space 2" : "Go to Space 1"}
             style={{
               boxShadow: '0 0 20px rgba(var(--theme-rgb),0.3), 0 4px 15px rgba(0,0,0,0.4)',
@@ -850,7 +841,15 @@ const App: React.FC = () => {
           >
             <SkipForward size={20} className="text-[var(--theme-color)] group-hover:translate-x-1 transition-transform" />
           </button>
-        )}
+
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="p-3 rounded-full bg-black/20 hover:bg-[rgba(var(--theme-rgb),0.4)] backdrop-blur-md text-white/70 hover:text-white transition-all duration-300 border border-white/8 hover:rotate-90"
+            title="Settings"
+          >
+            <Settings size={20} />
+          </button>
+        </div>
 
         {isSettingsOpen && <SettingsModal onClose={() => setIsSettingsOpen(false)} />}
         {isAuthOpen     && <AuthModal language={settings.language} onClose={() => setIsAuthOpen(false)} />}
