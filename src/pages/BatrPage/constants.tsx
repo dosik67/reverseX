@@ -74,6 +74,70 @@ export const BACKGROUNDS: BackgroundTheme[] = [
   }
 ];
 
+// Second wallpaper space - unique backgrounds
+export const BACKGROUNDS_SPACE2: BackgroundTheme[] = [
+  {
+    name: "Aurora Borealis",
+    value: "linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)",
+    textColor: "text-white"
+  },
+  {
+    name: "Sunset Dreams",
+    value: "linear-gradient(to top, #fad0c4 0%, #ffd1ff 100%)",
+    textColor: "text-gray-900"
+  },
+  {
+    name: "Ocean Depth",
+    value: "linear-gradient(180deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%)",
+    textColor: "text-white"
+  },
+  {
+    name: "Fire Storm",
+    value: "linear-gradient(45deg, #ff0844 0%, #ffb199 100%)",
+    textColor: "text-white"
+  },
+  {
+    name: "Purple Haze",
+    value: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    textColor: "text-white"
+  },
+  {
+    name: "Golden Hour",
+    value: "linear-gradient(to right, #f83600 0%, #f9d423 100%)",
+    textColor: "text-white"
+  },
+  {
+    name: "Northern Lights",
+    value: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+    textColor: "text-white"
+  },
+  {
+    name: "Cherry Blossom",
+    value: "linear-gradient(to top, #fad0c4 0%, #ffd1ff 100%)",
+    textColor: "text-gray-900"
+  },
+  {
+    name: "Cyber Punk",
+    value: "linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 50%, #ff006e 100%)",
+    textColor: "text-white"
+  },
+  {
+    name: "Forest Mist",
+    value: "linear-gradient(to right, #134e5e 0%, #71b280 100%)",
+    textColor: "text-white"
+  },
+  {
+    name: "Cosmic Dust",
+    value: "linear-gradient(135deg, #2d1f3d 0%, #614385 50%, #516395 100%)",
+    textColor: "text-white"
+  },
+  {
+    name: "Peach Smoothie",
+    value: "linear-gradient(to right, #ffecd2 0%, #fcb69f 100%)",
+    textColor: "text-gray-900"
+  }
+];
+
 export const DEFAULT_SETTINGS: AppSettings = {
   blurAmount: 20,
   isAnimationEnabled: true,

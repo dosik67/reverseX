@@ -23,6 +23,8 @@ interface GlobalContextType extends GlobalState {
   user: User | null;
   bgIndex: number;
   setBgIndex: (index: number) => void;
+  bgSpace: number;
+  setBgSpace: (space: number) => void;
   updateSettings: (newSettings: Partial<AppSettings>) => void;
   updateBookmark: (id: string, updates: Partial<Bookmark>) => void;
   isSyncing: boolean;
@@ -45,6 +47,7 @@ const LS = {
   bookmarks: 'batr_bookmarks',
   topBar: 'batr_top_bar',
   bgIndex: 'batr_bg_index',
+  bgSpace: 'batr_bg_space',
   favorites: 'batr_favorites',
   others: 'batr_others',
 };
@@ -90,6 +93,11 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return saved ? parseInt(saved) : 5; // Default to "Deep Space Mesh"
   });
 
+  const [bgSpace, setBgSpace] = useState(() => {
+    const saved = localStorage.getItem(LS.bgSpace);
+    return saved ? parseInt(saved) : 0; // 0 = first space, 1 = second space
+  });
+
   const [user, setUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
@@ -113,11 +121,12 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     localStorage.setItem(LS.bookmarks, JSON.stringify(bookmarks));
     localStorage.setItem(LS.topBar, JSON.stringify(topLinks));
     localStorage.setItem(LS.bgIndex, bgIndex.toString());
+    localStorage.setItem(LS.bgSpace, bgSpace.toString());
     
     const replacer = (key: string, value: any) => (key === 'icon' ? undefined : value);
     localStorage.setItem(LS.favorites, JSON.stringify(favorites, replacer));
     localStorage.setItem(LS.others, JSON.stringify(others, replacer));
-  }, [settings, bookmarks, topLinks, favorites, others, bgIndex]);
+  }, [settings, bookmarks, topLinks, favorites, others, bgIndex, bgSpace]);
 
   useEffect(() => {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -231,6 +240,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       others, setOthers,
       user,
       bgIndex, setBgIndex,
+      bgSpace, setBgSpace,
       importData, exportData,
       isSyncing,
       lastSynced,

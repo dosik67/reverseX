@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Settings, User, LogOut, Cloud, CloudUpload, Upload, X, FileText, Image, Film, Music, Archive } from 'lucide-react';
-import { BACKGROUNDS } from './constants';
+import { Settings, User, LogOut, Cloud, CloudUpload, Upload, X, FileText, Image, Film, Music, Archive, SkipForward } from 'lucide-react';
+import { BACKGROUNDS, BACKGROUNDS_SPACE2 } from './constants';
 import { useGlobal } from './context/GlobalContext';
 import SearchBar from './components/SearchBar';
 import AppMenu from './components/AppMenu';
@@ -477,24 +477,56 @@ const DropZone: React.FC = () => {
   );
 };
 
-// ─── BATR Logo (clean shimmer, no glitch spam) ───────────────────────────────
+// ─── BATR Logo (typing + fade-in, RUSJellyka font) ─────────────────────────────
 const BatrLogo: React.FC<{ themeColor: string }> = ({ themeColor }) => {
+  const [visible, setVisible] = useState(false);
   const [glitch, setGlitch] = useState(false);
+  const fullText = 'batr';
+  const [typed, setTyped] = useState('');
 
   useEffect(() => {
+    // Smooth fade-in on mount
+    const timer = setTimeout(() => setVisible(true), 100);
+
+    // Type-once animation (does not erase)
+    const typeTimer = window.setTimeout(() => {
+      let i = 0;
+      const id = window.setInterval(() => {
+        i += 1;
+        setTyped(fullText.slice(0, i));
+        if (i >= fullText.length) window.clearInterval(id);
+      }, 110);
+    }, 250);
+    
     // Rare glitch — every 8-15s, very brief
+    let glitchTimeout: number | null = null;
+    let glitchInnerTimeout: number | null = null;
     const schedule = () => {
       const delay = 8000 + Math.random() * 7000;
-      setTimeout(() => {
+      glitchTimeout = window.setTimeout(() => {
         setGlitch(true);
-        setTimeout(() => { setGlitch(false); schedule(); }, 120);
+        glitchInnerTimeout = window.setTimeout(() => { setGlitch(false); schedule(); }, 120);
       }, delay);
     };
     schedule();
+    
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(typeTimer);
+      if (glitchTimeout) clearTimeout(glitchTimeout);
+      if (glitchInnerTimeout) clearTimeout(glitchInnerTimeout);
+    };
   }, []);
 
   return (
-    <div className="relative flex flex-col items-center justify-center select-none cursor-default">
+    <div 
+      className="relative flex flex-col items-center justify-center select-none cursor-default"
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(20px)',
+        transition: 'opacity 1.5s ease-out, transform 1.5s ease-out',
+      }}
+    >
       {/* Soft glow — always on, not pulsing */}
       <div className="absolute blur-3xl rounded-full pointer-events-none"
         style={{
@@ -507,9 +539,9 @@ const BatrLogo: React.FC<{ themeColor: string }> = ({ themeColor }) => {
       <span
         className="relative font-black uppercase"
         style={{
-          fontFamily: "'Orbitron', 'Space Grotesk', sans-serif",
+          fontFamily: '"RUSJellyka - Love and Passion", "Jellyka - Love and Passion", "RUS Jellyka", Orbitron, "Space Grotesk", sans-serif',
           fontSize: 'clamp(3.5rem, 9vw, 7rem)',
-          letterSpacing: '0.3em',
+          letterSpacing: '0.15em',
           background: `linear-gradient(135deg, #ffffff 0%, ${themeColor} 45%, #ffffff 70%, ${themeColor} 100%)`,
           backgroundSize: '250% auto',
           WebkitBackgroundClip: 'text',
@@ -528,21 +560,21 @@ const BatrLogo: React.FC<{ themeColor: string }> = ({ themeColor }) => {
           (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
         }}
       >
-        batr
+        {typed || '\u00A0'}
       </span>
 
       {/* Rare glitch */}
-      {glitch && (
+      {glitch && typed.length === fullText.length && (
         <span className="absolute font-black uppercase pointer-events-none"
           style={{
-            fontFamily: "'Orbitron', sans-serif",
+            fontFamily: '"RUSJellyka - Love and Passion", "Jellyka - Love and Passion", "RUS Jellyka", Orbitron, sans-serif',
             fontSize: 'clamp(3.5rem, 9vw, 7rem)',
-            letterSpacing: '0.3em',
+            letterSpacing: '0.15em',
             color: themeColor,
             opacity: 0.35,
             transform: 'translate(5px, -1px)',
             mixBlendMode: 'screen',
-          }}>batr</span>
+          }}>{fullText}</span>
       )}
 
     </div>
@@ -551,7 +583,7 @@ const BatrLogo: React.FC<{ themeColor: string }> = ({ themeColor }) => {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 const App: React.FC = () => {
-  const { settings, updateSettings, bgIndex, setBgIndex, user, isSyncing, topLinks, setTopLinks, bookmarks, setBookmarks } = useGlobal();
+  const { settings, updateSettings, bgIndex, setBgIndex, bgSpace, setBgSpace, user, isSyncing, topLinks, setTopLinks, bookmarks, setBookmarks } = useGlobal();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -643,8 +675,10 @@ const App: React.FC = () => {
 
   const handleLogout = async () => { await supabase.auth.signOut(); };
 
-  const currentBgValue = settings.customBackground || BACKGROUNDS[bgIndex].value;
-  const currentSvgId = !settings.customBackground && !settings.customVideo ? BACKGROUNDS[bgIndex].svgId : null;
+  // Get the correct background array based on current space
+  const currentBackgrounds = bgSpace === 0 ? BACKGROUNDS : BACKGROUNDS_SPACE2;
+  const currentBgValue = settings.customBackground || currentBackgrounds[bgIndex].value;
+  const currentSvgId = !settings.customBackground && !settings.customVideo ? currentBackgrounds[bgIndex].svgId : null;
   const themeRgb = hexToRgb(settings.themeColor);
   const useWebGL = !settings.customBackground && !settings.customVideo && !currentSvgId && settings.isAnimationEnabled;
 
@@ -656,6 +690,7 @@ const App: React.FC = () => {
         {/* Global styles & keyframes */}
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&family=Orbitron:wght@700;900&display=swap');
+          @import url('https://db.onlinewebfonts.com/c/974bd26af2807a1d5eaa49c648186e45?family=RUSJellyka+-+Love+and+Passion');
           :root {
             --glass-blur: ${settings.blurAmount}px;
             --theme-color: ${settings.themeColor};
@@ -773,7 +808,17 @@ const App: React.FC = () => {
 
           <footer className="p-8 flex justify-center pb-12 relative animate-fade-in">
             {!settings.lockBackground && !settings.customBackground && !settings.customVideo && (
-              <BackgroundSwitcher currentIndex={bgIndex} onSwitch={setBgIndex} />
+              <BackgroundSwitcher
+                currentIndex={bgIndex}
+                bgSpace={bgSpace}
+                onSwitch={setBgIndex}
+                onSpaceSwitch={() => {
+                  const nextSpace = bgSpace === 0 ? 1 : 0;
+                  const nextBackgrounds = nextSpace === 0 ? BACKGROUNDS : BACKGROUNDS_SPACE2;
+                  setBgSpace(nextSpace);
+                  setBgIndex(prev => Math.min(prev, nextBackgrounds.length - 1));
+                }}
+              />
             )}
           </footer>
         </div>
@@ -786,6 +831,24 @@ const App: React.FC = () => {
         >
           <Settings size={20} />
         </button>
+
+        {/* ── Wallpaper Skip Button (Bottom Right) ── */}
+        {!settings.lockBackground && !settings.customBackground && !settings.customVideo && (
+          <button
+            onClick={() => {
+              const backgrounds = bgSpace === 0 ? BACKGROUNDS : BACKGROUNDS_SPACE2;
+              const nextIndex = bgIndex >= backgrounds.length - 1 ? 0 : bgIndex + 1;
+              setBgIndex(nextIndex);
+            }}
+            className="fixed bottom-6 right-20 p-3 rounded-full bg-black/40 hover:bg-[rgba(var(--theme-rgb),0.5)] backdrop-blur-md text-white/80 hover:text-white transition-all duration-300 z-40 border border-white/10 hover:scale-110 group"
+            title="Skip to next wallpaper"
+            style={{
+              boxShadow: '0 0 20px rgba(var(--theme-rgb),0.3), 0 4px 15px rgba(0,0,0,0.4)',
+            }}
+          >
+            <SkipForward size={20} className="text-[var(--theme-color)] group-hover:translate-x-1 transition-transform" />
+          </button>
+        )}
 
         {isSettingsOpen && <SettingsModal onClose={() => setIsSettingsOpen(false)} />}
         {isAuthOpen     && <AuthModal language={settings.language} onClose={() => setIsAuthOpen(false)} />}
