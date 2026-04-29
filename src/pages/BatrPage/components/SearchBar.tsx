@@ -102,8 +102,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
             position: 'fixed',
             inset: 0,
             background: 'rgba(0,0,0,0.35)',
-            backdropFilter: 'blur(2px)',
-            WebkitBackdropFilter: 'blur(2px)',
             zIndex: 999,
           }}
         />,
