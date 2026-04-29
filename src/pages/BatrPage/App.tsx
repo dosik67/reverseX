@@ -477,7 +477,7 @@ const DropZone: React.FC = () => {
   );
 };
 
-// ─── BATR Logo (typing + fade-in, RUSJellyka font) ─────────────────────────────
+// ─── BATR Logo (typing + fade-in, PF Playskool Pro font) ──────────────────────
 const BatrLogo: React.FC<{ themeColor: string }> = ({ themeColor }) => {
   const [visible, setVisible] = useState(false);
   const [glitch, setGlitch] = useState(false);
@@ -539,7 +539,7 @@ const BatrLogo: React.FC<{ themeColor: string }> = ({ themeColor }) => {
       <span
         className="relative font-black uppercase"
         style={{
-          fontFamily: '"RUSJellyka - Love and Passion", "Jellyka - Love and Passion", "RUS Jellyka", Orbitron, "Space Grotesk", sans-serif',
+          fontFamily: '"PFPlayskoolPro-Regular", "PF Playskool Pro", "Space Grotesk", system-ui, sans-serif',
           fontSize: 'clamp(3.5rem, 9vw, 7rem)',
           letterSpacing: '0.15em',
           background: `linear-gradient(135deg, #ffffff 0%, ${themeColor} 45%, #ffffff 70%, ${themeColor} 100%)`,
@@ -567,7 +567,7 @@ const BatrLogo: React.FC<{ themeColor: string }> = ({ themeColor }) => {
       {glitch && typed.length === fullText.length && (
         <span className="absolute font-black uppercase pointer-events-none"
           style={{
-            fontFamily: '"RUSJellyka - Love and Passion", "Jellyka - Love and Passion", "RUS Jellyka", Orbitron, sans-serif',
+            fontFamily: '"PFPlayskoolPro-Regular", "PF Playskool Pro", "Space Grotesk", system-ui, sans-serif',
             fontSize: 'clamp(3.5rem, 9vw, 7rem)',
             letterSpacing: '0.15em',
             color: themeColor,
@@ -690,7 +690,7 @@ const App: React.FC = () => {
         {/* Global styles & keyframes */}
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&family=Orbitron:wght@700;900&display=swap');
-          @import url('https://db.onlinewebfonts.com/c/974bd26af2807a1d5eaa49c648186e45?family=RUSJellyka+-+Love+and+Passion');
+          @import url('https://db.onlinewebfonts.com/c/1f3cecd67a658841068d04a7d9af5261?family=PFPlayskoolPro-Regular');
           :root {
             --glass-blur: ${settings.blurAmount}px;
             --theme-color: ${settings.themeColor};
@@ -807,7 +807,7 @@ const App: React.FC = () => {
           </main>
 
           <footer className="p-8 flex justify-center pb-12 relative animate-fade-in">
-            {!settings.lockBackground && !settings.customBackground && !settings.customVideo && (
+            {!settings.lockBackground && (
               <BackgroundSwitcher
                 currentIndex={bgIndex}
                 bgSpace={bgSpace}
@@ -833,15 +833,16 @@ const App: React.FC = () => {
         </button>
 
         {/* ── Wallpaper Skip Button (Bottom Right) ── */}
-        {!settings.lockBackground && !settings.customBackground && !settings.customVideo && (
+        {!settings.lockBackground && (
           <button
             onClick={() => {
-              const backgrounds = bgSpace === 0 ? BACKGROUNDS : BACKGROUNDS_SPACE2;
-              const nextIndex = bgIndex >= backgrounds.length - 1 ? 0 : bgIndex + 1;
-              setBgIndex(nextIndex);
+              const nextSpace = bgSpace === 0 ? 1 : 0;
+              const nextBackgrounds = nextSpace === 0 ? BACKGROUNDS : BACKGROUNDS_SPACE2;
+              setBgSpace(nextSpace);
+              setBgIndex(prev => Math.min(prev, nextBackgrounds.length - 1));
             }}
             className="fixed bottom-6 right-20 p-3 rounded-full bg-black/40 hover:bg-[rgba(var(--theme-rgb),0.5)] backdrop-blur-md text-white/80 hover:text-white transition-all duration-300 z-40 border border-white/10 hover:scale-110 group"
-            title="Skip to next wallpaper"
+            title={bgSpace === 0 ? "Go to Space 2" : "Go to Space 1"}
             style={{
               boxShadow: '0 0 20px rgba(var(--theme-rgb),0.3), 0 4px 15px rgba(0,0,0,0.4)',
             }}

@@ -55,7 +55,23 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
   const isOpen = isFocused && history.length > 0;
 
   return (
-    <div ref={containerRef} className="w-full max-w-2xl px-4 relative" style={{ zIndex: 20 }}>
+    <>
+      {/* Overlay layer (like original search) */}
+      {isFocused && (
+        <div
+          onMouseDown={() => setIsFocused(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.35)',
+            backdropFilter: 'blur(2px)',
+            WebkitBackdropFilter: 'blur(2px)',
+            zIndex: 50,
+          }}
+        />
+      )}
+
+      <div ref={containerRef} className="w-full max-w-2xl px-4 relative" style={{ zIndex: 60 }}>
       <form onSubmit={handleSearch}>
         <div className="relative">
           {/* Search icon */}
@@ -103,7 +119,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
             borderTop: 'none',
             borderRadius: '0 0 20px 20px',
             overflow: 'hidden',
-            zIndex: 30,
+            zIndex: 70,
             boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
           }}>
             {history.map((item, idx) => (
@@ -140,7 +156,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
                     display: 'flex',
                     alignItems: 'center',
                     transition: 'color 0.15s, background 0.15s',
-                    zIndex: 35,
+                    zIndex: 75,
                     position: 'relative',
                   }}
                   onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#fff'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.1)'; }}
@@ -154,7 +170,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
           </div>
         )}
       </form>
-    </div>
+      </div>
+    </>
   );
 };
 

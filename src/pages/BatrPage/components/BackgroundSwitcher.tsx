@@ -74,7 +74,6 @@ const BackgroundSwitcher: React.FC<BackgroundSwitcherProps> = ({
         title="Skip to next wallpaper"
       >
         <SkipForward size={18} className="text-[var(--theme-color)] group-hover:translate-x-1 transition-transform" />
-        <span className="text-xs font-bold uppercase tracking-wider">Skip</span>
       </button>
     </div>
   );
