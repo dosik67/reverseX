@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, History, X } from 'lucide-react';
 import { SEARCH_ENGINES, TRANSLATIONS } from '../constants';
 
@@ -13,6 +14,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
   const [isFocused, setIsFocused] = useState(false);
   const t = TRANSLATIONS[language];
   const formRef = useRef<HTMLFormElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+
+  const isOpen = isFocused && history.length > 0;
+  const portalRoot = useMemo(() => (typeof document !== 'undefined' ? document.body : null), []);
 
   useEffect(() => {
     const saved = localStorage.getItem('batr_searchHistory');
@@ -33,6 +39,33 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!isFocused) return;
+
+    const update = () => {
+      const el = inputRef.current;
+      if (!el) return;
+      setAnchorRect(el.getBoundingClientRect());
+    };
+
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [isFocused]);
+
+  useEffect(() => {
+    if (!isFocused) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsFocused(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isFocused]);
+
   const saveHistory = (newHistory: string[]) => {
     setHistory(newHistory);
     localStorage.setItem('batr_searchHistory', JSON.stringify(newHistory));
@@ -44,7 +77,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
     saveHistory(newHistory);
   };
 
-  const removeFromHistory = (e: React.MouseEvent, term: string) => {
+  const removeFromHistory = (e: { stopPropagation: () => void }, term: string) => {
     e.stopPropagation();
     const newHistory = history.filter(h => h !== term);
     saveHistory(newHistory);
@@ -61,7 +94,63 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
   };
 
   return (
-    <form ref={formRef} onSubmit={handleSearch} className="w-full max-w-2xl px-4 relative group z-10">
+    <>
+      {isFocused && portalRoot && createPortal(
+        <div
+          onMouseDown={() => setIsFocused(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.35)',
+            backdropFilter: 'blur(2px)',
+            WebkitBackdropFilter: 'blur(2px)',
+            zIndex: 999,
+          }}
+        />,
+        portalRoot
+      )}
+
+      {isOpen && anchorRect && portalRoot && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            left: anchorRect.left,
+            top: anchorRect.bottom,
+            width: anchorRect.width,
+            marginTop: 0,
+            zIndex: 1001,
+          }}
+        >
+          <div className="glass-input border-t-0 rounded-b-3xl overflow-hidden shadow-2xl">
+            {history.map((item, index) => (
+              <div
+                key={index}
+                onMouseDown={() => handleSearch(undefined, item)}
+                className="flex items-center justify-between px-6 py-3 cursor-pointer hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-4 text-white/80">
+                  <History className="h-4 w-4 opacity-50" />
+                  <span>{item}</span>
+                </div>
+                <button
+                  type="button"
+                  onMouseDown={(e) => removeFromHistory(e, item)}
+                  className="p-1 rounded-full hover:bg-white/20 text-white/50 hover:text-white transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>,
+        portalRoot
+      )}
+
+      <form
+        ref={formRef}
+        onSubmit={handleSearch}
+        className={`w-full max-w-2xl px-4 relative group ${isFocused ? 'z-[1000]' : 'z-10'}`}
+      >
       <div className="relative transform transition-all duration-500 ease-out 
                       scale-95 opacity-90
                       group-hover:scale-[0.98] group-hover:opacity-100
@@ -70,10 +159,15 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
           <Search className="h-6 w-6 text-white/70" />
         </div>
         <input
+          ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setIsFocused(true)}
+          onFocus={() => {
+            setIsFocused(true);
+            const el = inputRef.current;
+            if (el) setAnchorRect(el.getBoundingClientRect());
+          }}
           placeholder={t.searchPlaceholder}
           className={`block w-full pl-14 pr-6 py-4
                      text-lg text-white placeholder-[rgba(var(--theme-rgb),0.6)]
@@ -84,29 +178,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
           autoFocus
         />
 
-        {isFocused && history.length > 0 && (
-          <div className="absolute top-full left-0 w-full glass-input border-t-0 rounded-b-3xl overflow-hidden shadow-2xl z-20">
-            {history.map((item, index) => (
-              <div
-                key={index}
-                onClick={() => handleSearch(undefined, item)}
-                className="flex items-center justify-between px-6 py-3 cursor-pointer hover:bg-white/10 transition-colors"
-              >
-                <div className="flex items-center gap-4 text-white/80">
-                  <History className="h-4 w-4 opacity-50" />
-                  <span>{item}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={(e) => removeFromHistory(e, item)}
-                  className="p-1 rounded-full hover:bg-white/20 text-white/50 hover:text-white transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Dropdown is rendered in a portal so it's always above bookmarks */}
       </div>
       <style>{`
           .theme-ring-focus:focus {
@@ -116,6 +188,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
           }
       `}</style>
     </form>
+    </>
   );
 };
 
