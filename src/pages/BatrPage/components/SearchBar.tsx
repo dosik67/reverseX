@@ -100,14 +100,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
           style={{
             position: 'fixed',
             left: anchorRect.left,
-            top: anchorRect.bottom,
+            top: anchorRect.bottom - 8,
             width: anchorRect.width,
             marginTop: 0,
             zIndex: 1001,
           }}
         >
           <div
-            className="glass-input border-t-0 rounded-b-3xl overflow-hidden shadow-2xl"
+            className="glass-input rounded-3xl overflow-hidden shadow-2xl"
             style={{
               backdropFilter: 'none',
               WebkitBackdropFilter: 'none',
