@@ -108,7 +108,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
         >
           <div
             className="glass-input border-t-0 rounded-b-3xl overflow-hidden shadow-2xl"
-            style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
+            style={{
+              backdropFilter: 'none',
+              WebkitBackdropFilter: 'none',
+              background: '#0b0b12',
+              borderColor: 'rgba(255,255,255,0.14)',
+            }}
           >
             {history.map((item, index) => (
               <div
@@ -163,7 +168,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ engine, language }) => {
                      focus:outline-none focus:ring-2 theme-ring-focus focus:bg-[rgba(var(--theme-rgb),0.1)]
                      transition-all duration-300
                      ${isFocused && history.length > 0 ? 'rounded-t-3xl rounded-b-none border-b-0' : 'rounded-full'}`}
-          style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
+          style={{
+            backdropFilter: 'none',
+            WebkitBackdropFilter: 'none',
+            background: '#0b0b12',
+            borderColor: 'rgba(255,255,255,0.14)',
+          }}
           autoFocus
         />
 
