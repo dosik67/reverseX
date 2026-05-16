@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Folder, Plus, Globe, ChevronRight, LayoutGrid, List, Settings2, Trash2, Edit2, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Folder, Plus, Globe, ChevronRight, LayoutGrid, List, Settings2, Trash2, Edit2, Check, Download, Upload } from 'lucide-react';
 import { 
   DndContext, 
   closestCenter,
@@ -140,25 +140,31 @@ const SortableLink = ({
 };
 
 const OSCurtain: React.FC<OSCurtainProps> = ({ isOpen, onClose }) => {
-  const [folders, setFolders] = useState<FolderItem[]>([
-    {
-      id: '1',
-      name: 'Мои',
-      links: [
-        { id: '1-1', title: 'Google', url: 'https://google.com' },
-        { id: '1-2', title: 'YouTube', url: 'https://youtube.com' },
-      ],
-    },
-    {
-      id: '2',
-      name: 'Работа',
-      links: [
-        { id: '2-1', title: 'GitHub', url: 'https://github.com' },
-      ],
-    },
-  ]);
+  const [folders, setFolders] = useState<FolderItem[]>(() => {
+    const saved = localStorage.getItem('reversex_os_folders');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [
+      {
+        id: '1',
+        name: 'Мои',
+        links: [
+          { id: '1-1', title: 'Google', url: 'https://google.com' },
+          { id: '1-2', title: 'YouTube', url: 'https://youtube.com' },
+        ],
+      },
+      {
+        id: '2',
+        name: 'Работа',
+        links: [
+          { id: '2-1', title: 'GitHub', url: 'https://github.com' },
+        ],
+      },
+    ];
+  });
 
-  const [activeFolderId, setActiveFolderId] = useState<string>('1');
+  const [activeFolderId, setActiveFolderId] = useState<string>(folders[0]?.id || '1');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const [isAddingFolder, setIsAddingFolder] = useState(false);
@@ -178,13 +184,60 @@ const OSCurtain: React.FC<OSCurtainProps> = ({ isOpen, onClose }) => {
   const [editingLinkTitle, setEditingLinkTitle] = useState('');
   const [editingLinkUrl, setEditingLinkUrl] = useState('');
 
-  const [curtainTheme, setCurtainTheme] = useState({
-    gradient: 'bg-black/80',
-    font: 'font-sans',
-    animation: 'duration-700',
+  const [curtainTheme, setCurtainTheme] = useState(() => {
+    const saved = localStorage.getItem('reversex_os_theme');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return {
+      gradient: 'bg-black/80',
+      font: 'font-sans',
+      animation: 'duration-700',
+    };
   });
 
+  useEffect(() => {
+    localStorage.setItem('reversex_os_folders', JSON.stringify(folders));
+  }, [folders]);
+
+  useEffect(() => {
+    localStorage.setItem('reversex_os_theme', JSON.stringify(curtainTheme));
+  }, [curtainTheme]);
+
   const activeFolder = folders.find((f) => f.id === activeFolderId);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExportJSON = () => {
+    const data = JSON.stringify({ folders, curtainTheme }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'workspace_settings.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsed = JSON.parse(event.target?.result as string);
+          if (parsed.folders) setFolders(parsed.folders);
+          if (parsed.curtainTheme) setCurtainTheme(parsed.curtainTheme);
+        } catch (error) {
+          alert('Ошибка при чтении файла');
+        }
+      };
+      reader.readAsText(file);
+    }
+    // reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -358,6 +411,17 @@ const OSCurtain: React.FC<OSCurtainProps> = ({ isOpen, onClose }) => {
           </div>
           
           <div className="flex items-center gap-3 bg-black/30 p-1.5 rounded-xl border border-white/5">
+            <div className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded-lg border border-white/5 mr-2">
+              <button onClick={handleExportJSON} className="p-1 text-white/50 hover:text-white transition-colors" title="Скачать настройки (JSON)">
+                <Download size={14} />
+              </button>
+              <div className="w-px h-3 bg-white/20"></div>
+              <button onClick={() => fileInputRef.current?.click()} className="p-1 text-white/50 hover:text-white transition-colors" title="Загрузить настройки (JSON)">
+                <Upload size={14} />
+              </button>
+              <input type="file" accept=".json" className="hidden" ref={fileInputRef} onChange={handleImportJSON} />
+            </div>
+
             <button 
               onClick={() => setShowSettings(!showSettings)}
               className={`p-2 rounded-lg transition-all ${showSettings ? 'bg-[var(--theme-color)] text-white shadow-lg' : 'text-white/50 hover:bg-white/10 hover:text-white'}`}
