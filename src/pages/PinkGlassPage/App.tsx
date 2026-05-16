@@ -4,6 +4,8 @@ import { BACKGROUNDS } from './constants';
 import { useGlobal } from './context/GlobalContext';
 import SearchBar from './components/SearchBar';
 import AppMenu from './components/AppMenu';
+import OSCurtain from './components/OSCurtain';
+import { ChevronLeft } from 'lucide-react';
 import BookmarkGrid from './components/BookmarkGrid';
 import InfiniteBar from './components/InfiniteBar';
 import BackgroundSwitcher from './components/BackgroundSwitcher';
@@ -59,6 +61,7 @@ const App: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<Bookmark | null>(null);
+  const [isOSCurtainOpen, setIsOSCurtainOpen] = useState(false);
 
   // --- Drag & Drop Sensors ---
   const sensors = useSensors(
@@ -391,6 +394,16 @@ const App: React.FC = () => {
 
         {isSettingsOpen && <SettingsModal onClose={() => setIsSettingsOpen(false)} />}
         {isAuthOpen && <AuthModal language={settings.language} onClose={() => setIsAuthOpen(false)} />}
+
+        <button
+            onClick={() => setIsOSCurtainOpen(true)}
+            className={`fixed right-0 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-[var(--theme-color)] backdrop-blur-md border border-white/10 border-r-0 py-8 px-1 rounded-l-xl transition-all duration-300 z-40 text-white/50 hover:text-white flex items-center justify-center group shadow-[-5px_0_15px_rgba(0,0,0,0.3)] hover:w-6 w-4 overflow-hidden ${isOSCurtainOpen ? 'translate-x-full' : 'translate-x-0'}`}
+            title="Open Workspace"
+        >
+            <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+        </button>
+
+        <OSCurtain isOpen={isOSCurtainOpen} onClose={() => setIsOSCurtainOpen(false)} />
 
         {isUrlModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
