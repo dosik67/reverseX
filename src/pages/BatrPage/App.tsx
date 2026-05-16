@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Settings, User, LogOut, Cloud, CloudUpload, Upload, X, FileText, Image, Film, Music, Archive, SkipForward } from 'lucide-react';
+import { Settings, User, LogOut, Cloud, CloudUpload, Upload, X, FileText, Image, Film, Music, Archive, SkipForward, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { BACKGROUNDS, BACKGROUNDS_SPACE2 } from './constants';
 import { useGlobal } from './context/GlobalContext';
 import SearchBar from './components/SearchBar';
@@ -587,6 +587,8 @@ const App: React.FC = () => {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isUrlModalOpen, setIsUrlModalOpen] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -735,6 +737,11 @@ const App: React.FC = () => {
             from { transform: translateY(5px); }
             to   { transform: translateY(-5px); }
           }
+          @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+            70% { transform: scale(1.02) translateY(0); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+          }
 
           ${!settings.isAnimationEnabled ? `*,*::before,*::after{animation:none!important;transition:none!important;}` : ''}
         `}</style>
@@ -794,7 +801,14 @@ const App: React.FC = () => {
           </header>
 
           <main className="flex-1 flex flex-col items-center justify-center -mt-8 px-4 w-full">
-            <div className="mb-6 animate-fade-in-down flex justify-center">
+            <div className="mb-6 animate-fade-in-down flex flex-col items-center justify-center">
+              <button
+                  onClick={() => setIsUrlModalOpen(true)}
+                  className="mb-2 p-1.5 rounded-full bg-white/5 hover:bg-white/20 text-white/50 hover:text-white backdrop-blur-md border border-white/5 transition-all duration-300 hover:scale-110 shadow-lg"
+                  title="Open URL"
+              >
+                  <LinkIcon size={14} />
+              </button>
               <BatrLogo themeColor={settings.themeColor} />
             </div>
 
@@ -817,7 +831,7 @@ const App: React.FC = () => {
                   const nextSpace = bgSpace === 0 ? 1 : 0;
                   const nextBackgrounds = nextSpace === 0 ? BACKGROUNDS : BACKGROUNDS_SPACE2;
                   setBgSpace(nextSpace);
-                  setBgIndex(prev => Math.min(prev, nextBackgrounds.length - 1));
+                  setBgIndex(Math.min(bgIndex, nextBackgrounds.length - 1));
                 }}
               />
             )}
@@ -831,7 +845,7 @@ const App: React.FC = () => {
               const nextSpace = bgSpace === 0 ? 1 : 0;
               const nextBackgrounds = nextSpace === 0 ? BACKGROUNDS : BACKGROUNDS_SPACE2;
               setBgSpace(nextSpace);
-              setBgIndex(prev => Math.min(prev, nextBackgrounds.length - 1));
+              setBgIndex(Math.min(bgIndex, nextBackgrounds.length - 1));
             }}
             className="p-3 rounded-full bg-black/40 hover:bg-[rgba(var(--theme-rgb),0.5)] backdrop-blur-md text-white/80 hover:text-white transition-all duration-300 border border-white/10 hover:scale-110 group"
             title={bgSpace === 0 ? "Go to Space 2" : "Go to Space 1"}
@@ -853,6 +867,51 @@ const App: React.FC = () => {
 
         {isSettingsOpen && <SettingsModal onClose={() => setIsSettingsOpen(false)} />}
         {isAuthOpen     && <AuthModal language={settings.language} onClose={() => setIsAuthOpen(false)} />}
+
+        {isUrlModalOpen && (
+            <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsUrlModalOpen(false)} style={{ animation: 'fadeIn 0.3s ease-out forwards' }} />
+                <div className="relative w-full max-w-md bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl" style={{ animation: 'popIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards' }}>
+                    <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <LinkIcon size={20} className="theme-text" /> Открыть ссылку
+                    </h3>
+                    <form onSubmit={(e) => {
+                        e.preventDefault();
+                        if (urlInput) {
+                            let finalUrl = urlInput.trim();
+                            if (!/^https?:\/\//i.test(finalUrl)) {
+                                finalUrl = 'https://' + finalUrl;
+                            }
+                            window.location.href = finalUrl;
+                        }
+                    }}>
+                        <input
+                            autoFocus
+                            type="text"
+                            value={urlInput}
+                            onChange={(e) => setUrlInput(e.target.value)}
+                            placeholder="Вставьте URL сюда..."
+                            className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-[var(--theme-color)] transition-colors mb-4"
+                        />
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsUrlModalOpen(false)}
+                                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-colors"
+                            >
+                                Отмена
+                            </button>
+                            <button
+                                type="submit"
+                                className="px-4 py-2 rounded-xl theme-bg text-white hover:opacity-90 transition-opacity flex items-center gap-2"
+                            >
+                                Перейти <ExternalLink size={16} />
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
 
         {/* ── Drop Zone ── */}
         <DropZone />
